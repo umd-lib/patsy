@@ -93,29 +93,3 @@ class Database():
                 instance.dirlist_id, instance.dirlist_line)
         cur.execute(query, data)
         return cur.lastrowid
-
-
-class Asset():
-    pass
-
-
-class Batch():
-    pass
-
-
-class Dirlist():
-    pass
-
-
-class Instance():
-    pass
-
-
-class RestoredAsset():
-
-    def __init__(self, id, bytes, md5, filename, path):
-        self.id = id
-        self.bytes = bytes
-        self.md5 = md5
-        self.filename = filename
-        self.path = path

@@ -8,6 +8,20 @@ from .utils import print_header
 def main():
     # main parser for command line arguments
     parser = argparse.ArgumentParser(description='CLI for PATSy database')
+    
+    parser.add_argument(
+        '-v', '--version',
+        action='version',
+        help='Print version number and exit',
+        version=version
+    )
+    
+    parser.add_argument(
+        '-d', '--database',
+        action='store'
+    )
+    
+    """
     subparsers = parser.add_subparsers(
         title='subcommands',
         description='valid subcommands',
@@ -15,15 +29,7 @@ def main():
         metavar='{create}',
         dest='cmd'
     )
-    parser.add_argument(
-        '-v', '--version',
-        action='version',
-        help='Print version number and exit',
-        version=version
-    )
     subparsers.required = True
-
-    # argument parser for the deposit sub-command
     create_parser = subparsers.add_parser(
         'create',
         help='Add records',
@@ -40,13 +46,16 @@ def main():
         action='store',
         help='Source file to read from'
     )
-
     create_parser.set_defaults(func=create)
+    """
 
     # parse the args and call the default sub-command function
     args = parser.parse_args()
     print_header()
+    
+    """
     args.func(args)
+    """
 
 if __name__ == "__main__":
     main()

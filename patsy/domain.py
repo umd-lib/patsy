@@ -8,76 +8,19 @@ from utils import calculate_md5
 from utils import human_readable
 
 
-class Asset():
-    """
-    Class representing a single asset under preservation.
-    """
-
-    def __init__(self, filename, sourcefile, sourceline,
-                 bytes=None, timestamp=None, md5=None):
-        self.filename = filename
-        self.bytes = bytes
-        self.timestamp = timestamp
-        self.md5 = md5
-        self.restored = []
-        self.extra_copies = []
-        self.sourcefile = sourcefile
-        self.sourceline = sourceline
-        self.status = 'Not checked'
-
-    @property
-    def signature(self):
-        return (self.filename, self.md5, self.bytes)
-
-
-class Batch():
-    """
-    Class representing a set of assets having been accessioned.
-    """
-
-    def __init__(self, identifier, *dirlists):
-        self.identifier = identifier
-        self.dirlists = [d for d in dirlists]
-        self.assets = []
-        self.status = None
-        for dirlist in self.dirlists:
-            self.load_assets(dirlist)
-
-    @property
-    def bytes(self):
-        return sum(
-            [asset.bytes for asset in self.assets if asset.bytes is not None]
-            )
-
-    @property
-    def has_hashes(self):
-        return all(
-            [asset.md5 is not None for asset in self.assets]
-            )
-
-    def load_assets(self, dirlist):
-        self.assets.extend([asset for asset in dirlist.assets])
-
-    def summary_dict(self):
-        return {'identifier': self.identifier,
-                'dirlists': {d.md5: d.filename for d in self.dirlists},
-                'num_assets': len(self.assets),
-                'bytes': self.bytes,
-                'human_readable': human_readable(self.bytes),
-                'status': self.status
-                }
-    @property
-    def asset_root(self):
-        return os.path.commonpath([a.restored.path for a in self.assets])
-
-    def has_duplicates(self):
-        return len(self.assets) < len(set([a.signature for a in self.assets]))
-
-
 class DirList():
     """
     Class representing an accession inventory list
     making up all or part of a batch.
+    
+    CREATE TABLE dirlists(
+        id          INTEGER PRIMARY KEY UNIQUE NOT NULL,
+        filename    TEXT,
+        md5         TEXT,
+        bytes       INTEGER,
+        batch_id    INTEGER,
+        FOREIGN KEY(batch_id) REFERENCES batches(id)
+    );
     """
 
     def __init__(self, path):
@@ -211,3 +154,123 @@ class DirList():
                               sourcefile=self.filename, sourceline=n)
                         )
             return results
+
+
+
+class Asset():
+    """
+    Class representing a single asset under preservation.
+    
+    CREATE TABLE assets(
+        id          INTEGER PRIMARY KEY UNIQUE NOT NULL,
+        filename    TEXT,
+        md5         TEXT,
+        bytes       INTEGER,
+        source_id   INTEGER,
+        source_line INTEGER,
+        relpath     TEXT,
+        FOREIGN KEY(source_id) REFERENCES dirlists(id)
+    );
+    """
+
+    def __init__(self, 
+                 filename,
+                 md5=None,
+                 bytes=None,
+                 timestamp=None,
+                 source_id, 
+                 source_line,
+                 relpath=None
+                 ):
+        self.filename = filename
+        self.bytes = bytes
+        self.timestamp = timestamp
+        self.md5 = md5
+        self.restored = []
+        self.extra_copies = []
+        self.sourcefile = sourcefile
+        self.sourceline = sourceline
+        self.status = 'Not checked'
+
+    @property
+    def signature(self):
+        return (self.filename, self.md5, self.bytes)
+
+
+class RestoredAsset():
+
+    def __init__(self, id, bytes, md5, filename, path):
+        self.id = id
+        self.bytes = bytes
+        self.md5 = md5
+        self.filename = filename
+        self.path = path
+
+
+class Batch():
+    """
+    Class representing a set of assets having been accessioned.
+
+    CREATE TABLE batches(
+        id          INTEGER PRIMARY KEY UNIQUE NOT NULL,
+        name        TEXT
+    );
+    """
+
+    def __init__(self, identifier, *dirlists):
+        self.identifier = identifier
+        self.dirlists = [d for d in dirlists]
+        self.assets = []
+        self.status = None
+        for dirlist in self.dirlists:
+            self.load_assets(dirlist)
+
+    @property
+    def bytes(self):
+        return sum(
+            [asset.bytes for asset in self.assets if asset.bytes is not None]
+            )
+
+    @property
+    def has_hashes(self):
+        return all(
+            [asset.md5 is not None for asset in self.assets]
+            )
+
+    def load_assets(self, dirlist):
+        self.assets.extend([asset for asset in dirlist.assets])
+
+    def summary_dict(self):
+        return {'identifier': self.identifier,
+                'dirlists': {d.md5: d.filename for d in self.dirlists},
+                'num_assets': len(self.assets),
+                'bytes': self.bytes,
+                'human_readable': human_readable(self.bytes),
+                'status': self.status
+                }
+    @property
+    def asset_root(self):
+        return os.path.commonpath([a.restored.path for a in self.assets])
+
+    def has_duplicates(self):
+        return len(self.assets) < len(set([a.signature for a in self.assets]))
+
+
+class Instance():
+    """
+    CREATE TABLE instances(
+        uuid         TEXT PRIMARY KEY UNIQUE NOT NULL,
+        filename     TEXT,
+        md5          TEXT,
+        bytes        INTEGER,
+        dirlist_id   INTEGER,
+        dirlist_line INTEGER,
+        path         TEXT,
+        action       TEXT,
+        FOREIGN KEY(dirlist_id) REFERENCES dirlists(id)
+    );
+    """
+
+    def __init__(self):
+        pass
+
