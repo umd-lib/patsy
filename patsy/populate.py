@@ -5,14 +5,17 @@ import sqlite3
 import sys
 import yaml
 
-from accessions import DirList
-from accessions import Batch
-from accessions import Asset
+from .domain import DirList
+from .domain import Batch
+from .domain import Asset
+from .database import Database
 
-from restores import Database
+
+def load_restored_files():
+    pass
 
 
-def main():
+def load_accession_records():
     configfile = sys.argv[1]
     with open(configfile) as handle:
         config = yaml.safe_load(handle)
@@ -52,7 +55,4 @@ def main():
             dirlist_id = database.lookup_dirlist_by_name(asset.sourcefile)
             asset_id = database.create_asset(asset, dirlist_id)
 
-
-if __name__ == "__main__":
-    main()
 

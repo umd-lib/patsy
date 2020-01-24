@@ -1,8 +1,3 @@
-DROP TABLE IF EXISTS instances;
-DROP TABLE IF EXISTS dirlists;
-DROP TABLE IF EXISTS accessions;
-DROP TABLE IF EXISTS accession_batches;
-
 CREATE TABLE instances(
     uuid         TEXT PRIMARY KEY UNIQUE NOT NULL,
     filename     TEXT,
@@ -29,10 +24,10 @@ CREATE TABLE assets(
     filename    TEXT,
     md5         TEXT,
     bytes       INTEGER,
-    source_id   INTEGER,
-    source_line INTEGER,
+    dirlist_id   INTEGER,
+    dirlist_line INTEGER,
     relpath     TEXT,
-    FOREIGN KEY(source_id) REFERENCES dirlists(id)
+    FOREIGN KEY(dirlist_id) REFERENCES dirlists(id)
 );
 
 CREATE TABLE batches(

@@ -10,6 +10,15 @@ class Database():
         self.connection.commit()
         self.connection.close()
 
+    def has_schema(self):
+        self.cursor.execute(
+            '''SELECT COUNT(*) FROM sqlite_master WHERE type='table';'''
+            )
+        if self.cursor.fetchone()[0] == 4:
+            return True
+        else:
+            return False
+
     def match_filename_bytes_md5(self, asset):
         query = """
             SELECT * FROM files WHERE filename=? and md5=? and bytes=?;

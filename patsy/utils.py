@@ -17,7 +17,9 @@ def calculate_md5(path):
 
 
 def human_readable(bytes):
-    """Return a human-readable representation of the input bytes."""
+    """
+    Return a human-readable representation of the provided number of bytes.
+    """
     for n, label in enumerate(['bytes', 'KiB', 'MiB', 'GiB', 'TiB']):
         value = bytes / (1024 ** n)
         if value < 1024:
@@ -25,8 +27,11 @@ def human_readable(bytes):
         else:
             continue
 
+
 def print_header():
-    """Generate script header and display it in the console."""
+    """
+    Generate the script header and display it in the console.
+    """
     title = f'| PATSy CLI |'
     border = '=' * len(title)
     spacer = '|' + ' '*(len(title)-2) + '|'
