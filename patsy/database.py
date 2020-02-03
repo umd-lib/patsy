@@ -1,4 +1,12 @@
 import sqlite3
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+
+class Db():
+
+    def __init__(self, path):
+        engine = create_engine(f'sqlite:///{path}', echo=True)
+
 
 class Database():
 

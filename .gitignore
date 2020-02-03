@@ -107,4 +107,4 @@ venv.bak/
 .DS_Store
 thumbs.db
 dump/
-
+.vscode

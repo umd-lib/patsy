@@ -6,7 +6,7 @@ import os
 from . import version
 from .crud import create
 from .utils import print_header
-from .database import Database
+from .database import Db
 
 
 def main():
@@ -38,12 +38,16 @@ def main():
         print(f"Using a transient in-memory database...")
         
     
-    db = Database(path)
+    db = Db(path)
+    print(db)
+
+    '''
     if not db.has_schema():
         print(f"Loading database schema...")
         with open('patsy/patsy.schema', 'r') as handle:
-            db.connection.executescript(handle.read())
-
+            schema_script = handle.read()
+            db.connection.executescript(schema_script)
+    '''
 
 if __name__ == "__main__":
     main()
