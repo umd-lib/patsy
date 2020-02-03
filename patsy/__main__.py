@@ -6,6 +6,7 @@ import os
 from . import version
 from .utils import print_header
 from .database import Db
+from .model import Batch
 
 
 def main():
@@ -38,6 +39,7 @@ def main():
     db = Db(path)
     session = db.session()
     print(session)
+    batch = Batch('Archive001')
     
 if __name__ == "__main__":
     main()
