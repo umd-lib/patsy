@@ -1,5 +1,8 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
+Base = declarative_base()
 
 class Instance(Base):
     """
@@ -15,13 +18,13 @@ class Instance(Base):
         FOREIGN KEY(dirlist_id) REFERENCES dirlists(id)
     );
     """
-__tablename__ = 'instances'
+    __tablename__ = 'instances'
 
-    uuid = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     filename = Column(String)
 
     def __repr__(self):
-        return f"<Instances(name='{self.filename}'>")
+        return f"<Instances(name='{self.filename}'>"
 
 
 class Dirlist(Base):
@@ -35,7 +38,7 @@ class Dirlist(Base):
         FOREIGN KEY(batch_id) REFERENCES batches(id)
     );
     """
-__tablename__ = 'dirlists'
+    __tablename__ = 'dirlists'
 
     id = Column(Integer, primary_key=True)
     filename = Column(String)
@@ -43,7 +46,7 @@ __tablename__ = 'dirlists'
     bytes = Column(Integer)
 
     def __repr__(self):
-        return f"<Dirlist(filename='{self.filename}'>")
+        return f"<Dirlist(filename='{self.filename}'>"
 
 
 class Asset(Base):
@@ -63,10 +66,10 @@ class Asset(Base):
 
     id = Column(Integer, primary_key=True)
     md5 = Column(String)
-    bytes = Column(integer)
+    bytes = Column(Integer)
 
     def __repr__(self):
-        return f"<Asset(name='{self.name}', bytes=({self.bytes})>")
+        return f"<Asset(name='{self.name}', bytes=({self.bytes})>"
 
 
 class Batch(Base):
@@ -82,7 +85,7 @@ class Batch(Base):
     name = Column(String)
 
     def __repr__(self):
-        return f"<Batch(name='{self.name}'>")
+        return f"<Batch(name='{self.name}'>"
 
 
 Asset.instances = relationship(
