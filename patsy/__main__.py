@@ -35,10 +35,9 @@ def main():
         path = ":memory:"
         print(f"Using a transient in-memory database...")
         
-    
     db = Db(path)
-    print(db)
-
+    session = db.session()
+    print(session)
     
 if __name__ == "__main__":
     main()

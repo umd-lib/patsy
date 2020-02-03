@@ -1,11 +1,16 @@
 import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 
 class Db():
 
     def __init__(self, path):
-        engine = create_engine(f'sqlite:///{path}', echo=True)
+        self.engine = create_engine(f'sqlite:///{path}', echo=True)
+    
+    def session(self):
+        return sessionmaker(bind=self.engine)
 
 
 class Database():
