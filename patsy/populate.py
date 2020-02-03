@@ -5,10 +5,10 @@ import sqlite3
 import sys
 import yaml
 
-from .domain import DirList
-from .domain import Batch
-from .domain import Asset
-from .database import Database
+from .model import DirList
+from .model import Batch
+from .model import Asset
+from .database import Db
 
 
 def load_restored_files():

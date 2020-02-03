@@ -4,13 +4,11 @@ import argparse
 import os
 
 from . import version
-from .crud import create
 from .utils import print_header
 from .database import Db
 
 
 def main():
-    
     parser = argparse.ArgumentParser(
         description='CLI for PATSy database'
     )
@@ -41,13 +39,6 @@ def main():
     db = Db(path)
     print(db)
 
-    '''
-    if not db.has_schema():
-        print(f"Loading database schema...")
-        with open('patsy/patsy.schema', 'r') as handle:
-            schema_script = handle.read()
-            db.connection.executescript(schema_script)
-    '''
-
+    
 if __name__ == "__main__":
     main()
