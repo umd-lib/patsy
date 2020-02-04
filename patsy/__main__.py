@@ -13,9 +13,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-
-
-def main():
+def get_args():
+    """
+    Create parsers and return args namespace object
+    """
     parser = argparse.ArgumentParser(
         description='CLI for PATSy database'
     )
@@ -30,30 +31,30 @@ def main():
         action='store',
         help='Path to database file',
     )
-
-    # Parse args and initialize DB
-    args = parser.parse_args()
-    print_header()
+    return parser.parse_args()
     
+
+
+def main():
+    args = get_args()
+    print_header()
+
+    # Set up database file or use in-memory db
     if args.database:
-        path = args.database
-        print(f"Using database at {path}...")
+        db_file = args.database
+        print(f"Using database at {path}...") 
     else:
-        path = ":memory:"
+        db_file = ":memory:"
         print(f"Using a transient in-memory database...")
+    db_path = f"sqlite:///{db_file}"
 
-
-    dbpath = f'sqlite:///{path}'
-    engine = create_engine(dbpath)
+    # Create the mapper and session
+    engine = create_engine(db_path)
     Session = sessionmaker(bind=engine)
     session = Session()
-    print(session)
-    #session.configure(bind=engine, autoflush=False, expire_on_commit=False)
-    Base = declarative_base()
-    Batch.__table__.create(bind=engine, checkfirst=True)
-    #Base.metadata.create_all(engine)
 
-    batch = Batch(name="Archive001")    #print(Batch.__table__)
+    
+    batch = Batch(name="Archive001")
     session.add(batch)
     session.commit()
     my_batch = session.query(Batch).first()
