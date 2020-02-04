@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 AccessionRecord = namedtuple('AccessionRecord', 
-    "sourcefile sourceline filename bytes timestamp md5"
+    "batch sourcefile sourceline filename bytes timestamp md5"
     )
 
 class Instance(Base):
