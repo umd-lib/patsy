@@ -55,9 +55,8 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
     print(session)
-
-
-    load_accession_records("/home/jwestgard/Desktop/accession_catalog.csv")
+    for rec in load_accession_records("/home/jwestgard/Desktop/accession_catalog.csv"):
+        print(rec.batch)
 
 
 if __name__ == "__main__":

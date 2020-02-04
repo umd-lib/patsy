@@ -17,6 +17,4 @@ def load_accession_records(catalog_file):
     with open(catalog_file, 'r') as handle:
         reader = csv.reader(handle, delimiter=',')
         for row in reader:
-            accession = AccessionRecord(*row)
-            print(accession)
-
+            yield AccessionRecord(*row)
