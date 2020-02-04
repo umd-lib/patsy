@@ -18,10 +18,13 @@ class Instance(Base):
         FOREIGN KEY(dirlist_id) REFERENCES dirlists(id)
     );
     """
-    __tablename__ = 'instances'
+    __tablename__ = "instances"
 
     id = Column(Integer, primary_key=True)
     filename = Column(String)
+    dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
+
+    dirlist = relationship("Dirlist", back_populates="instances")
 
     def __repr__(self):
         return f"<Instances(name='{self.filename}'>"
@@ -38,12 +41,17 @@ class Dirlist(Base):
         FOREIGN KEY(batch_id) REFERENCES batches(id)
     );
     """
-    __tablename__ = 'dirlists'
+    __tablename__ = "dirlists"
 
     id = Column(Integer, primary_key=True)
     filename = Column(String)
     md5 = Column(Integer)
     bytes = Column(Integer)
+    batch_id = Column(Integer, ForeignKey("batches.id"))
+
+    batch = relationship("Batch", back_populates="dirlists")
+    instances = relationship("Instance", back_populates="dirlist")
+    assets = relationship("Asset", back_populates="dirlist")
 
     def __repr__(self):
         return f"<Dirlist(filename='{self.filename}'>"
@@ -62,11 +70,14 @@ class Asset(Base):
         FOREIGN KEY(dirlist_id) REFERENCES dirlists(id)
     );
     """
-    __tablename__ = 'assets'
+    __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True)
     md5 = Column(String)
     bytes = Column(Integer)
+    dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
+
+    dirlist = relationship("Dirlist", back_populates="assets")
 
     def __repr__(self):
         return f"<Asset(name='{self.name}', bytes=({self.bytes})>"
@@ -88,15 +99,16 @@ class Batch(Base):
         return f"<Batch(name='{self.name}'>"
 
 
-Asset.instances = relationship(
-    "Instances", order_by=Instance.id, back_populates="instance"
+Dirlist.instances = relationship(
+    "Instance", order_by=Instance.id, back_populates="dirlist"
     )
-Instance.dirlist = relationship(
-    "Dirlists", order_by=Dirlist.id, back_populates="dirlist"
+Batch.dirlists = relationship(
+    "Dirlist", order_by=Dirlist.id, back_populates="batch"
     )
-Dirlist.batch = relationship(
-    "Batches", order_by=batch.id, back_populates="batch"
+Asset.dirlist = relationship(
+    "Dirlist", order_by=Dirlist.id, back_populates="assets"
     )
+
 
 
 '''

@@ -32,6 +32,12 @@ class Database():
         else:
             return False
 
+    def tables(self):
+        self.cursor.execute(
+            '''SELECT name FROM sqlite_master WHERE type='table';'''
+            )
+        return [t[0] for t in self.cursor.fetchall()]
+
     def match_filename_bytes_md5(self, asset):
         query = """
             SELECT * FROM files WHERE filename=? and md5=? and bytes=?;
@@ -75,13 +81,13 @@ class Database():
         else:
             return None
 
-    def create_asset(self, asset, source_id):
+    def create_asset(self, asset, dirlist_id):
         cur = self.connection.cursor()
         query = """INSERT INTO assets 
-                    (filename, md5, bytes, source_id, source_line)
+                    (filename, md5, bytes, dirlist_id, dirlist_line)
                    VALUES (?, ?, ?, ?, ?)"""
         data = (asset.filename, asset.md5, asset.bytes, 
-                source_id, asset.sourceline
+                dirlist_id, asset.dirlist_line
                 )
         cur.execute(query, data)
         return cur.lastrowid
