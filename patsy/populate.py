@@ -15,7 +15,7 @@ def load_restored_files():
     pass
 
 
-def load_accession_records(source_dir, db):
+def load_accession_records(source_dir):
 
     batches = {}
 

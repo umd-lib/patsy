@@ -2,16 +2,19 @@
 
 import argparse
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from . import version
 from .utils import print_header
 from .database import Db
 from .model import Batch
+from .model import Asset
+from .model import Dirlist
+from .model import Instance
+
 from .populate import load_accession_records
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
 def get_args():
     """
@@ -42,7 +45,7 @@ def main():
     # Set up database file or use in-memory db
     if args.database:
         db_file = args.database
-        print(f"Using database at {path}...") 
+        print(f"Using database at {db_file}...") 
     else:
         db_file = ":memory:"
         print(f"Using a transient in-memory database...")
@@ -53,12 +56,7 @@ def main():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    
-    batch = Batch(name="Archive001")
-    session.add(batch)
-    session.commit()
-    my_batch = session.query(Batch).first()
-    print(my_batch)
+    load_accession_records()
 
 
 if __name__ == "__main__":
