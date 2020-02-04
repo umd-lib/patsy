@@ -8,8 +8,10 @@ import os
 import re
 import sys
 
-FIELDS = ['sourcefile', 'sourceline', 'filename', 'bytes', 'timestamp', 'md5']
-Asset = collections.namedtuple('Asset', ' '.join(FIELDS))
+
+Asset = collections.namedtuple('Asset',
+    "batch sourcefile sourceline filename bytes timestamp md5"
+    )
 
 
 def calculate_md5(path):
@@ -39,7 +41,7 @@ def human_readable(bytes):
             continue
 
 
-def iter_space_delimited(dirlist_filename, lines):
+def iter_space_delimited(batch, dirlist_filename, lines):
     ptrn = r'^(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}\s[AP]M)\s+([0-9,]+)\s(.+?)$'
     for n, line in enumerate(lines, 1):
         # check if the line describes an asset
@@ -51,7 +53,8 @@ def iter_space_delimited(dirlist_filename, lines):
                                           '%m/%d/%Y %I:%M %p')
             bytes = int(''.join([c for c in match.group(2) if c.isdigit()]))
             filename = match.group(3)
-            yield Asset(filename=filename, 
+            yield Asset(batch=batch,
+                        filename=filename, 
                         bytes=bytes,
                         timestamp=timestamp.isoformat(), 
                         sourcefile=dirlist_filename,
@@ -59,7 +62,7 @@ def iter_space_delimited(dirlist_filename, lines):
                         )
 
 
-def iter_semicolon_delimited(dirlist_filename, lines):
+def iter_semicolon_delimited(batch, dirlist_filename, lines):
     for n, line in enumerate(lines, 1):
         cols = line.split(';')
         if cols[2] == 'Directory':
@@ -68,7 +71,8 @@ def iter_semicolon_delimited(dirlist_filename, lines):
             filename = os.path.basename(cols[0].rsplit('\\')[-1])
             timestamp = datetime.strptime(cols[1], '%m/%d/%Y %I:%M:%S %p')
             bytes = round(float(cols[2].replace(',', '')) * 1024)
-            yield Asset(filename=filename,
+            yield Asset(batch=batch,
+                        filename=filename,
                         bytes=bytes, 
                         timestamp=timestamp.isoformat(),     
                         sourcefile=dirlist_filename, 
@@ -77,7 +81,7 @@ def iter_semicolon_delimited(dirlist_filename, lines):
                         )
 
 
-def iter_tabular_formats(dirlist_filename, lines):
+def iter_tabular_formats(batch, dirlist_filename, lines):
     delimiter = '\t' if '\t' in lines[0] else ','
     possible_keys = {
         'filename': ['Filename', 'File Name', 'FILENAME', 'Key','"Filename"', '"Key"'],
@@ -131,7 +135,8 @@ def iter_tabular_formats(dirlist_filename, lines):
                 md5 = row[md5_key]
             else:
                 md5 = None
-            yield Asset(filename=filename,
+            yield Asset(batch=batch,
+                        filename=filename,
                         bytes=bytes,
                         timestamp=timestamp, 
                         md5=md5,
@@ -144,11 +149,10 @@ class DirList():
 
     def __init__(self, path):
         self.filename = os.path.basename(path)
+        self.batch = self.filename.split('_')[0]
         self.path = path
         self.bytes = int(os.path.getsize(path))
         self.md5 = calculate_md5(path)
-        self.dirlines = 0
-        self.extralines = 0
         self.lines = self.read()
 
         # Set up asset iterator with appropriate parser function
@@ -181,7 +185,7 @@ def main():
             if os.path.isfile(path):
                 dirlist = DirList(path)
                 for asset in dirlist.assets(
-                    dirlist.filename, dirlist.lines
+                    dirlist.batch, dirlist.filename, dirlist.lines
                     ):
                     writer.writerow(asset)
 

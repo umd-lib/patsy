@@ -1,3 +1,6 @@
+import csv
+
+from .model import AccessionRecord
 from .model import Dirlist
 from .model import Batch
 from .model import Asset
@@ -8,20 +11,12 @@ def load_restored_files():
 
 
 def load_accession_records(catalog_file):
-
+    """
+    Load the accession catalog into batch, dirlist, & asset objects
+    """
     with open(catalog_file, 'r') as handle:
-        for line in handle:
-            cols = line.split(',')
-            sourcefile = cols[0]
-            sourceline = int(cols[1])
-            filename = cols[2]
-            if cols[3] != '':
-                bytes = int(cols[3])
-            else:
-                bytes = None
-            timestamp = cols[4]
-            md5 = cols[5]
-            asset = Asset(filename=filename, md5=md5, bytes=bytes,
-                            dirlist_line=sourceline)
-            print(asset)
+        reader = csv.reader(handle, delimiter=',')
+        for row in reader:
+            accession = AccessionRecord(*row)
+            print(accession)
 
