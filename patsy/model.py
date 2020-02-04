@@ -24,8 +24,6 @@ class Instance(Base):
     filename = Column(String)
     dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
 
-    dirlist = relationship("Dirlist", back_populates="instances")
-
     def __repr__(self):
         return f"<Instances(name='{self.filename}'>"
 
@@ -50,8 +48,6 @@ class Dirlist(Base):
     batch_id = Column(Integer, ForeignKey("batches.id"))
 
     batch = relationship("Batch", back_populates="dirlists")
-    instances = relationship("Instance", back_populates="dirlist")
-    assets = relationship("Asset", back_populates="dirlist")
 
     def __repr__(self):
         return f"<Dirlist(filename='{self.filename}'>"
@@ -95,18 +91,17 @@ class Batch(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
+    dirlist = relationship("Dirlist", back_populates="batch")
+
     def __repr__(self):
         return f"<Batch(name='{self.name}'>"
 
 
-Dirlist.instances = relationship(
-    "Instance", order_by=Instance.id, back_populates="dirlist"
-    )
 Batch.dirlists = relationship(
     "Dirlist", order_by=Dirlist.id, back_populates="batch"
     )
-Asset.dirlist = relationship(
-    "Dirlist", order_by=Dirlist.id, back_populates="assets"
+Dirlist.assets = relationship(
+    "Asset", order_by=Asset.id, back_populates="dirlist"
     )
 
 
