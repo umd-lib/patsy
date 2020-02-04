@@ -56,7 +56,9 @@ def main():
     session = Session()
     print(session)
     for rec in load_accession_records("/home/jwestgard/Desktop/accession_catalog.csv"):
-        print(rec.batch)
+        batchname = rec.batch
+        session.add(Batch(name=batchname))
+    session.commit()
 
 
 if __name__ == "__main__":
