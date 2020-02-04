@@ -69,14 +69,17 @@ class Asset(Base):
     __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True)
+    filename = Column(String)
+    timestamp = Column(String)
     md5 = Column(String)
     bytes = Column(Integer)
-    dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
 
+    dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
+    dirlist_line = Column(Integer)
     dirlist = relationship("Dirlist", back_populates="assets")
 
     def __repr__(self):
-        return f"<Asset(name='{self.name}', bytes=({self.bytes})>"
+        return f"<Asset(name='{self.filename}', bytes={self.bytes}, md5='{self.md5}')>"
 
 
 class Batch(Base):
