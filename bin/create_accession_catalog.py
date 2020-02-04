@@ -53,7 +53,7 @@ def iter_space_delimited(dirlist_filename, lines):
             filename = match.group(3)
             yield Asset(filename=filename, 
                         bytes=bytes,
-                        timestamp=timestamp, 
+                        timestamp=timestamp.isoformat(), 
                         sourcefile=dirlist_filename,
                         sourceline=n, md5=None
                         )
@@ -70,7 +70,7 @@ def iter_semicolon_delimited(dirlist_filename, lines):
             bytes = round(float(cols[2].replace(',', '')) * 1024)
             yield Asset(filename=filename,
                         bytes=bytes, 
-                        timestamp=timestamp,     
+                        timestamp=timestamp.isoformat(),     
                         sourcefile=dirlist_filename, 
                         sourceline=n, 
                         md5=None
@@ -94,7 +94,6 @@ def iter_tabular_formats(dirlist_filename, lines):
                 break
     reader = csv.DictReader(lines, quotechar='"', delimiter=delimiter)
     for n, row in enumerate(reader, 1):
-        print(dirlist_filename, n)
         # Skip extra rows in Prange-style "CSV" files
         if 'File Name' in row and any([
             (row.get('Type') == 'Directory'),
