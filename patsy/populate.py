@@ -10,4 +10,4 @@ def load_restored_files():
 def load_accession_records(catalog_file):
 
     with open(catalog_file, 'r') as handle:
-        
+        print(handle.read())

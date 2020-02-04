@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker
 
 from . import version
 from .utils import print_header
-from .database import Db
 from .model import Batch
 from .model import Asset
 from .model import Dirlist
@@ -55,8 +54,10 @@ def main():
     engine = create_engine(db_path)
     Session = sessionmaker(bind=engine)
     session = Session()
+    print(session)
 
-    load_accession_records()
+
+    load_accession_records("~/Desktop/accession_catalog.csv")
 
 
 if __name__ == "__main__":
