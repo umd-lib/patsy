@@ -9,6 +9,11 @@ from .database import Db
 from .model import Batch
 from .populate import load_accession_records
 
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -37,26 +42,23 @@ def main():
         path = ":memory:"
         print(f"Using a transient in-memory database...")
 
-    db = Db(path)
-    session = db.session()
+
+    dbpath = f'sqlite:///{path}'
+    engine = create_engine(dbpath)
+    Session = sessionmaker(bind=engine)
+    session = Session()
     print(session)
-    batch = Batch()
+    #session.configure(bind=engine, autoflush=False, expire_on_commit=False)
+    Base = declarative_base()
+    Batch.__table__.create(bind=engine, checkfirst=True)
+    #Base.metadata.create_all(engine)
 
-    """
-    # Load schema if required
-    if not db.has_schema():
-        print(f"Loading database schema...")
-        with open('patsy/patsy.schema', 'r') as handle:
-            db.connection.executescript(handle.read())
-    print(f"PATSy database has the following tables:")
-    for table in db.tables():
-        print(f"  - {table}")
+    batch = Batch(name="Archive001")    #print(Batch.__table__)
+    session.add(batch)
+    session.commit()
+    my_batch = session.query(Batch).first()
+    print(my_batch)
 
-    # Run the chosen function
-    source = ("/Users/westgard/Box Sync/AWSMigration" + \
-              "/aws-migration-data/AccessionInventories/dcrprojects")
-    load_accession_records(source, db)
-    """
 
 if __name__ == "__main__":
     main()

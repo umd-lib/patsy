@@ -8,9 +8,12 @@ class Db():
 
     def __init__(self, path):
         self.engine = create_engine(f'sqlite:///{path}', echo=True)
-    
+
     def session(self):
-        return sessionmaker(bind=self.engine)
+        Session = sessionmaker(bind=self.engine)
+        base = declarative_base()
+        base.metadata.create_all(self.engine)
+        return Session()
 
 
 class Database():
