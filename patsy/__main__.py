@@ -57,7 +57,7 @@ def main():
     print(session)
 
 
-    load_accession_records("~/Desktop/accession_catalog.csv")
+    load_accession_records("/home/jwestgard/Desktop/accession_catalog.csv")
 
 
 if __name__ == "__main__":
