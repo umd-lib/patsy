@@ -10,7 +10,7 @@ def load_restored_files():
     pass
 
 
-def load_accession_records(catalog_file):
+def iter_accession_records_from(catalog_file):
     """
     Load the accession catalog into batch, dirlist, & asset objects
     """
