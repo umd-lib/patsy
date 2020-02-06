@@ -6,14 +6,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from . import version
-from .utils import print_header
+#from .database import Database
 from .model import Batch
 from .model import Asset
 from .model import Dirlist
 from .model import Instance
 from .model import Base
-
 from .populate import iter_accession_records_from
+from .utils import print_header
 
 
 def get_args():
@@ -31,8 +31,14 @@ def get_args():
     )
     parser.add_argument(
         '-d', '--database',
+        default=':memory:',
         action='store',
-        help='Path to database file',
+        help='Path to db file (defaults to in-memory db)',
+    )
+    parser.add_argument(
+        '-b', '--batch',
+        action='store',
+        help='Batchname to filter accession records on'
     )
     return parser.parse_args()    
 
@@ -41,14 +47,18 @@ def main():
     args = get_args()
     print_header()
 
+    '''
+    This attempt to separate database management into its 
+    own class did not work:
+    session = Database(args.database).session()
+    '''
+
     # Set up database file or use in-memory db
-    if args.database:
-        db_file = args.database
-        print(f"Using database at {db_file}...") 
-    else:
-        db_file = ":memory:"
+    if args.database == ":memory:":
         print(f"Using a transient in-memory database...")
-    db_path = f"sqlite:///{db_file}"
+    else:
+        print(f"Using database at {args.database}...")         
+    db_path = f"sqlite:///{args.database}"
 
     # Create the mapper and session
     print("Setting up the database session...")
@@ -60,11 +70,12 @@ def main():
     Base.metadata.create_all(engine)
     
     accessions_file = "/Users/westgard/Desktop/accession_catalog.csv"
+    accessions_filter = args.batch
     
     # Create all batch objects
     print("Adding batches...", end="")
     all_batches = set()
-    for rec in iter_accession_records_from(accessions_file):
+    for rec in iter_accession_records_from(accessions_file, accessions_filter):
         batchname = rec.batch
         if batchname not in all_batches:
             all_batches.add(batchname)
@@ -76,7 +87,7 @@ def main():
     # Create all dirlist objects
     print("Adding dirlists...", end="")
     all_dirlists = set()
-    for rec in iter_accession_records_from(accessions_file):
+    for rec in iter_accession_records_from(accessions_file, accessions_filter):
         dirlistname = rec.sourcefile
         batchname = rec.batch
         if dirlistname not in all_dirlists:
@@ -88,17 +99,27 @@ def main():
     print(f"added {dirlist_count} dirlists")
 
     # Create asset objects
-    for rec in iter_accession_records_from(accessions_file):
+    for rec in iter_accession_records_from(accessions_file, accessions_filter):
+        sourcefile_id, = session.query(Dirlist.id).filter(
+            Dirlist.filename == rec.sourcefile).one()
         asset = Asset(md5=rec.md5,
                       timestamp=rec.timestamp,
                       filename=rec.filename,
-                      bytes=rec.bytes
+                      bytes=rec.bytes,
+                      dirlist_id=sourcefile_id,
+                      dirlist_line=rec.sourceline
                       )
         session.add(asset)
         session.commit()
         added_count = session.query(Asset).count()
-        print(f"Adding assets ... {added_count}", end="\r")
-    
+        print(f"Adding assets...added {added_count} assets", end="\r")
+        
+    print(f"\nBootstrapping complete!")
+    if args.database == ':memory:':
+        print(f"Cannot query transient DB. Use -d to specify a database file.")
+    else:
+        print(f"Query the bootstrapped database at {args.database}.")
+
 
 if __name__ == "__main__":
     main()

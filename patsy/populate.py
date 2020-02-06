@@ -10,11 +10,14 @@ def load_restored_files():
     pass
 
 
-def iter_accession_records_from(catalog_file):
+def iter_accession_records_from(catalog_file, batch):
     """
     Load the accession catalog into batch, dirlist, & asset objects
     """
     with open(catalog_file, 'r') as handle:
         reader = csv.reader(handle, delimiter=',')
         for row in reader:
-            yield AccessionRecord(*row)
+            if row[0] != batch:
+                continue
+            else:
+                yield AccessionRecord(*row)

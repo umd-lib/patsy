@@ -1,6 +1,7 @@
 import hashlib
 import sys
 
+
 def calculate_md5(path):
     """
     Calclulate and return the object's md5 hash.
