@@ -1,15 +1,9 @@
-from collections import namedtuple
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
-
-
-AccessionRecord = namedtuple('AccessionRecord', 
-    "batch sourcefile sourceline filename bytes timestamp md5"
-    )
 
 
 class Batch(Base):
@@ -100,6 +94,8 @@ class RestoredFile(Base):
     md5 = Column(String)
     bytes = Column(Integer)
     path = Column(String)
+    relpath = Column(String)
+    action = Column(String)
 
     def __repr__(self):
         return f"<RestoredFile(id='{self.id}', name='{self.filename}'>"

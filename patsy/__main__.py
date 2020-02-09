@@ -51,6 +51,12 @@ def get_args():
         action='store',
         help='Source of accessions to load'
         )
+    accessions_subcommand.add_argument(
+        '-f', '--filter', 
+        action='store',
+        default=None,
+        help='Batchname to load'
+        )
 
     # create the parser for the "load_restores" command
     restores_subcommand = subparsers.add_parser(
@@ -67,26 +73,22 @@ def get_args():
 
 
 def main():
+    """
+    Carry out the main actions as specified in the args.
+    """
     args = get_args()
     print_header()
 
-    # Set up database file or use in-memory db
-    if args.database == ":memory:":
-        print(f"Using a transient in-memory database...")
-    else:
-        print(f"Using database at {args.database}...")         
-    db_path = f"sqlite:///{args.database}"
-
-    print(args)
+    #print(args)
 
     if args.cmd == 'schema':
-        create_schema(db_path)
+        create_schema(args)
     elif args.cmd == 'accessions':
-        load_accessions()
+        load_accessions(args)
     elif args.cmd == 'restores':
-        load_restores()
+        load_restores(args)
 
-    print(f"\nActions complete!")
+    print(f"Actions complete!")
     if args.database == ':memory:':
         print(f"Cannot query transient DB. Use -d to specify a database file.")
     else:
