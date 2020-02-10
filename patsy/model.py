@@ -58,8 +58,8 @@ class Asset(Base):
     dirlist = relationship("Dirlist", back_populates="assets")
 
     def __repr__(self):
-        return (f"<Asset(name='{self.filename}', ",
-                f"bytes={self.bytes}, md5='{self.md5}')>")
+        return f"<Asset(name='{self.filename}', " + \
+               f"bytes={self.bytes}, md5='{self.md5}')>"
 
 
 class Instance(Base):
@@ -82,6 +82,20 @@ class Instance(Base):
         return f"<Instance(id='{self.id}', name='{self.filename}'>"
 
 
+class RestoredFileList(Base):
+
+    __tablename__ = "restoredfilelists"
+
+    id = Column(Integer, primary_key=True)
+    filename = Column(String)
+    md5 = Column(String)
+    bytes = Column(Integer)
+    commonroot = Column(String)
+
+    def __repr__(self):
+        return f"<RestoredFileList(id='{self.id}', name='{self.filename}'>"
+
+
 class RestoredFile(Base):
     """
     Class representing a temporary instance restored from tape backup
@@ -97,9 +111,11 @@ class RestoredFile(Base):
     relpath = Column(String)
     action = Column(String)
 
+    restoredfilelist_id = Column(Integer, ForeignKey("restoredfilelists.id"))
+    restoredfilelist = relationship("RestoredFileList", back_populates="restores")
+
     def __repr__(self):
         return f"<RestoredFile(id='{self.id}', name='{self.filename}'>"
-
 
 
 Batch.dirlists = relationship(
@@ -107,4 +123,7 @@ Batch.dirlists = relationship(
     )
 Dirlist.assets = relationship(
     "Asset", order_by=Asset.id, back_populates="dirlist"
+    )
+RestoredFileList.restores = relationship(
+    "RestoredFile", order_by=RestoredFile.path, back_populates="restoredfilelist"
     )

@@ -1,4 +1,6 @@
+import csv
 import hashlib
+import os
 import sys
 
 
@@ -15,6 +17,16 @@ def calculate_md5(path):
             else:
                 hash.update(data)
     return hash.hexdigest()
+
+
+def get_common_root(path):
+    with open(path) as handle:
+        reader = csv.reader(handle)
+        all_paths = [row[1] for row in reader]
+        if all_paths:
+            return os.path.commonpath(all_paths)
+        else:
+            return None
 
 
 def human_readable(bytes):
