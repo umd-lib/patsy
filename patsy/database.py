@@ -43,11 +43,6 @@ def load_accessions(args):
     """
     Process a set of accession records and load to the database
     """
-    use_database_file(args.database)
-    session = Session()
-    AccessionRecord = namedtuple('AccessionRecord', 
-        "batch sourcefile sourceline filename bytes timestamp md5"
-        )
 
     def iter_accession_records_from(catalog_file, batch):
         """
@@ -61,21 +56,34 @@ def load_accessions(args):
                 else:
                     yield AccessionRecord(*row)
 
-    accessions_file = args.source
-    print(f"Loading accessions from {accessions_file}")
+    use_database_file(args.database)
+    session = Session()
+    AccessionRecord = namedtuple(
+        'AccessionRecord', 
+        "batch sourcefile sourceline filename bytes timestamp md5"
+        )
+
+    # Process single file or directory of files
+    print(f"Loading accessions from {args.source}")
+    if os.path.isfile(args.source):
+        filepaths = [args.source]
+    elif os.path.isdir(args.source):
+        filepaths = [
+            os.path.join(args.source, f) for f in os.listdir(args.source)
+            ]
 
     # Create all batch objects
     print("Adding batches...", end="")
     all_batches = set()
-    for rec in iter_accession_records_from(args.source,
-                                           args.filter):
-        batchname = rec.batch
-        if batchname not in all_batches:
-            all_batches.add(batchname)
-            session.add(Batch(name=batchname))
-            session.commit()
-    batch_count = session.query(Batch).count()
-    print(f"added {batch_count} batches")
+    for sourcefile in filepaths:
+        for rec in iter_accession_records_from(sourcefile, args.filter):
+            batchname = rec.batch
+            if batchname not in all_batches:
+                all_batches.add(batchname)
+                session.add(Batch(name=batchname))
+                session.commit()
+        batch_count = session.query(Batch).count()
+        print(f"added {batch_count} batches")
 
     # Create all dirlist objects
     print("Adding dirlists...", end="")
@@ -117,7 +125,8 @@ def load_restores(args):
     """
     use_database_file(args.database)
     session = Session()
-    RestoredFileRecord = namedtuple('RestoredFile', 
+    RestoredFileRecord = namedtuple(
+        'RestoredFile', 
         "md5 path filename bytes"
         )
 
@@ -125,7 +134,9 @@ def load_restores(args):
     if os.path.isfile(args.source):
         filepaths = [args.source]
     elif os.path.isdir(args.source):
-        filepaths = [os.path.join(args.source, f) for f in os.listdir(args.source)]
+        filepaths = [
+            os.path.join(args.source, f) for f in os.listdir(args.source)
+            ]
 
     for filepath in filepaths:
         print(f"Loading {filepath}...")
@@ -137,8 +148,11 @@ def load_restores(args):
             filename = os.path.basename(filepath)
             commonroot = get_common_root(filepath)
             bytes = os.path.getsize(filepath)
-            filelist = RestoredFileList(filename=filename, md5=md5, 
-                                        commonroot=commonroot, bytes=bytes)
+            filelist = RestoredFileList(filename=filename, 
+                                        md5=md5, 
+                                        commonroot=commonroot, 
+                                        bytes=bytes
+                                        )
             session.add(filelist)
             session.commit()
 
@@ -149,14 +163,17 @@ def load_restores(args):
                 fullpath = row[1]
                 if fullpath.startswith(commonroot):
                     relpath = fullpath[len(commonroot):].lstrip('/')
-                restore = RestoredFile(filename=row[3], md5=row[0], 
-                                        bytes=row[2], path=row[1],
-                                        relpath=relpath
-                                        )
+                restore = RestoredFile(filename=row[3], 
+                                       md5=row[0], 
+                                       bytes=row[2], 
+                                       path=row[1],
+                                       relpath=relpath
+                                       )
                 session.add(restore)
                 session.commit()
                 added_count = session.query(RestoredFile).count()
-                print(f"Adding restored files...added {added_count} files", end="\r")
+                print(f"Adding restored files...added {added_count} files",
+                        end="\r")
                 
                 '''
                 print(restore)

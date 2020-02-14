@@ -112,7 +112,9 @@ class RestoredFile(Base):
     action = Column(String)
 
     restoredfilelist_id = Column(Integer, ForeignKey("restoredfilelists.id"))
-    restoredfilelist = relationship("RestoredFileList", back_populates="restores")
+    restoredfilelist = relationship(
+        "RestoredFileList", back_populates="restores"
+        )
 
     def __repr__(self):
         return f"<RestoredFile(id='{self.id}', name='{self.filename}'>"
@@ -125,5 +127,6 @@ Dirlist.assets = relationship(
     "Asset", order_by=Asset.id, back_populates="dirlist"
     )
 RestoredFileList.restores = relationship(
-    "RestoredFile", order_by=RestoredFile.path, back_populates="restoredfilelist"
+    "RestoredFile", order_by=RestoredFile.path, 
+    back_populates="restoredfilelist"
     )

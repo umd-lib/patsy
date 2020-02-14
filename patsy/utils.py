@@ -20,6 +20,10 @@ def calculate_md5(path):
 
 
 def get_common_root(path):
+    """
+    Return the root path common to all files in the dirlist.
+    Assumes that the dirlist is a csv with paths in the 2nd column.
+    """
     with open(path) as handle:
         reader = csv.reader(handle)
         all_paths = [row[1] for row in reader]
