@@ -44,25 +44,23 @@ def load_accessions(args):
     Process a set of accession records and load to the database
     """
 
-    def iter_accession_records_from(catalog_file, batch):
+    AccessionRecord = namedtuple(
+        "AccessionRecord", 
+        "batch sourcefile sourceline filename bytes timestamp md5 relpath"
+        )
+
+    def iter_accession_records_from(catalog_file):
         """
         Load the accession catalog into batch, dirlist, & asset objects
         """
         with open(catalog_file, 'r') as handle:
-            reader = csv.reader(handle, delimiter=',')
+            reader = csv.DictReader(handle, delimiter=',')
             for row in reader:
-                if batch and row[0] != batch:
-                    continue
-                else:
-                    yield AccessionRecord(*row)
+                yield AccessionRecord(*row)
 
     use_database_file(args.database)
     session = Session()
-    AccessionRecord = namedtuple(
-        'AccessionRecord', 
-        "batch sourcefile sourceline filename bytes timestamp md5"
-        )
-
+    
     # Process single file or directory of files
     print(f"Loading accessions from {args.source}")
     if os.path.isfile(args.source):
@@ -72,24 +70,20 @@ def load_accessions(args):
             os.path.join(args.source, f) for f in os.listdir(args.source)
             ]
 
-    # Create all batch objects
-    print("Adding batches...", end="")
-    all_batches = set()
+    # Check whether batch exists and if not create it
     for sourcefile in filepaths:
-        for rec in iter_accession_records_from(sourcefile, args.filter):
-            batchname = rec.batch
-            if batchname not in all_batches:
-                all_batches.add(batchname)
-                session.add(Batch(name=batchname))
-                session.commit()
+        base = os.path.basename(sourcefile)
+        batchname = os.path.splitext(base)[0]
+        print(batchname)
+        session.add(Batch(name=batchname))
+        session.commit()
         batch_count = session.query(Batch).count()
-        print(f"added {batch_count} batches")
+        print(f"total {batch_count} batches")
 
     # Create all dirlist objects
     print("Adding dirlists...", end="")
     all_dirlists = set()
-    for rec in iter_accession_records_from(args.source,
-                                           args.filter):
+    for rec in iter_accession_records_from(args.source):
         dirlistname = rec.sourcefile
         batchname = rec.batch
         if dirlistname not in all_dirlists:
@@ -117,6 +111,7 @@ def load_accessions(args):
         session.commit()
         added_count = session.query(Asset).count()
         print(f"Adding assets...added {added_count} assets", end="\r")
+    print("")
 
 
 def load_restores(args):
