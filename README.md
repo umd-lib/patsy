@@ -60,7 +60,7 @@ created.
 
 ### Loading accession records
 
-Loads accession records are loaded from CSV files:
+Load accession records from CSV files:
 
 ```
 > python3 -m patsy accessions --database <SQLITE_DATABASE_FILE> --source <ACCESSION_PATH>
@@ -72,7 +72,7 @@ is a directory, every file in that directory will be loaded.
 
 ### Loading restored file records
 
-Loads "restored file" information from CSV files:
+Load "restored file" information from CSV files:
 
 ```
 > python3 -m patsy restores --database <SQLITE_DATABASE_FILE> --source <RESTORES_PATH>
