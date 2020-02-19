@@ -1,6 +1,6 @@
 from collections import namedtuple
 import patsy.database
-import patsy.restore
+from patsy.restore import RestoreCsvLoader
 from sqlalchemy import create_engine
 from patsy.model import Base
 import unittest
@@ -15,9 +15,10 @@ class TestRestore(unittest.TestCase):
         Session.configure(bind=engine)
         Base.metadata.create_all(engine)
 
-    def test_load_single_accession_file(self):
+    def test_load_single_file(self):
         restore_file = 'tests/data/restores/sample_restore_1.csv'
-        result = patsy.restore.load_restores_from_file(restore_file)
+        restore_loader = RestoreCsvLoader()
+        result = restore_loader.load_from_file(restore_file)
 
         self.assertEqual(5, result.num_processed)
         self.assertEqual(5, len(result.successes))
@@ -27,15 +28,19 @@ class TestRestore(unittest.TestCase):
         num_rows = session.query(Restore).count()
         self.assertEqual(5, num_rows)
 
-    def test_loading_same_accession_file_multiple_times(self):
+    def test_loading_same_file_multiple_times(self):
         restore_file = 'tests/data/restores/sample_restore_1.csv'
 
-        result = patsy.restore.load_restores_from_file(restore_file)
+        restore_loader = RestoreCsvLoader()
+        result = restore_loader.load_from_file(restore_file)
+
         self.assertEqual(5, result.num_processed)
         self.assertEqual(5, len(result.successes))
         self.assertEqual(0, len(result.failures))
 
-        result = patsy.restore.load_restores_from_file(restore_file)
+        restore_loader = RestoreCsvLoader()
+        result = restore_loader.load_from_file(restore_file)
+
         self.assertEqual(5, result.num_processed)
         self.assertEqual(0, len(result.successes))
         self.assertEqual(5, len(result.failures))
@@ -44,9 +49,11 @@ class TestRestore(unittest.TestCase):
         num_rows = session.query(Restore).count()
         self.assertEqual(5, num_rows)
 
-    def test_load_multiple_accession_files(self):
+    def test_load_multiple_files(self):
         restores_dir = 'tests/data/restores'
-        result = patsy.restore.load_restores(restores_dir)
+
+        restore_loader = RestoreCsvLoader()
+        result = restore_loader.load(restores_dir)
 
         self.assertEqual(2, result.files_processed)
         self.assertEqual(10, result.total_rows_processed)
@@ -58,14 +65,16 @@ class TestRestore(unittest.TestCase):
         num_rows = session.query(Restore).count()
         self.assertEqual(10, num_rows)
 
-    def test_csv_to_accession(self):
+    def test_csv_to_restore(self):
         # Row with all the elements
         row = [
             'ABC123',  # md5
             '/test_path/test_file',  # filepath
             'test_file',  # filename
             '456']  # bytes
-        restore = patsy.restore.csv_to_restore(row)
+
+        restore_loader = RestoreCsvLoader()
+        restore = restore_loader.csv_to_object(row)
         self.assertEqual(row[0], restore.md5)
         self.assertEqual(row[1], restore.filepath)
         self.assertEqual(row[2], restore.filename)
@@ -76,5 +85,5 @@ class TestRestore(unittest.TestCase):
             'ABC123',  # md5
             '/test_path/test_file']  # filepath
         with self.assertRaises(IndexError):
-            accession = patsy.restore.csv_to_restore(row)
+            restore = restore_loader.csv_to_object(row)
 
