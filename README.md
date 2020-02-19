@@ -133,6 +133,14 @@ subdirectories of:
 CSV files containing the restore records are stored in folders underneath
 the "data/restores" directory.
 
+## Running the Tests
+
+The unit tests for the application can be run using "pytest", i.e.:
+
+```
+> pytest
+```
+
 ## License
 
 See the [LICENSE](LICENSE) file for license rights and limitations.

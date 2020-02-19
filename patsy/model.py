@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Index, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -6,16 +6,40 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
+class Accession(Base):
+    """
+    Class representing an authoritative accession record listing
+    """
+
+    __tablename__ = "accessions"
+
+    id = Column(Integer, primary_key=True)
+    batch = Column(String)
+    sourcefile = Column(String)
+    sourceline = Column(Integer)
+    filename = Column(String)
+    bytes = Column(Integer)
+    timestamp = Column(String)
+    relpath = Column(String)
+    md5 = Column(String)
+
+    def __repr__(self):
+        return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
+
+
+Index('accession_batch_index', Accession.batch, Accession.relpath, unique=True)
+
+
 class Batch(Base):
     """
     Class representing a group of assets in a content stream
     """
-    
+
     __tablename__ = 'batches'
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    
+
     def __repr__(self):
         return f"<Batch(id='{self.id}', name='{self.name}'>"
 
@@ -24,7 +48,7 @@ class Dirlist(Base):
     """
     Class representing an authoritative accession record listing
     """
-    
+
     __tablename__ = "dirlists"
 
     id = Column(Integer, primary_key=True)
@@ -44,7 +68,7 @@ class Asset(Base):
     """
     Class representing a digital asset under preservation
     """
-    
+
     __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True)
@@ -127,6 +151,6 @@ Dirlist.assets = relationship(
     "Asset", order_by=Asset.id, back_populates="dirlist"
     )
 RestoredFileList.restores = relationship(
-    "RestoredFile", order_by=RestoredFile.path, 
+    "RestoredFile", order_by=RestoredFile.path,
     back_populates="restoredfilelist"
     )

@@ -3,8 +3,9 @@
 import argparse
 
 from . import version
+from .accession import load_accessions
 from .database import create_schema
-from .database import load_accessions
+from .database import use_database_file
 from .database import load_restores
 from .utils import print_header
 
@@ -84,8 +85,27 @@ def main():
     if args.cmd == 'schema':
         create_schema(args)
     elif args.cmd == 'accessions':
-        load_accessions(args)
+        use_database_file(args.database)
+        result = load_accessions(args.source)
+        print("----- Accession Load ----")
+        print(f"Number of files processed: {result.files_processed}")
+        print(f"Total number of rows processed: {result.total_rows_processed}")
+        print(f"Total Successful rows: {result.total_successful_rows}")
+        print(f"Total Failed rows {result.total_failed_rows}")
+        if result.total_failed_rows > 0:
+            print("Files with errors:")
+            for file_load_key in result.file_load_results_map.keys():
+                file_load_result = result.file_load_results_map[file_load_key]
+
+                if len(file_load_result.failures) > 0:
+                    print(f"\t{file_load_key}")
+                    for failure in file_load_result.failures:
+                        print(f"\t\t{str(failure)}")
+        else:
+            print("All files loaded successfully.")
+
     elif args.cmd == 'restores':
+        use_database_file(args.database)
         load_restores(args)
 
     print(f"Actions complete!")
