@@ -30,6 +30,26 @@ class Accession(Base):
 Index('accession_batch_index', Accession.batch, Accession.relpath, unique=True)
 
 
+class Restore(Base):
+    """
+    Class representing a restore record listing
+    """
+
+    __tablename__ = "restores"
+
+    id = Column(Integer, primary_key=True)
+    md5 = Column(String)
+    filename = Column(String)
+    filepath = Column(String)
+    bytes = Column(Integer)
+
+    def __repr__(self):
+        return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"
+
+
+Index('restore_filepath', Restore.filepath, unique=True)
+
+
 class Batch(Base):
     """
     Class representing a group of assets in a content stream
@@ -120,37 +140,9 @@ class RestoredFileList(Base):
         return f"<RestoredFileList(id='{self.id}', name='{self.filename}'>"
 
 
-class RestoredFile(Base):
-    """
-    Class representing a temporary instance restored from tape backup
-    """
-
-    __tablename__ = "restores"
-
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
-    md5 = Column(String)
-    bytes = Column(Integer)
-    path = Column(String)
-    relpath = Column(String)
-    action = Column(String)
-
-    restoredfilelist_id = Column(Integer, ForeignKey("restoredfilelists.id"))
-    restoredfilelist = relationship(
-        "RestoredFileList", back_populates="restores"
-        )
-
-    def __repr__(self):
-        return f"<RestoredFile(id='{self.id}', name='{self.filename}'>"
-
-
 Batch.dirlists = relationship(
     "Dirlist", order_by=Dirlist.id, back_populates="batch"
     )
 Dirlist.assets = relationship(
     "Asset", order_by=Asset.id, back_populates="dirlist"
-    )
-RestoredFileList.restores = relationship(
-    "RestoredFile", order_by=RestoredFile.path,
-    back_populates="restoredfilelist"
     )
