@@ -52,7 +52,7 @@ The following lists the known commands:
 ### Creating a new (empty) database
 
 ```
-> python3 -m patsy schema --database <SQLITE_DATABASE_FILE>
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> schema 
 ```
 
 where <SQLITE_DATABASE_FILE> is the path where the SQLite database should be
@@ -63,7 +63,7 @@ created.
 Load accession records from CSV files:
 
 ```
-> python3 -m patsy accessions --database <SQLITE_DATABASE_FILE> --source <ACCESSION_PATH>
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> accessions --source <ACCESSION_PATH>
 ```
 
 where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
@@ -75,13 +75,27 @@ is a directory, every file in that directory will be loaded.
 Load "restored file" information from CSV files:
 
 ```
-> python3 -m patsy restores --database <SQLITE_DATABASE_FILE> --source <RESTORES_PATH>
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> restores --source <RESTORES_PATH>
 ```
 
 where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
 <RESTORES_PATH> is a file, only that file will be loaded. If <RESTORES_PATH>
 is a directory, every file in that directory will be loaded.
 
+### Finding perfect matches
+
+To find new perfect matches for a particular batch of accessions:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_perfect_matches --batch <BATCH>
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and <BATCH> is
+an (optional) batch name (corresponding to the "batch" field in the accession).
+
+If the "--batch" parameter is not provides, all accessions will be searched.
+
+
+```
 ## Accession Records
 
 Accession records represent the "canonical" information about an asset. These
@@ -122,16 +136,11 @@ A restore record is uniquely identified by the "filepath" field.
 
 ## Data Files
 
-Contact Joshua Westgrad for access to the Box directory containing the
+Contact Joshua Westgrad for access to the GitHub repository containing the
 accession and restores CSV files.
 
-CSV files containing the accession records are stored in the "batches"
-subdirectories of:
-
-* data/accessions/[newspapers | prange | libdc]
-
-CSV files containing the restore records are stored in folders underneath
-the "data/restores" directory.
+Some sample data is provided in this repository for testing. See
+[sample_data/README.md][2].
 
 ## Running the Tests
 
@@ -148,3 +157,4 @@ See the [LICENSE](LICENSE) file for license rights and limitations.
 ---
 
 [1]: https://docs.python-guide.org/dev/virtualenvs/#virtualenvwrapper
+[2]: sample_data/README.md
