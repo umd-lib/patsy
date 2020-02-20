@@ -1,9 +1,16 @@
-from sqlalchemy import Column, Integer, String, Index, ForeignKey
+from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 
 Base = declarative_base()
+
+
+# Many-to-many relationship between accessions and restores that are perfect matches
+perfect_matches_table = Table('perfect_matches', Base.metadata,
+                              Column('accession_id', Integer, ForeignKey('accessions.id')),
+                              Column('restore_id', Integer, ForeignKey('restores.id'))
+                             )
 
 
 class Accession(Base):
@@ -22,6 +29,7 @@ class Accession(Base):
     timestamp = Column(String)
     relpath = Column(String)
     md5 = Column(String)
+    perfect_matches = relationship("Restore", secondary=perfect_matches_table, back_populates="perfect_matches")
 
     def __repr__(self):
         return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
@@ -42,6 +50,7 @@ class Restore(Base):
     filename = Column(String)
     filepath = Column(String)
     bytes = Column(Integer)
+    perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
 
     def __repr__(self):
         return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"

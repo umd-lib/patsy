@@ -5,6 +5,7 @@ import argparse
 from . import version
 from .accession import AccessionCsvLoader
 from .database import create_schema
+from .perfect_matches import find_perfect_matches_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
 from .utils import print_header
@@ -53,12 +54,6 @@ def get_args():
         action='store',
         help='Source of accessions to load'
         )
-    accessions_subcommand.add_argument(
-        '-f', '--filter', 
-        action='store',
-        default=None,
-        help='Batchname to load'
-        )
 
     # create the parser for the "load_restores" command
     restores_subcommand = subparsers.add_parser(
@@ -69,6 +64,18 @@ def get_args():
         '-s', '--source', 
         action='store',
         help='Source of restores to load'
+        )
+
+    # create the parser for the "load_accessions" command
+    find_perfect_matches_subcommand = subparsers.add_parser(
+        'find_perfect_matches',
+        help='Scans accession and restore records looking for perfect matches'
+        )
+    find_perfect_matches_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        default=None,
+        help='Batchname to query'
         )
 
     return parser.parse_args()
@@ -98,6 +105,14 @@ def main():
         result = restore_loader.load(args.source, PrintProgressNotifier())
         print("-----Restore Load ----")
         print(result)
+
+    elif args.cmd == 'find_perfect_matches':
+        use_database_file(args.database)
+        matches_found = find_perfect_matches_command(args.batch, PrintProgressNotifier())
+        print("-----Perfect Matches ----")
+        for match in matches_found:
+            print(match)
+        print(f"{len(matches_found)} new matches found")
 
     print(f"Actions complete!")
     if args.database == ':memory:':
