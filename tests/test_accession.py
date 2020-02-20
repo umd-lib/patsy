@@ -1,6 +1,6 @@
 from collections import namedtuple
 import patsy.database
-import patsy.accession
+from patsy.accession import AccessionCsvLoader
 from sqlalchemy import create_engine
 from patsy.model import Base
 import unittest
@@ -15,9 +15,11 @@ class TestAccession(unittest.TestCase):
         Session.configure(bind=engine)
         Base.metadata.create_all(engine)
 
-    def test_load_single_accession_file(self):
+    def test_load_single_file(self):
         accession_file = 'tests/data/accessions/sample_accession_1.csv'
-        result = patsy.accession.load_accessions_from_file(accession_file)
+
+        accession_loader = AccessionCsvLoader()
+        result = accession_loader.load_from_file(accession_file)
 
         self.assertEqual(5, result.num_processed)
         self.assertEqual(5, len(result.successes))
@@ -27,15 +29,18 @@ class TestAccession(unittest.TestCase):
         num_rows = session.query(Accession).count()
         self.assertEqual(5, num_rows)
 
-    def test_loading_same_accession_file_multiple_times(self):
+    def test_loading_same_file_multiple_times(self):
         accession_file = 'tests/data/accessions/sample_accession_1.csv'
 
-        result = patsy.accession.load_accessions_from_file(accession_file)
+        accession_loader = AccessionCsvLoader()
+        result = accession_loader.load_from_file(accession_file)
         self.assertEqual(5, result.num_processed)
         self.assertEqual(5, len(result.successes))
         self.assertEqual(0, len(result.failures))
 
-        result = patsy.accession.load_accessions_from_file(accession_file)
+
+        accession_loader = AccessionCsvLoader()
+        result = accession_loader.load_from_file(accession_file)
         self.assertEqual(5, result.num_processed)
         self.assertEqual(0, len(result.successes))
         self.assertEqual(5, len(result.failures))
@@ -44,9 +49,11 @@ class TestAccession(unittest.TestCase):
         num_rows = session.query(Accession).count()
         self.assertEqual(5, num_rows)
 
-    def test_load_multiple_accession_files(self):
-        accession_file = 'tests/data/accessions'
-        result = patsy.accession.load_accessions(accession_file)
+    def test_load_multiple_files(self):
+        accession_dir = 'tests/data/accessions'
+
+        accession_loader = AccessionCsvLoader()
+        result = accession_loader.load(accession_dir)
 
         self.assertEqual(2, result.files_processed)
         self.assertEqual(10, result.total_rows_processed)
@@ -62,7 +69,9 @@ class TestAccession(unittest.TestCase):
         # Row with all the elements
         row = dict(batch='Batch1', bytes=123, filename='test_file', md5='ABC123', relpath='test_path/test_file',
                    sourcefile='sourcefile.csv', sourceline=1, timestamp='1/1/2020 12:30pm')
-        accession = patsy.accession.csv_to_accession(row)
+
+        accession_loader = AccessionCsvLoader()
+        accession = accession_loader.csv_to_object(row)
         self.assertEqual(row['batch'], accession.batch)
         self.assertEqual(row['bytes'], accession.bytes)
         self.assertEqual(row['filename'], accession.filename)
@@ -75,5 +84,5 @@ class TestAccession(unittest.TestCase):
         # Rows with missing elements throws exception
         row = dict(batch='Batch1', timestamp='1/1/2020 12:30pm')
         with self.assertRaises(KeyError):
-            accession = patsy.accession.csv_to_accession(row)
+            accession = accession_loader.csv_to_object(row)
 

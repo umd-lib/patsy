@@ -3,11 +3,12 @@
 import argparse
 
 from . import version
-from .accession import load_accessions
+from .accession import AccessionCsvLoader
 from .database import create_schema
 from .database import use_database_file
-from .restore import load_restores
+from .restore import RestoreCsvLoader
 from .utils import print_header
+from .progress_notifier import PrintProgressNotifier
 
 
 def get_args():
@@ -86,49 +87,24 @@ def main():
         create_schema(args)
     elif args.cmd == 'accessions':
         use_database_file(args.database)
-        result = load_accessions(args.source)
+        accession_loader = AccessionCsvLoader()
+        result = accession_loader.load(args.source, PrintProgressNotifier())
         print("----- Accession Load ----")
-        print(f"Number of files processed: {result.files_processed}")
-        print(f"Total number of rows processed: {result.total_rows_processed}")
-        print(f"Total Successful rows: {result.total_successful_rows}")
-        print(f"Total Failed rows {result.total_failed_rows}")
-        if result.total_failed_rows > 0:
-            print("Files with errors:")
-            for file_load_key in result.file_load_results_map.keys():
-                file_load_result = result.file_load_results_map[file_load_key]
-
-                if len(file_load_result.failures) > 0:
-                    print(f"\t{file_load_key}")
-                    for failure in file_load_result.failures:
-                        print(f"\t\t{str(failure)}")
-        else:
-            print("All files loaded successfully.")
+        print(result)
 
     elif args.cmd == 'restores':
         use_database_file(args.database)
-        result = load_restores(args.source)
+        restore_loader = RestoreCsvLoader()
+        result = restore_loader.load(args.source, PrintProgressNotifier())
         print("-----Restore Load ----")
-        print(f"Number of files processed: {result.files_processed}")
-        print(f"Total number of rows processed: {result.total_rows_processed}")
-        print(f"Total Successful rows: {result.total_successful_rows}")
-        print(f"Total Failed rows {result.total_failed_rows}")
-        if result.total_failed_rows > 0:
-            print("Files with errors:")
-            for file_load_key in result.file_load_results_map.keys():
-                file_load_result = result.file_load_results_map[file_load_key]
-
-                if len(file_load_result.failures) > 0:
-                    print(f"\t{file_load_key}")
-                    for failure in file_load_result.failures:
-                        print(f"\t\t{str(failure)}")
-        else:
-            print("All files loaded successfully.")
+        print(result)
 
     print(f"Actions complete!")
     if args.database == ':memory:':
         print(f"Cannot query transient DB. Use -d to specify a database file.")
     else:
         print(f"Query the bootstrapped database at {args.database}.")
+
 
 if __name__ == "__main__":
     main()
