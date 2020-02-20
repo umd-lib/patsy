@@ -1,0 +1,6 @@
+batch,sourcefile,sourceline,filename,bytes,timestamp,md5,relpath
+Archive125,Archive125_2019-02-13_pythonscript.csv,6,bcast-072779-0001.wav.md5,32,2018-06-06T15:37:07,63267f7e55aa25b48eea6aefc99cf9f1,bcast-072779-0001.wav.md5
+Archive125,Archive125_2019-02-13_pythonscript.csv,7,bcast-072780-0001.wav,841552660,2018-06-06T15:08:42,272487c57271219670157ed3890d11be,bcast-072780-0001.wav
+Archive125,Archive125_2019-02-13_pythonscript.csv,8,bcast-072780-0001.wav.md5,32,2018-06-06T15:08:42,0a18bfca588a97ee4be8c00ba11d9408,bcast-072780-0001.wav.md5
+Archive125,Archive125_2019-02-13_pythonscript.csv,9,bcast-072754-0001.wav,2306320660,2018-06-07T15:12:40,9afd1e7a6278295aca33172c02721f10,bcast-072754-0001.wav
+Archive125,Archive125_2019-02-13_pythonscript.csv,10,bcast-072754-0001.wav.md5,32,2018-06-07T15:12:41,4fa169db45f653a8127f49ddce658ab6,bcast-072754-0001.wav.md5
