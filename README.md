@@ -84,18 +84,45 @@ is a directory, every file in that directory will be loaded.
 
 ### Finding perfect matches
 
+A perfect match between an accession and a restore is where:
+
+* The MD5 values match (accession.md5 == restore.md5)
+* The filenames match (accession.filename == restore.filename)
+* The file sizes match (accession.bytes == restore.bytes)
+
 To find new perfect matches for a particular batch of accessions:
 
 ```
 > python3 -m patsy --database <SQLITE_DATABASE_FILE> find_perfect_matches --batch <BATCH>
+```
 
 where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and <BATCH> is
 an (optional) batch name (corresponding to the "batch" field in the accession).
 
-If the "--batch" parameter is not provides, all accessions will be searched.
+If the "--batch" parameter is not provided, all accessions will be searched.
 
+### Finding altered MD5 matches
+
+An altered MD5 match between an accession and a restore is where:
+
+* The MD5 values do not match (accession.md5 != restore.md5)
+* The filenames match (accession.filename == restore.filename)
+* The file sizes match (accession.bytes == restore.bytes)
+
+An altered MD5 match indicates a *possible* match between an accession to a
+restore, where there might be data corruption.
+
+To find new altered MD5 matches for a particular batch of accessions:
 
 ```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_altered_md5_matches --batch <BATCH>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and <BATCH> is
+an (optional) batch name (corresponding to the "batch" field in the accession).
+
+If the "--batch" parameter is not provided, all accessions will be searched.
+
 ## Accession Records
 
 Accession records represent the "canonical" information about an asset. These
