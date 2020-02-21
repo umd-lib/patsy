@@ -7,6 +7,7 @@ from .accession import AccessionCsvLoader
 from .database import create_schema
 from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
+from .filename_only_matches import find_filename_only_matches_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
 from .utils import print_header
@@ -91,6 +92,18 @@ def get_args():
         help='Batchname to query'
         )
 
+    # create the parser for the "find_filename_only_matches" command
+    find_filename_only_matches_subcommand = subparsers.add_parser(
+        'find_filename_only_matches',
+        help='Scans accession and restore records looking for filename only matches'
+        )
+    find_filename_only_matches_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        default=None,
+        help='Batchname to query'
+        )
+
     return parser.parse_args()
 
 
@@ -131,6 +144,14 @@ def main():
         use_database_file(args.database)
         matches_found = find_altered_md5_matches_command(args.batch, PrintProgressNotifier())
         print("-----Altered MD5 Matches ----")
+        for match in matches_found:
+            print(match)
+        print(f"{len(matches_found)} new matches found")
+
+    elif args.cmd == 'find_filename_only_matches':
+        use_database_file(args.database)
+        matches_found = find_filename_only_matches_command(args.batch, PrintProgressNotifier())
+        print("-----Filename Only Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")

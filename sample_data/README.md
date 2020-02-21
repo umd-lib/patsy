@@ -24,3 +24,17 @@ of which has MD5 of the form "MD5_ALTERED_<NUMBER>" that is purposely different
 from an accession record in
 "sample_data/accessions/test_altered_md5_accessions.csv", but with the same
 filename and file size.
+
+## sample_data/accessions/test_filename_only_accessions.csv
+
+Accession data for testing "filename only" matches. There are 5 records, each
+of which has a "filename_only" match with one of the restore records in
+"sample_data/restores/test_filename_only_restores.csv"
+
+## sample_data/restores/test_filename_only_restores.csv
+
+Restore data for testing "filename only" matches. There are 5 records, each
+of which has MD5 of the form "MD5_FILENAME_ONLY_<NUMBER>" that is purposely
+different from an accession record in
+"sample_data/accessions/test_filename_only_accessions.csv" as well as a
+different file size, but with the same filename.

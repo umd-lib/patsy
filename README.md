@@ -2,7 +2,7 @@
 
 Command-line client for preservation asset tracking system (PATSy)
 
-## Prerequsites
+## Prerequisites
 
 * Python 3.7
 * pip
@@ -116,6 +116,29 @@ To find new altered MD5 matches for a particular batch of accessions:
 
 ```
 > python3 -m patsy --database <SQLITE_DATABASE_FILE> find_altered_md5_matches --batch <BATCH>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and <BATCH> is
+an (optional) batch name (corresponding to the "batch" field in the accession).
+
+If the "--batch" parameter is not provided, all accessions will be searched.
+
+### Finding filename only matches
+
+A filename only match between an accession and a restore is where:
+
+* The MD5 values do not match (accession.md5 != restore.md5)
+* The file sizes do not match (accession.bytes != restore.bytes)
+* The filenames match (accession.filename == restore.filename)
+
+A filename match indicates a *possible* match between an accession to a
+restore, where there might be data corruption, or just a simple coincidence
+of filename.
+
+To find new filename only matches for a particular batch of accessions:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_filename_only_matches --batch <BATCH>
 ```
 
 where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and <BATCH> is
