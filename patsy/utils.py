@@ -2,7 +2,7 @@ import csv
 import hashlib
 import os
 import sys
-from .model import Accession
+from .model import Accession, Transfer
 
 
 def get_accessions(session, batch=None):
@@ -20,6 +20,18 @@ def get_accessions(session, batch=None):
         accessions = session.query(Accession).filter(Accession.batch == batch)
 
     return accessions
+
+def get_unmatched_transfers(session):
+    """
+    Queries the database for a list of all transfers without a matching restore
+
+    :param session: the Session in which to perform the query
+    :return: a Query object representing the list of transfers without a
+             matching restore
+    """
+    transfers = session.query(Transfer).filter(Transfer.restore == None)
+
+    return transfers
 
 # def calculate_md5(path):
 #     """

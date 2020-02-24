@@ -71,12 +71,34 @@ class Restore(Base):
     altered_md5_matches = relationship("Accession", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
     filename_only_matches = relationship("Accession", secondary=filename_only_matches_table,
                                          back_populates="filename_only_matches")
+    transfers = relationship("Transfer", back_populates="restore")
 
     def __repr__(self):
         return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"
 
 
 Index('restore_filepath', Restore.filepath, unique=True)
+
+
+class Transfer(Base):
+    """
+    Class representing a transfer record listing
+    """
+
+    __tablename__ = "transfers"
+
+    id = Column(Integer, primary_key=True)
+    filepath = Column(String)
+    storagepath = Column(String)
+    restore_id = Column(Integer, ForeignKey('restores.id'))
+    restore = relationship("Restore", back_populates="transfers")
+
+    def __repr__(self):
+        return f"<Transfer(id='{self.id}', filepath='{self.filepath}', storagepath='{self.storagepath}'>"
+
+
+Index('transfer_filepath_storagepath_index', Transfer.filepath, Transfer.storagepath, unique=True)
+
 
 
 class Batch(Base):

@@ -8,8 +8,10 @@ from .database import create_schema
 from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
 from .filename_only_matches import find_filename_only_matches_command
+from .transfer_matches import find_transfer_matches_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
+from .transfer import TransferCsvLoader
 from .utils import print_header
 from .progress_notifier import PrintProgressNotifier
 
@@ -68,6 +70,17 @@ def get_args():
         help='Source of restores to load'
         )
 
+    # create the parser for the "load_transfers" command
+    transfers_subcommand = subparsers.add_parser(
+        'transfers',
+        help='Load transfer records'
+        )
+    transfers_subcommand.add_argument(
+        '-s', '--source',
+        action='store',
+        help='Source of transfers to load'
+        )
+
     # create the parser for the "find_perfect_matches" command
     find_perfect_matches_subcommand = subparsers.add_parser(
         'find_perfect_matches',
@@ -104,6 +117,12 @@ def get_args():
         help='Batchname to query'
         )
 
+    # create the parser for the "find_transfer_matches" command
+    find_transfer_matches_subcommand = subparsers.add_parser(
+        'find_transfer_matches',
+        help='Scans unmatched transfer recoreds looking for matching restores'
+        )
+
     return parser.parse_args()
 
 
@@ -132,6 +151,13 @@ def main():
         print("-----Restore Load ----")
         print(result)
 
+    elif args.cmd == 'transfers':
+        use_database_file(args.database)
+        transfer_loader = TransferCsvLoader()
+        result = transfer_loader.load(args.source, PrintProgressNotifier())
+        print("-----Transfer Load ----")
+        print(result)
+
     elif args.cmd == 'find_perfect_matches':
         use_database_file(args.database)
         matches_found = find_perfect_matches_command(args.batch, PrintProgressNotifier())
@@ -152,6 +178,14 @@ def main():
         use_database_file(args.database)
         matches_found = find_filename_only_matches_command(args.batch, PrintProgressNotifier())
         print("-----Filename Only Matches ----")
+        for match in matches_found:
+            print(match)
+        print(f"{len(matches_found)} new matches found")
+
+    elif args.cmd == 'find_transfer_matches':
+        use_database_file(args.database)
+        matches_found = find_transfer_matches_command(PrintProgressNotifier())
+        print("-----Transfer Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")

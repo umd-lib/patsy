@@ -38,7 +38,6 @@ class TestAccession(unittest.TestCase):
         self.assertEqual(5, len(result.successes))
         self.assertEqual(0, len(result.failures))
 
-
         accession_loader = AccessionCsvLoader()
         result = accession_loader.load_from_file(accession_file)
         self.assertEqual(5, result.num_processed)

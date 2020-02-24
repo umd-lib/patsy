@@ -1,5 +1,4 @@
-from patsy.model import Accession
-from patsy.model import Restore
+from patsy.model import Accession, Restore, Transfer
 from faker import Faker
 import random
 import os
@@ -132,6 +131,46 @@ class RestoreBuilder:
         :return: a Restore object
         """
         return Restore(md5=self.md5, filepath=self.filepath, filename=self.filename, bytes=self.bytes)
+
+
+class TransferBuilder:
+    """
+    Builder for a Transfer object, initially populated with random values.
+
+    Specific values can be set using the setter methods, i.e.,
+
+    TransferBuilder().set_fileoath('foo.txt').build()
+    """
+    def __init__(self):
+        fake = Faker()
+
+        self.filepath = fake.file_path()
+        self.storagepath = fake.file_path()
+
+    def set_filepath(self, filepath):
+        """
+        Sets the filepath
+        :param filepath: the filepath to set
+        :return: self
+        """
+        self.filepath = filepath
+        return self
+
+    def set_storagepath(self, set_storagepath):
+        """
+        Sets the set_storagepath
+        :param set_storagepath: the storagepath to set
+        :return: self
+        """
+        self.set_storagepath = set_storagepath
+        return self
+
+    def build(self):
+        """
+        Returns a Transfer object
+        :return: a Transfer object
+        """
+        return Transfer(filepath=self.filepath, storagepath=self.storagepath)
 
 
 def create_perfect_match(accession):
