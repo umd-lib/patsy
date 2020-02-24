@@ -1,4 +1,3 @@
-from collections import namedtuple
 import patsy.database
 from patsy.restore import RestoreCsvLoader
 from sqlalchemy import create_engine

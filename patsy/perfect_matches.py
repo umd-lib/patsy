@@ -1,5 +1,5 @@
 from .database import Session
-from .model import Accession, Restore
+from .model import Restore
 from .progress_notifier import ProgressNotifier
 from .utils import get_accessions
 

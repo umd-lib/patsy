@@ -1,7 +1,7 @@
 import patsy.database
 from sqlalchemy import create_engine
 from patsy.model import Base
-from patsy.perfect_matches import find_perfect_matches, get_accessions
+from patsy.perfect_matches import find_perfect_matches
 import unittest
 from patsy.model import Accession
 from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match
