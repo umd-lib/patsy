@@ -82,6 +82,18 @@ where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
 <RESTORES_PATH> is a file, only that file will be loaded. If <RESTORES_PATH>
 is a directory, every file in that directory will be loaded.
 
+### Loading transfer file records
+
+Load transfer records from CSV files:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> transfers --source <TRANSFERS_PATH>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
+<TRANSFERS_PATH> is a file, only that file will be loaded. If <TRANSFERS_PATH>
+is a directory, every file in that directory will be loaded.
+
 ### Finding perfect matches
 
 A perfect match between an accession and a restore is where:
@@ -146,6 +158,20 @@ an (optional) batch name (corresponding to the "batch" field in the accession).
 
 If the "--batch" parameter is not provided, all accessions will be searched.
 
+### Finding transfer matches
+
+A transfer match links a restore record to a storage location (such as AWS).
+
+To find new transfer matches:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_transfer_matches --batch
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database. By default,
+only transfer records that do not have a match to a restore records will be
+searched.
+
 ## Accession Records
 
 Accession records represent the "canonical" information about an asset. These
@@ -183,6 +209,19 @@ Restore records are imported from CSV files with the following format:
 * bytes - The total number of bytes in the file
 
 A restore record is uniquely identified by the "filepath" field.
+
+## Transfer Records
+
+Transfer records represent which restore records have been uploaded to a storage
+location, such as AWS storage.
+
+Transfer records are imported from CSV files with the following format:
+
+* filepath - the full path to the restore file
+* storage_path - the storage path for the file (typically, an AWS storage path)
+
+A transfer record is uniquely identified by the combination of "filepath" and
+"storage_path" fields.
 
 ## Data Files
 
