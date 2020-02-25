@@ -19,6 +19,13 @@ altered_md5_matches_table = Table('altered_md5_matches', Base.metadata,
                                   Column('restore_id', Integer, ForeignKey('restores.id'))
                                   )
 
+# Many-to-many relationship between accessions and restores where the filename
+# is the same, but the MD5 checksum and bytes are different
+filename_only_matches_table = Table('filename_only_matches', Base.metadata,
+                                    Column('accession_id', Integer, ForeignKey('accessions.id')),
+                                    Column('restore_id', Integer, ForeignKey('restores.id'))
+                                    )
+
 
 class Accession(Base):
     """
@@ -38,6 +45,8 @@ class Accession(Base):
     md5 = Column(String)
     perfect_matches = relationship("Restore", secondary=perfect_matches_table, back_populates="perfect_matches")
     altered_md5_matches = relationship("Restore", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
+    filename_only_matches = relationship("Restore", secondary=filename_only_matches_table,
+                                         back_populates="filename_only_matches")
 
     def __repr__(self):
         return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
@@ -60,6 +69,8 @@ class Restore(Base):
     bytes = Column(Integer)
     perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
     altered_md5_matches = relationship("Accession", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
+    filename_only_matches = relationship("Accession", secondary=filename_only_matches_table,
+                                         back_populates="filename_only_matches")
 
     def __repr__(self):
         return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"
