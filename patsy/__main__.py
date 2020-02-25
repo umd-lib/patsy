@@ -133,8 +133,6 @@ def main():
     args = get_args()
     print_header()
 
-    #print(args)
-
     if args.cmd == 'schema':
         create_schema(args)
     elif args.cmd == 'accessions':
