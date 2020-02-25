@@ -4,7 +4,7 @@ from patsy.model import Base
 from patsy.perfect_matches import find_perfect_matches, get_accessions
 import unittest
 from patsy.model import Accession
-from .test_utils import AccessionBuilder, RestoreBuilder, create_perfect_match
+from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match
 
 Session = patsy.database.Session
 
@@ -171,26 +171,3 @@ class TestPerfectMatches(unittest.TestCase):
         self.assertEqual(0, len(new_matches_found))
         self.assertEqual(1, len(accession.perfect_matches))
         self.assertEqual(1, len(restore.perfect_matches))
-
-    def test_get_accessions(self):
-        session = Session()
-
-        accession_batch1 = AccessionBuilder().set_batch('Batch1').build()
-        accession_batch2 = AccessionBuilder().set_batch('Batch2').build()
-
-        session.add(accession_batch1)
-        session.add(accession_batch2)
-        session.commit()
-
-        # Calling with only sessions queries all accessions
-        accessions = get_accessions(session)
-        self.assertEqual(2, accessions.count())
-
-        # Calling with a batch only gives accessions in that batch
-        accessions = get_accessions(session, 'Batch1')
-        self.assertEqual(1, accessions.count())
-        self.assertEqual(accession_batch1, accessions[0])
-
-        accessions = get_accessions(session, 'Batch2')
-        self.assertEqual(1, accessions.count())
-        self.assertEqual(accession_batch2, accessions[0])
