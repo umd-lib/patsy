@@ -4,6 +4,7 @@ import argparse
 
 from . import version
 from .accession import AccessionCsvLoader
+from .aws_manifest import create_manifest_command
 from .database import create_schema
 from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
@@ -123,6 +124,23 @@ def get_args():
         help='Scans unmatched transfer recoreds looking for matching restores'
         )
 
+    # create the parser for the "create_manifest" command
+    create_manifest_subcommand = subparsers.add_parser(
+        'create_manifest',
+        help='Creates a manifest of untransferred accessions with perfect matches in the given batch'
+        )
+    create_manifest_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        default=None,
+        help='Batchname to query'
+        )
+    create_manifest_subcommand.add_argument(
+        '-o', '--output',
+        action='store',
+        default=None,
+        help='The file to write the manifest to'
+        )
     return parser.parse_args()
 
 
@@ -146,20 +164,20 @@ def main():
         use_database_file(args.database)
         restore_loader = RestoreCsvLoader()
         result = restore_loader.load(args.source, PrintProgressNotifier())
-        print("-----Restore Load ----")
+        print("----- Restore Load ----")
         print(result)
 
     elif args.cmd == 'transfers':
         use_database_file(args.database)
         transfer_loader = TransferCsvLoader()
         result = transfer_loader.load(args.source, PrintProgressNotifier())
-        print("-----Transfer Load ----")
+        print("----- Transfer Load ----")
         print(result)
 
     elif args.cmd == 'find_perfect_matches':
         use_database_file(args.database)
         matches_found = find_perfect_matches_command(args.batch, PrintProgressNotifier())
-        print("-----Perfect Matches ----")
+        print("----- Perfect Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")
@@ -167,7 +185,7 @@ def main():
     elif args.cmd == 'find_altered_md5_matches':
         use_database_file(args.database)
         matches_found = find_altered_md5_matches_command(args.batch, PrintProgressNotifier())
-        print("-----Altered MD5 Matches ----")
+        print("----- Altered MD5 Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")
@@ -175,7 +193,7 @@ def main():
     elif args.cmd == 'find_filename_only_matches':
         use_database_file(args.database)
         matches_found = find_filename_only_matches_command(args.batch, PrintProgressNotifier())
-        print("-----Filename Only Matches ----")
+        print("----- Filename Only Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")
@@ -183,10 +201,16 @@ def main():
     elif args.cmd == 'find_transfer_matches':
         use_database_file(args.database)
         matches_found = find_transfer_matches_command(PrintProgressNotifier())
-        print("-----Transfer Matches ----")
+        print("----- Transfer Matches ----")
         for match in matches_found:
             print(match)
         print(f"{len(matches_found)} new matches found")
+
+    elif args.cmd == 'create_manifest':
+        use_database_file(args.database)
+        result = create_manifest_command(args.batch, args.output)
+        print("----- Create Manifest ----")
+        print(result)
 
     print(f"Actions complete!")
     if args.database == ':memory:':

@@ -56,10 +56,19 @@ class AccessionBuilder:
     def set_batch(self, batch):
         """
         Sets the name of the batch the accession belongs to
-        :param bytes: the name of the batch
+        :param batch: the name of the batch
         :return: self
         """
         self.batch = batch
+        return self
+
+    def set_relpath(self, relpath):
+        """
+        Sets the relative path of the accession
+        :param relpath: the relative path of the accession
+        :return: self
+        """
+        self.relpath = relpath
         return self
 
     def build(self):
