@@ -52,7 +52,8 @@ class Accession(Base):
         return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
 
 
-Index('accession_batch_index', Accession.batch, Accession.relpath, unique=True)
+Index('accession_batch_relpath', Accession.batch, Accession.relpath, unique=True)
+Index('accession_md5', Accession.md5, unique=False)
 
 
 class Restore(Base):
@@ -78,6 +79,7 @@ class Restore(Base):
 
 
 Index('restore_filepath', Restore.filepath, unique=True)
+Index('restore_md5', Restore.md5, unique=False)
 
 
 class Transfer(Base):
@@ -97,4 +99,5 @@ class Transfer(Base):
         return f"<Transfer(id='{self.id}', filepath='{self.filepath}', storagepath='{self.storagepath}'>"
 
 
-Index('transfer_filepath_storagepath_index', Transfer.filepath, Transfer.storagepath, unique=True)
+Index('transfer_filepath_storagepath', Transfer.filepath, Transfer.storagepath, unique=True)
+Index('transfer_filepath', Transfer.filepath, unique=False)
