@@ -2,7 +2,7 @@ import patsy.database
 from sqlalchemy import create_engine
 from patsy.model import Base, Transfer
 import unittest
-from patsy.utils import get_accessions, get_unmatched_transfers
+from patsy.utils import get_accessions, get_unmatched_transfers, get_batch_names
 from .utils import AccessionBuilder, RestoreBuilder, TransferBuilder
 
 
@@ -64,3 +64,31 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(2, unmatched_transfers.count())
         self.assertIn(unmatched_transfer1, unmatched_transfers)
         self.assertIn(unmatched_transfer2, unmatched_transfers)
+
+    def test_get_batch_names_no_records(self):
+        session = Session()
+        batch_names = get_batch_names(session)
+        self.assertEqual([], batch_names)
+
+    def test_get_batch_names(self):
+        session = Session()
+
+        accession1_abc_batch = AccessionBuilder().set_batch('ABC_Batch').build()
+        accession2_abc_batch = AccessionBuilder().set_batch('ABC_Batch').build()
+        accession_xyz_batch = AccessionBuilder().set_batch('XYZ_Batch').build()
+
+        session.add(accession1_abc_batch)
+        session.add(accession2_abc_batch)
+        session.add(accession_xyz_batch)
+
+        session.commit()
+
+        batch_names = get_batch_names(session)
+
+        self.assertEqual(2, len(batch_names))
+        self.assertIn('ABC_Batch', batch_names)
+        self.assertIn('XYZ_Batch', batch_names)
+
+        # Batches should be in alphabetical order
+        self.assertEqual('ABC_Batch', batch_names[0])
+        self.assertEqual('XYZ_Batch', batch_names[1])

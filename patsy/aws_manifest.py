@@ -24,13 +24,14 @@ def create_manifest_command(batch, output=None):
 
     return f"{len(manifest_entries)} entries written to {output}"
 
+
 def find_untransferred_accessions(session, batch):
     """
     Returns an array of accessions in the given batch that have perfect
     matches, but have never been transferred.
 
     :param session: the Session in which to perform the query
-    :param batch: the he name of the batch to limit the search to
+    :param batch: the name of the batch to limit the search to
     :return: an array of accessions in the given batch that have perfect
     matches, but have never been transferred.
     """

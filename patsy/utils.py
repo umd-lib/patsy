@@ -1,5 +1,6 @@
 import sys
 from .model import Accession, Transfer
+from sqlalchemy import asc
 
 
 def get_accessions(session, batch=None):
@@ -17,6 +18,24 @@ def get_accessions(session, batch=None):
         accessions = session.query(Accession).filter(Accession.batch == batch)
 
     return accessions
+
+
+def get_batch_names(session):
+    """
+    Returns a list of all the batch names, i.e. the "batch" field in the
+    Accession table, in alphabetical order
+
+    :param session: the Session in which to perform the query
+    :return: a list of all the batch names, in alphabetical order
+    """
+
+    batch_names = []
+    query_result = session.query(Accession.batch).distinct().order_by(asc(Accession.batch)).all()
+
+    for row in query_result:
+        batch_names.append(row[0])
+
+    return batch_names
 
 
 def get_unmatched_transfers(session):

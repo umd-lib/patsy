@@ -148,7 +148,7 @@ class TransferBuilder:
 
     Specific values can be set using the setter methods, i.e.,
 
-    TransferBuilder().set_fileoath('foo.txt').build()
+    TransferBuilder().set_filepath('foo.txt').build()
     """
     def __init__(self):
         fake = Faker()
@@ -165,13 +165,13 @@ class TransferBuilder:
         self.filepath = filepath
         return self
 
-    def set_storagepath(self, set_storagepath):
+    def set_storagepath(self, storagepath):
         """
         Sets the set_storagepath
         :param set_storagepath: the storagepath to set
         :return: self
         """
-        self.set_storagepath = set_storagepath
+        self.set_storagepath = storagepath
         return self
 
     def build(self):
