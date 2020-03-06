@@ -5,6 +5,7 @@ import argparse
 from . import version
 from .accession import AccessionCsvLoader
 from .aws_manifest import create_manifest_command
+from .batch_stats import batch_stats_command
 from .database import create_schema
 from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
@@ -121,7 +122,7 @@ def get_args():
     # create the parser for the "find_transfer_matches" command
     find_transfer_matches_subcommand = subparsers.add_parser(
         'find_transfer_matches',
-        help='Scans unmatched transfer recoreds looking for matching restores'
+        help='Scans unmatched transfer records looking for matching restores'
         )
 
     # create the parser for the "create_manifest" command
@@ -140,6 +141,24 @@ def get_args():
         action='store',
         default=None,
         help='The file to write the manifest to'
+        )
+
+    # create the parser for the "batch_stats" command
+    batch_stats_subcommand = subparsers.add_parser(
+        'batch_stats',
+        help='Outputs statistics about the given batch'
+        )
+    batch_stats_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        default=None,
+        help='Optional batch name to query. Defaults to querying all batches'
+        )
+    batch_stats_subcommand.add_argument(
+        '-o', '--output',
+        action='store',
+        default=None,
+        help='The (optional) file to write the batch stats to in CSV format. Defaults to standard out'
         )
     return parser.parse_args()
 
@@ -210,6 +229,12 @@ def main():
         use_database_file(args.database)
         result = create_manifest_command(args.batch, args.output)
         print("----- Create Manifest ----")
+        print(result)
+
+    elif args.cmd == 'batch_stats':
+        use_database_file(args.database)
+        result = batch_stats_command(args.batch, args.output)
+        print("----- Batch Stats ----")
         print(result)
 
     print(f"Actions complete!")

@@ -191,7 +191,33 @@ one perfect match to a restore record, but which has not been transferred.
 If an accession record has multiple perfect matches, and at least one of
 the restore records has been transferred, it will *not* be included in the
 list.
-  
+
+### Batch Statistics
+
+Statistics about all batches (or a particular batch) can be generated with the
+following command:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> batch_stats --batch <BATCH> --output <OUTPUT_FILE>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+a batch name (corresponding to the "batch" field in the accession) and
+<OUTPUT_FILE> is the output filename for the CSV file containing the results.
+Both \<BATCH> and <OUTPUT_FILE> are optional. If \<BATCH> is not provided,
+information about all the batches will be output. If <OUTPUT_FILE> is not
+provided, the output will be printed to standard out.
+
+The following fields will be output:
+
+* batch: the name of tha batch
+* num_accessions: The number of accessions in the batch
+* num_accessions_with_perfect_matches,: The number of accessions with at least
+  one perfect match. Accessions with multiple perfect matches are only counted
+  once.
+* num_accessions_transferred: The number of accessions that have been
+  transferred. Accessions that match multiple restore records which have been
+  transferred will only be counted once.  
 
 ## Accession Records
 
