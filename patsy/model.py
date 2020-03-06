@@ -12,6 +12,10 @@ perfect_matches_table = Table('perfect_matches', Base.metadata,
                               Column('restore_id', Integer, ForeignKey('restores.id'))
                               )
 
+Index('perfect_matches_accession_id', perfect_matches_table.c.accession_id, unique=False)
+Index('perfect_matches_restore_id', perfect_matches_table.c.restore_id, unique=False)
+
+
 # Many-to-many relationship between accessions and restores where filename and bytes
 # are the same, but the MD5 checksum is different
 altered_md5_matches_table = Table('altered_md5_matches', Base.metadata,
@@ -54,6 +58,7 @@ class Accession(Base):
 
 Index('accession_batch_relpath', Accession.batch, Accession.relpath, unique=True)
 Index('accession_md5', Accession.md5, unique=False)
+Index('accession_batch', Accession.batch, unique=False)
 
 
 class Restore(Base):
