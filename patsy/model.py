@@ -106,3 +106,4 @@ class Transfer(Base):
 
 Index('transfer_filepath_storagepath', Transfer.filepath, Transfer.storagepath, unique=True)
 Index('transfer_filepath', Transfer.filepath, unique=False)
+Index('transfer_restore_id', Transfer.restore_id, unique=False)
