@@ -219,6 +219,36 @@ The following fields will be output:
   transferred. Accessions that match multiple restore records which have been
   transferred will only be counted once.  
 
+### Unmatched Accessions
+
+A list of unmatched accessions can be generated with the following command:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> unmatched_accessions --batch <BATCH>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+a batch name (corresponding to the "batch" field in the accession). The \<BATCH>
+parameter is required. A list of accessions without perfect matches will be
+printed to the console.
+
+**Note:**: Only perfect matches are considered. If an accession has an altered
+MD5 match, or a filename only match, it **will** be considered unmatched and
+included in the output.
+
+The following fields will be output:
+
+* batch: the name of tha batch
+* relpath: The relative path of the accession record
+
+There is an optional "--delete" flag which will **DELETE** the unmatched
+accessions from the database. Only use this flag if you want to delete the
+unmatched accession records:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> unmatched_accessions --batch <BATCH> --delete
+```
+
 ## Accession Records
 
 Accession records represent the "canonical" information about an asset. These

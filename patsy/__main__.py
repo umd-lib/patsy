@@ -11,6 +11,7 @@ from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
 from .filename_only_matches import find_filename_only_matches_command
 from .transfer_matches import find_transfer_matches_command
+from .unmatched_accessions import unmatched_accessions_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
 from .transfer import TransferCsvLoader
@@ -160,6 +161,31 @@ def get_args():
         default=None,
         help='The (optional) file to write the batch stats to in CSV format. Defaults to standard out'
         )
+
+    # create the parser for the "unmatched_accessions" command
+    unmatched_accessions_subcommand = subparsers.add_parser(
+        'unmatched_accessions',
+        help='Outputs statistics about the given batch'
+        )
+    unmatched_accessions_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        required=True,
+        help='Batch name to query.'
+        )
+    unmatched_accessions_subcommand.add_argument(
+        '-d', '--delete',
+        action='store_true',
+        default=None,
+        help='Removes all the unmatched accessions from the database.'
+        )
+    unmatched_accessions_subcommand.add_argument(
+        '-o', '--output',
+        action='store',
+        default=None,
+        help='The (optional) file to write the unmatched accessions to in CSV format. Defaults to standard out.'
+        )
+
     return parser.parse_args()
 
 
@@ -235,6 +261,12 @@ def main():
         use_database_file(args.database)
         result = batch_stats_command(args.batch, args.output)
         print("----- Batch Stats ----")
+        print(result)
+
+    elif args.cmd == "unmatched_accessions":
+        use_database_file(args.database)
+        result = unmatched_accessions_command(args.batch, args.output, args.delete)
+        print("----- Unmatched Accessions ----")
         print(result)
 
     print(f"Actions complete!")
