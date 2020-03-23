@@ -9,6 +9,10 @@ Copied from "patsy-data/data/accessions/libdc/batches/sample_data/restores/LIBDC
 File has been modified to include a "relpath" path consisting of
 "DCR Projects/Archive/NOVEMBER/scpa/" plus the filename.
 
+### Archive044.csv
+
+Copied from "patsy-data/data/accessions/libdc/batches/sample_data/restores/LIBDCR_Archive044.csv"
+
 ### test_altered_md5_accessions.csv
 
 Accession data for testing "altered MD5" matches. There are 5 records, each
@@ -31,6 +35,10 @@ used for testing transfer matching.
 ### LIBDCR_Archive031.csv
 
 Copied from "patsy-data/data/restores/LIBRDCRProjectsShare-md5sum/nfs.isip01.nas.umd.edu_ifs_data_LIBR-Archives-Projects-Export_DCR_Projects_Archive031 Date 03202014_work_scan.csv"
+
+### LIBDCR_Archive044.csv
+
+Copied from "patsy-data/data/restores/LIBRDCRProjectsShare-md5sum/nfs.isip01.nas.umd.edu_ifs_data_LIBR-Archives-Projects-Export_LMSRAID_Archive44 - Date 8202015_work_scan.csv"
 
 ### test_altered_md5_restores.csv
 
