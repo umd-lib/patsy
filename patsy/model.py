@@ -85,6 +85,7 @@ class Restore(Base):
 
 Index('restore_filepath', Restore.filepath, unique=True)
 Index('restore_md5', Restore.md5, unique=False)
+Index('restore_filename', Restore.filename, unique=False)
 
 
 class Transfer(Base):
