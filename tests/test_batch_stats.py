@@ -1,10 +1,9 @@
 import io
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base, Transfer
 from patsy.batch_stats import get_stats_for_batch, output_batch_stats_entries, batch_stats
 import unittest
-from .utils import AccessionBuilder, TransferBuilder, create_perfect_match
+from .utils import AccessionBuilder, TransferBuilder, create_perfect_match, create_test_engine
 from patsy.perfect_matches import find_perfect_matches
 from patsy.transfer_matches import find_transfer_matches
 from patsy.utils import get_accessions, get_batch_names
@@ -14,8 +13,8 @@ Session = patsy.database.Session
 
 class TestBatchStats(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_get_stats_for_batch_no_data(self):

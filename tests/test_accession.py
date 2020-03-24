@@ -1,17 +1,17 @@
 import patsy.database
 from patsy.accession import AccessionCsvLoader
-from sqlalchemy import create_engine
 from patsy.model import Base
 import unittest
 from patsy.model import Accession
+from .utils import create_test_engine
 
 Session = patsy.database.Session
 
 
 class TestAccession(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_load_single_file(self):

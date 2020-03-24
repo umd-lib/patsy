@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from .model import Base
@@ -14,7 +14,14 @@ def use_database_file(database):
         print(f"Using database at {database}...")         
     db_path = f"sqlite:///{database}"
     print("Binding the database session...")
+
     engine = create_engine(db_path)
+
+    # Enable foreign key constraints
+    def _fk_pragma_on_connect(dbapi_con, con_record):
+        dbapi_con.execute('pragma foreign_keys=ON')
+
+    event.listen(engine, 'connect', _fk_pragma_on_connect)
     Session.configure(bind=engine)
 
 

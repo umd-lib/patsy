@@ -2,6 +2,7 @@ from patsy.model import Accession, Restore, Transfer
 from faker import Faker
 import random
 import os
+from patsy.database import use_database_file
 
 
 class AccessionBuilder:
@@ -197,3 +198,13 @@ def create_perfect_match(accession):
     restore = restore_builder.build()
 
     return restore
+
+
+def create_test_engine():
+    """
+    Returns an SQLAlchemy Engine, configured for testing.
+
+    :return: an SQLAlchemy Engine, configured for testing.
+    """
+    engine = use_database_file(":memory:")
+    return engine

@@ -1,19 +1,18 @@
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base
 from patsy.perfect_matches import find_perfect_matches
 from patsy.altered_md5_matches import find_altered_md5_matches
 import unittest
 from patsy.model import Accession
-from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match
+from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match, create_test_engine
 
 Session = patsy.database.Session
 
 
 class TestAlteredMd5sMatches(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_no_altered_md5_match(self):
