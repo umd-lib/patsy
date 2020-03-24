@@ -4,7 +4,7 @@ from patsy.perfect_matches import find_perfect_matches
 from patsy.altered_md5_matches import find_altered_md5_matches
 from patsy.filename_only_matches import find_filename_only_matches
 import unittest
-from patsy.model import Accession
+from patsy.model import Accession, Restore, filename_only_matches_table
 from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match, create_test_engine
 
 Session = patsy.database.Session
@@ -236,3 +236,112 @@ class TestFilenameOnlyMatches(unittest.TestCase):
         self.assertEqual(0, len(new_matches_found))
         self.assertEqual(1, len(accession.filename_only_matches))
         self.assertEqual(1, len(restore.filename_only_matches))
+
+    def test_deleting_accession_using_orm_should_delete_filename_only_match(self):
+        session = Session()
+
+        accession = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore = create_perfect_match(accession)
+        restore.md5 = 'filename_only_md5'
+        restore.bytes = restore.bytes + 100
+
+        session.add(accession)
+        session.add(restore)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_filename_only_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(1, len(new_matches_found))
+        self.assertEqual(1, len(accession.filename_only_matches))
+        self.assertEqual(1, len(restore.filename_only_matches))
+
+        # Delete using SQLAlchemy ORM
+        session.delete(accession)
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(filename_only_matches_table).count()
+        self.assertEqual(0, accessions_count)
+        self.assertEqual(1, restores_count)  # Restores are not affected
+        self.assertEqual(0, matches_count)
+        self.assertEqual([], restore.filename_only_matches)
+
+    def test_deleting_accession_using_raw_sql_should_delete_filename_only_match(self):
+        session = Session()
+
+        accession = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore = create_perfect_match(accession)
+        restore.md5 = 'filename_only_md5'
+        restore.bytes = restore.bytes + 100
+
+        session.add(accession)
+        session.add(restore)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_filename_only_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(1, len(new_matches_found))
+        self.assertEqual(1, len(accession.filename_only_matches))
+        self.assertEqual(1, len(restore.filename_only_matches))
+
+        # Delete using raw SQL, not SQLAlchemy, to test ON DELETE CASCADE
+        session.execute("DELETE FROM accessions where accessions.batch = 'batch_to_delete'")
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(filename_only_matches_table).count()
+        self.assertEqual(0, accessions_count)
+        self.assertEqual(1, restores_count)  # Restores are not affected
+        self.assertEqual(0, matches_count)
+        self.assertEqual([], restore.filename_only_matches)
+
+    def test_deleting_accession_using_raw_sql_should_delete_filename_only_match_not_affect_other_matches(self):
+        session = Session()
+
+        accession1 = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore1 = create_perfect_match(accession1)
+        restore1.md5 = 'filename_only_md5'
+        restore1.bytes = restore1.bytes + 100
+
+        accession2 = AccessionBuilder().set_batch("batch_to_preserve").build()
+        restore2 = create_perfect_match(accession2)
+        restore2.md5 = 'filename_only_md5'
+        restore2.bytes = restore2.bytes + 100
+
+        session.add(accession1)
+        session.add(restore1)
+
+        session.add(accession2)
+        session.add(restore2)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_filename_only_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(2, len(new_matches_found))
+        self.assertEqual(1, len(accession1.filename_only_matches))
+        self.assertEqual(1, len(restore1.filename_only_matches))
+        self.assertEqual(1, len(accession2.filename_only_matches))
+        self.assertEqual(1, len(restore2.filename_only_matches))
+
+        # Delete using raw SQL, not SQLAlchemy, to test ON DELETE CASCADE
+        connection = session.connection()
+        connection.execute("DELETE FROM accessions where accessions.batch = 'batch_to_delete'")
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(filename_only_matches_table).count()
+        self.assertEqual(1, accessions_count)
+        self.assertEqual(2, restores_count)  # Restores are no affected
+        self.assertEqual(1, matches_count)
+        self.assertEqual([], restore1.filename_only_matches)
+        self.assertIn(accession2, restore2.filename_only_matches)
+        self.assertIn(restore2, accession2.filename_only_matches)
