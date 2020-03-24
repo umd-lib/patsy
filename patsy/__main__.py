@@ -12,6 +12,7 @@ from .altered_md5_matches import find_altered_md5_matches_command
 from .filename_only_matches import find_filename_only_matches_command
 from .transfer_matches import find_transfer_matches_command
 from .unmatched_accessions import unmatched_accessions_command
+from .delete_accessions import delete_accessions_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
 from .transfer import TransferCsvLoader
@@ -186,6 +187,18 @@ def get_args():
         help='The (optional) file to write the unmatched accessions to in CSV format. Defaults to standard out.'
         )
 
+    # create the parser for the "unmatched_accessions" command
+    delete_accessions_subcommand = subparsers.add_parser(
+        'delete_accessions',
+        help='Delets ALL the accessions in the given batch'
+        )
+    delete_accessions_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        required=True,
+        help='Batch of accessions to delete.'
+        )
+
     return parser.parse_args()
 
 
@@ -267,6 +280,12 @@ def main():
         use_database_file(args.database)
         result = unmatched_accessions_command(args.batch, args.output, args.delete)
         print("----- Unmatched Accessions ----")
+        print(result)
+
+    elif args.cmd == "delete_accessions":
+        use_database_file(args.database)
+        result = delete_accessions_command(args.batch)
+        print("----- Delete Accessions ----")
         print(result)
 
     print(f"Actions complete!")

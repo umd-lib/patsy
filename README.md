@@ -249,6 +249,41 @@ unmatched accession records:
 > python3 -m patsy --database <SQLITE_DATABASE_FILE> unmatched_accessions --batch <BATCH> --delete
 ```
 
+### Deleting all accessions in a batch
+
+----
+#### SQLite and Foreign Key Constraints
+
+By default, SQLite does not enable foreign key constraints. When deleting
+accessions, the "sqlite3" CLI client will *not* delete related matches in the
+"perfect_matches", "altered_md5_matches", or "filename_only_matches" tables,
+unless foreign key constraints are enabled, using the following command
+(which must be entered in every session, as it is not persisted):
+
+```
+PRAGMA foreign_keys=ON;
+```
+
+The "DB Browser for SQLite" GUI client (https://sqlitebrowser.org/) has
+foreign key constraints enabled by default, and so should be safe to use.
+
+When using either of these clients to delete entries using SQL, be sure that
+foreign key constraints are enabled, and also verify that the expected records
+in related tables are deleted.
+----
+
+An entire batch of accessions can be deleted using the following command, which
+will properly remove related entries in the "perfect_matches",
+"altered_md5_matches", and "filename_only_matches" tables:
+
+```
+> python3 -m patsy --database <SQLITE_DATABASE_FILE> delete_accessions --batch <BATCH>
+```
+
+where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+a batch name (corresponding to the "batch" field in the accession). The \<BATCH>
+parameter is required.
+
 ## Accession Records
 
 Accession records represent the "canonical" information about an asset. These
