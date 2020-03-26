@@ -71,6 +71,7 @@ class Restore(Base):
     id = Column(Integer, primary_key=True)
     md5 = Column(String)
     filename = Column(String)
+    filename_lowercase = Column(String)
     filepath = Column(String)
     bytes = Column(Integer)
     perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
@@ -86,7 +87,7 @@ class Restore(Base):
 Index('restore_filepath', Restore.filepath, unique=True)
 Index('restore_md5', Restore.md5, unique=False)
 Index('restore_filename', Restore.filename, unique=False)
-
+Index('restore_filename_lowercase', Restore.filename_lowercase, unique=False)
 
 class Transfer(Base):
     """
