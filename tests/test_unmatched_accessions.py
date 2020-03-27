@@ -1,10 +1,9 @@
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base, Accession, perfect_matches_table, filename_only_matches_table, altered_md5_matches_table
 from patsy.unmatched_accessions import unmatched_accessions, unmatched_accessions_output, delete_accessions
 from patsy.perfect_matches import find_perfect_matches
 import unittest
-from .utils import AccessionBuilder, create_perfect_match
+from .utils import AccessionBuilder, create_perfect_match, create_test_engine
 import io
 
 Session = patsy.database.Session
@@ -12,8 +11,8 @@ Session = patsy.database.Session
 
 class TestTransferMatches(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_unmatched_accessions_throws_error_if_batch_not_provided(self):

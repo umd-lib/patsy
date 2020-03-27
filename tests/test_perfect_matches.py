@@ -1,18 +1,17 @@
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base
 from patsy.perfect_matches import find_perfect_matches
 import unittest
-from patsy.model import Accession
-from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match
+from patsy.model import Accession, Restore, perfect_matches_table
+from .utils import AccessionBuilder, RestoreBuilder, create_perfect_match, create_test_engine
 
 Session = patsy.database.Session
 
 
 class TestPerfectMatches(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_no_perfect_match(self):
@@ -171,3 +170,104 @@ class TestPerfectMatches(unittest.TestCase):
         self.assertEqual(0, len(new_matches_found))
         self.assertEqual(1, len(accession.perfect_matches))
         self.assertEqual(1, len(restore.perfect_matches))
+
+    def test_deleting_accession_using_orm_should_delete_perfect_match(self):
+        session = Session()
+
+        accession = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore = create_perfect_match(accession)
+
+        session.add(accession)
+        session.add(restore)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_perfect_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(1, len(new_matches_found))
+        self.assertEqual(1, len(accession.perfect_matches))
+        self.assertEqual(1, len(restore.perfect_matches))
+
+        # Delete using SQLAlchemy ORM
+        session.delete(accession)
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(perfect_matches_table).count()
+        self.assertEqual(0, accessions_count)
+        self.assertEqual(1, restores_count)  # Restores are not affected
+        self.assertEqual(0, matches_count)
+        self.assertEqual([], restore.perfect_matches)
+
+    def test_deleting_accession_using_raw_sql_should_delete_perfect_match(self):
+        session = Session()
+
+        accession = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore = create_perfect_match(accession)
+
+        session.add(accession)
+        session.add(restore)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_perfect_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(1, len(new_matches_found))
+        self.assertEqual(1, len(accession.perfect_matches))
+        self.assertEqual(1, len(restore.perfect_matches))
+
+        # Delete using raw SQL, not SQLAlchemy, to test ON DELETE CASCADE
+        session.execute("DELETE FROM accessions where accessions.batch = 'batch_to_delete'")
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(perfect_matches_table).count()
+        self.assertEqual(0, accessions_count)
+        self.assertEqual(1, restores_count)  # Restores are not affected
+        self.assertEqual(0, matches_count)
+        self.assertEqual([], restore.perfect_matches)
+
+    def test_deleting_accession_using_raw_sql_should_delete_perfect_match_not_affect_other_matches(self):
+        session = Session()
+
+        accession1 = AccessionBuilder().set_batch("batch_to_delete").build()
+        restore1 = create_perfect_match(accession1)
+
+        accession2 = AccessionBuilder().set_batch("batch_to_preserve").build()
+        restore2 = create_perfect_match(accession2)
+
+        session.add(accession1)
+        session.add(restore1)
+
+        session.add(accession2)
+        session.add(restore2)
+        session.commit()
+
+        accessions = session.query(Accession)
+        new_matches_found = find_perfect_matches(session, accessions)
+        session.commit()
+
+        self.assertEqual(2, len(new_matches_found))
+        self.assertEqual(1, len(accession1.perfect_matches))
+        self.assertEqual(1, len(restore1.perfect_matches))
+        self.assertEqual(1, len(accession2.perfect_matches))
+        self.assertEqual(1, len(restore2.perfect_matches))
+
+        # Delete using raw SQL, not SQLAlchemy, to test ON DELETE CASCADE
+        connection = session.connection()
+        connection.execute("DELETE FROM accessions where accessions.batch = 'batch_to_delete'")
+        session.commit()
+
+        accessions_count = session.query(Accession).count()
+        restores_count = session.query(Restore).count()
+        matches_count = session.query(perfect_matches_table).count()
+        self.assertEqual(1, accessions_count)
+        self.assertEqual(2, restores_count)  # Restores are no affected
+        self.assertEqual(1, matches_count)
+        self.assertEqual([], restore1.perfect_matches)
+        self.assertIn(accession2, restore2.perfect_matches)
+        self.assertIn(restore2, accession2.perfect_matches)

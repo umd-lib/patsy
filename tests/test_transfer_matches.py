@@ -1,18 +1,17 @@
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base
 from patsy.transfer_matches import find_transfer_matches
 import unittest
 from patsy.model import Transfer
-from .utils import RestoreBuilder, TransferBuilder
+from .utils import RestoreBuilder, TransferBuilder, create_test_engine
 
 Session = patsy.database.Session
 
 
 class TestTransferMatches(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_no_transfer_match(self):

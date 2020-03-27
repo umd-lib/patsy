@@ -8,7 +8,7 @@ Base = declarative_base()
 
 # Many-to-many relationship between accessions and restores that are perfect matches
 perfect_matches_table = Table('perfect_matches', Base.metadata,
-                              Column('accession_id', Integer, ForeignKey('accessions.id')),
+                              Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
                               Column('restore_id', Integer, ForeignKey('restores.id'))
                               )
 
@@ -19,14 +19,14 @@ Index('perfect_matches_restore_id', perfect_matches_table.c.restore_id, unique=F
 # Many-to-many relationship between accessions and restores where filename and bytes
 # are the same, but the MD5 checksum is different
 altered_md5_matches_table = Table('altered_md5_matches', Base.metadata,
-                                  Column('accession_id', Integer, ForeignKey('accessions.id')),
+                                  Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
                                   Column('restore_id', Integer, ForeignKey('restores.id'))
                                   )
 
 # Many-to-many relationship between accessions and restores where the filename
 # is the same, but the MD5 checksum and bytes are different
 filename_only_matches_table = Table('filename_only_matches', Base.metadata,
-                                    Column('accession_id', Integer, ForeignKey('accessions.id')),
+                                    Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
                                     Column('restore_id', Integer, ForeignKey('restores.id'))
                                     )
 

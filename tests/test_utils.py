@@ -1,9 +1,8 @@
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base, Transfer
 import unittest
 from patsy.utils import get_accessions, get_unmatched_transfers, get_batch_names
-from .utils import AccessionBuilder, RestoreBuilder, TransferBuilder
+from .utils import AccessionBuilder, RestoreBuilder, TransferBuilder, create_test_engine
 
 
 Session = patsy.database.Session
@@ -11,8 +10,8 @@ Session = patsy.database.Session
 
 class TestUtils(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
     def test_get_accessions(self):

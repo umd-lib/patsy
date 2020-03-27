@@ -1,13 +1,10 @@
 import io
 import patsy.database
-from sqlalchemy import create_engine
 from patsy.model import Base
 from patsy.perfect_matches import find_perfect_matches
 from patsy.transfer_matches import find_transfer_matches
-from patsy.altered_md5_matches import find_altered_md5_matches
 import unittest
-from patsy.model import Accession
-from .utils import AccessionBuilder, RestoreBuilder, TransferBuilder, create_perfect_match
+from .utils import AccessionBuilder, TransferBuilder, create_perfect_match, create_test_engine
 from patsy.aws_manifest import find_untransferred_accessions, generate_manifest_entries, output_manifest_entries
 
 Session = patsy.database.Session
@@ -15,8 +12,8 @@ Session = patsy.database.Session
 
 class TestAwsManifest(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
-        Session.configure(bind=engine)
+        create_test_engine()
+        engine = Session().get_bind()
         Base.metadata.create_all(engine)
 
         session = Session()
