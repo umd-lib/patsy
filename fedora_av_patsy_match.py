@@ -31,6 +31,7 @@ an additional "file_extension" field in CSV format.
 Unmatched rows are returned as read in from the input CSV file.
 """
 
+
 def process_matches(row, restore_matches, file_extension):
     if restore_matches:
         rows = []
@@ -51,8 +52,8 @@ def process_matches(row, restore_matches, file_extension):
 def match_base_filename_exact_match(session, row):
     base_filename = row["identifier"]
 
-    extensions = ["", "wav", "mov", "mpg", "tif", "mp3"]
-    suffixes = ["", " "]
+    extensions = ["", "wav", "mov", "mpg", "tif", "mp3", "mp4", "mxf", "iso"]
+    suffixes = ["", " ", "_HD", "_SD"]
     base_filename_lowercase = base_filename.lower()
 
     matched_rows = []
