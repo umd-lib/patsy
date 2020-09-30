@@ -13,6 +13,7 @@ from .filename_only_matches import find_filename_only_matches_command
 from .transfer_matches import find_transfer_matches_command
 from .unmatched_accessions import unmatched_accessions_command
 from .delete_accessions import delete_accessions_command
+from .generate_schema import generate_schema_command
 from .database import use_database_file
 from .restore import RestoreCsvLoader
 from .transfer import TransferCsvLoader
@@ -190,7 +191,7 @@ def get_args():
     # create the parser for the "unmatched_accessions" command
     delete_accessions_subcommand = subparsers.add_parser(
         'delete_accessions',
-        help='Delets ALL the accessions in the given batch'
+        help='Deletes ALL the accessions in the given batch'
         )
     delete_accessions_subcommand.add_argument(
         '-b', '--batch',
@@ -198,6 +199,24 @@ def get_args():
         required=True,
         help='Batch of accessions to delete.'
         )
+
+    # create the parser for the "generate_schema" command
+    generate_schema_subcommand = subparsers.add_parser(
+        'generate_schema',
+        help='Generate schema diagram for the connected database (requires GraphViz)'
+        )
+    generate_schema_subcommand.add_argument(
+         '--dot',
+         default=None,
+         action='store',
+         help='filepath for generated .dot file'
+    )
+    generate_schema_subcommand.add_argument(
+         '--png',
+         default=None,
+         action='store',
+         help='filepath for generated .png file'
+    )
 
     return parser.parse_args()
 
@@ -287,6 +306,16 @@ def main():
         result = delete_accessions_command(args.batch)
         print("----- Delete Accessions ----")
         print(result)
+
+    elif args.cmd == "generate_schema":
+        use_database_file(args.database)
+        result = generate_schema_command(args.dot, args.png)
+        print("----- Generate Schema ----")
+        if len(result) > 0:
+            for file in result:
+                print(f"Created {file}")
+        else:
+            print("No files created")
 
     print(f"Actions complete!")
     if args.database == ':memory:':
