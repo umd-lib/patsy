@@ -118,7 +118,7 @@ def get_num_accessions_with_perfect_matches(session, batch):
     """
     # If an accession has multiple perfect matches, we only want to count it
     # once
-    accessions_with_a_perfect_match = session.query(Accession, perfect_matches_table)\
+    accessions_with_a_perfect_match = session.query(Accession)\
                              .join(perfect_matches_table)\
                              .group_by(Accession.id)\
                              .filter(Accession.batch == batch)

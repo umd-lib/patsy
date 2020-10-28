@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -43,7 +43,7 @@ class Accession(Base):
     sourcefile = Column(String)
     sourceline = Column(Integer)
     filename = Column(String)
-    bytes = Column(Integer)
+    bytes = Column(BigInteger)
     timestamp = Column(String)
     relpath = Column(String)
     md5 = Column(String)
@@ -72,7 +72,8 @@ class Restore(Base):
     md5 = Column(String)
     filename = Column(String)
     filepath = Column(String)
-    bytes = Column(Integer)
+    bytes = Column(BigInteger)
+    status = Column(String)
     perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
     altered_md5_matches = relationship("Accession", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
     filename_only_matches = relationship("Accession", secondary=filename_only_matches_table,
