@@ -1,6 +1,7 @@
 #!/user/bin/env python3
 
 import argparse
+import logging
 
 from . import version
 from .accession import AccessionCsvLoader
@@ -39,6 +40,12 @@ def get_args():
          default=':memory:',
          action='store',
          help='Path to db file (defaults to in-memory db)',
+    )
+    parser.add_argument(
+         '-l', '--logging',
+         default=False,
+         action='store_true',
+         help='Enable INFO logging of "sqlalchemy.engine" to stderr',
     )
 
     # Subcommand interface
@@ -225,8 +232,14 @@ def main():
     """
     Carry out the main actions as specified in the args.
     """
+
     args = get_args()
     print_header()
+
+    # Setup logging
+    if args.logging:
+        logging.basicConfig()
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
     if args.cmd == 'schema':
         create_schema(args)

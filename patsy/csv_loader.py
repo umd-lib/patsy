@@ -89,15 +89,21 @@ class AbstractCsvLoader(metaclass=abc.ABCMeta):
         insertions_succeeded = []
         insertions_failed = []
         num_processed = 0
-        for obj in iter_records_from(filename):
-            num_processed = num_processed + 1
-            try:
-                session = Session()
-                session.add(obj)
-                session.commit()
-                insertions_succeeded.append(repr(obj))
-            except IntegrityError as err:
-                insertions_failed.append(f"ERROR: {err.code, err.args[0]} - obj: {repr(obj)}")
+
+        try:
+            session = Session()
+
+            for obj in iter_records_from(filename):
+                num_processed = num_processed + 1
+                try:
+                    session.add(obj)
+                    session.commit()
+                    insertions_succeeded.append(repr(obj))
+                except IntegrityError as err:
+                    insertions_failed.append(f"ERROR: {err.code, err.args[0]} - obj: {repr(obj)}")
+                    session.rollback()
+        finally:
+            session.close()
 
         result = FileLoadResult(successes=insertions_succeeded, failures=insertions_failed, num_processed=num_processed)
         return result
