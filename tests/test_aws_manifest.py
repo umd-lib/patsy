@@ -31,6 +31,7 @@ class TestAwsManifest(unittest.TestCase):
 
         session.add(self.untransferred_accession)
         session.add(self.untransferred_restore)
+        session.commit()
 
         find_perfect_matches(session, [self.transferred_accession, self.untransferred_accession])
         find_transfer_matches(session, [self.transfer])
@@ -87,6 +88,7 @@ class TestAwsManifest(unittest.TestCase):
 
         session.add(mixed_untransferred_accession)
         session.add(mixed_untransferred_restore)
+        session.commit()
 
         find_perfect_matches(session, [mixed_transferred_accession, mixed_untransferred_accession])
         find_transfer_matches(session, [mixed_transfer])

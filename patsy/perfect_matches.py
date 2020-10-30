@@ -1,5 +1,7 @@
+from sqlalchemy import exists
+
 from .database import Session
-from .model import Restore
+from .model import Restore, Accession
 from .progress_notifier import ProgressNotifier
 from .utils import get_accessions
 
@@ -37,17 +39,24 @@ def find_perfect_matches(session, accessions):
              found
     """
     new_matches_found = []
-    for accession in accessions:
-        accession_md5 = accession.md5
 
-        restores = session.query(Restore)\
-                          .filter(Restore.md5 == accession_md5,
-                                  Restore.filename == accession.filename,
-                                  Restore.bytes == accession.bytes)
+    if isinstance(accessions, list):
+        query = session.query(Accession) \
+                       .filter(Accession.id.in_(a.id for a in accessions))
+    else:
+        query = accessions
 
-        for restore in restores:
-            if restore not in accession.perfect_matches:
-                accession.perfect_matches.append(restore)
-                new_matches_found.append(f"{accession}:{restore}")
+    query = query \
+        .join(Restore,
+              ((Accession.md5 == Restore.md5) &
+               (Accession.filename == Restore.filename) &
+               (Accession.bytes == Restore.bytes))) \
+        .add_entity(Restore) \
+        .filter(~exists().where(Accession.perfect_matches))
+
+    for accession, restore in query:
+
+        accession.perfect_matches.append(restore)
+        new_matches_found.append(f"{accession}:{restore}")
 
     return new_matches_found
