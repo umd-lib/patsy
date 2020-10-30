@@ -52,21 +52,24 @@ The following lists the known commands:
 ### Creating a new (empty) database
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> schema 
+> python3 -m patsy --database <DATABASE> schema 
 ```
 
-where <SQLITE_DATABASE_FILE> is the path where the SQLite database should be
-created.
+where `<DATABASE>` is one of:
+
+* ":memory:" to use a transient in-memory database
+* a PostgreSQL database connection string of the form "postgresql://username:password@host:port/database"
+* a path to an SQLite database file
 
 ### Loading accession records
 
 Load accession records from CSV files:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> accessions --source <ACCESSION_PATH>
+> python3 -m patsy --database <DATABASE> accessions --source <ACCESSION_PATH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
+where <DATABASE> is the path to the SQLite database. If
 <ACCESSION_PATH> is a file, only that file will be loaded. If <ACCESSION_PATH>
 is a directory, every file in that directory will be loaded.
 
@@ -75,10 +78,10 @@ is a directory, every file in that directory will be loaded.
 Load "restored file" information from CSV files:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> restores --source <RESTORES_PATH>
+> python3 -m patsy --database <DATABASE> restores --source <RESTORES_PATH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
+where <DATABASE> is the path to the SQLite database. If
 <RESTORES_PATH> is a file, only that file will be loaded. If <RESTORES_PATH>
 is a directory, every file in that directory will be loaded.
 
@@ -87,10 +90,10 @@ is a directory, every file in that directory will be loaded.
 Load transfer records from CSV files:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> transfers --source <TRANSFERS_PATH>
+> python3 -m patsy --database <DATABASE> transfers --source <TRANSFERS_PATH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database. If
+where <DATABASE> is the path to the SQLite database. If
 <TRANSFERS_PATH> is a file, only that file will be loaded. If <TRANSFERS_PATH>
 is a directory, every file in that directory will be loaded.
 
@@ -105,10 +108,10 @@ A perfect match between an accession and a restore is where:
 To find new perfect matches for a particular batch of accessions:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_perfect_matches --batch <BATCH>
+> python3 -m patsy --database <DATABASE> find_perfect_matches --batch <BATCH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 an (optional) batch name (corresponding to the "batch" field in the accession).
 
 If the "--batch" parameter is not provided, all accessions will be searched.
@@ -127,10 +130,10 @@ restore, where there might be data corruption.
 To find new altered MD5 matches for a particular batch of accessions:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_altered_md5_matches --batch <BATCH>
+> python3 -m patsy --database <DATABASE> find_altered_md5_matches --batch <BATCH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 an (optional) batch name (corresponding to the "batch" field in the accession).
 
 If the "--batch" parameter is not provided, all accessions will be searched.
@@ -150,10 +153,10 @@ of filename.
 To find new filename only matches for a particular batch of accessions:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_filename_only_matches --batch <BATCH>
+> python3 -m patsy --database <DATABASE> find_filename_only_matches --batch <BATCH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 an (optional) batch name (corresponding to the "batch" field in the accession).
 
 If the "--batch" parameter is not provided, all accessions will be searched.
@@ -165,10 +168,10 @@ A transfer match links a restore record to a storage location (such as AWS).
 To find new transfer matches:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> find_transfer_matches
+> python3 -m patsy --database <DATABASE> find_transfer_matches
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database. By default,
+where <DATABASE> is the path to the SQLite database. By default,
 only transfer records that do not have a match to a restore records will be
 searched.
 
@@ -178,10 +181,10 @@ A manifest file for use with the "aws-archiver" application is created with
 the following command:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> create_manifest --batch <BATCH> --output <OUTPUT_FILE>
+> python3 -m patsy --database <DATABASE> create_manifest --batch <BATCH> --output <OUTPUT_FILE>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 a batch name (corresponding to the "batch" field in the accession), and
 <OUTPUT_FILE> is the output filename for the manifest file. The batch name is
 required.
@@ -198,10 +201,10 @@ Statistics about all batches (or a particular batch) can be generated with the
 following command:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> batch_stats --batch <BATCH> --output <OUTPUT_FILE>
+> python3 -m patsy --database <DATABASE> batch_stats --batch <BATCH> --output <OUTPUT_FILE>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 a batch name (corresponding to the "batch" field in the accession) and
 <OUTPUT_FILE> is the output filename for the CSV file containing the results.
 Both \<BATCH> and <OUTPUT_FILE> are optional. If \<BATCH> is not provided,
@@ -224,10 +227,10 @@ The following fields will be output:
 A list of unmatched accessions can be generated with the following command:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> unmatched_accessions --batch <BATCH>
+> python3 -m patsy --database <DATABASE> unmatched_accessions --batch <BATCH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 a batch name (corresponding to the "batch" field in the accession). The \<BATCH>
 parameter is required. A list of accessions without perfect matches will be
 printed to the console.
@@ -246,7 +249,7 @@ accessions from the database. Only use this flag if you want to delete the
 unmatched accession records:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> unmatched_accessions --batch <BATCH> --delete
+> python3 -m patsy --database <DATABASE> unmatched_accessions --batch <BATCH> --delete
 ```
 
 ### Deleting all accessions in a batch
@@ -277,10 +280,10 @@ will properly remove related entries in the "perfect_matches",
 "altered_md5_matches", and "filename_only_matches" tables:
 
 ```
-> python3 -m patsy --database <SQLITE_DATABASE_FILE> delete_accessions --batch <BATCH>
+> python3 -m patsy --database <DATABASE> delete_accessions --batch <BATCH>
 ```
 
-where <SQLITE_DATABASE_FILE> is the path to the SQLite database, and \<BATCH> is
+where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 a batch name (corresponding to the "batch" field in the accession). The \<BATCH>
 parameter is required.
 
