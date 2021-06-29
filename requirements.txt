@@ -5,9 +5,9 @@ lazy-object-proxy==1.4.3
 mccabe==0.6.1
 pylint==2.4.4
 pytest==5.3.5
-PyYAML==5.3
+PyYAML==5.4
 six==1.14.0
 SQLAlchemy==1.3.13
 typed-ast==1.4.1
 wrapt==1.11.2
-sqlalchemy_schemadisplay=1.3
+sqlalchemy_schemadisplay==1.3
