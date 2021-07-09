@@ -1,0 +1,6 @@
+batch,sourcefile,sourceline,filename,bytes,timestamp,md5,relpath
+FilenameOnlyBatch,FilenameOnly_2014-03-13_DPIdetails.txt,1,filename_only_test_file1,98765,Fri Apr 26 15:52:37 EDT 2013,2f90e976c036856ece60dd7c536cc6c9,test/filename_only_test_file1
+FilenameOnlyBatch,FilenameOnly_2014-03-13_DPIdetails.txt,2,filename_only_test_file2,98765,Mon Apr 29 10:28:56 EDT 2013,66ab658c0675fc72ca6b42e4cb8f66a4,test/filename_only_test_file2
+FilenameOnlyBatch,FilenameOnly_2014-03-13_DPIdetails.txt,3,filename_only_test_file3,98765,Mon Apr 29 12:21:30 EDT 2013,037feb7a305fae37707ed1c12de72080,test/filename_only_test_file3
+FilenameOnlyBatch,FilenameOnly_2014-03-13_DPIdetails.txt,4,filename_only_test_file4,98765,Tue May 07 11:17:44 EDT 2013,d3c736d3f075e54d7d5c4235778935db,test/filename_only_test_file4
+FilenameOnlyBatch,FilenameOnly_2014-03-13_DPIdetails.txt,5,filename_only_test_file5,98765,Mon Apr 29 16:24:24 EDT 2013,5b06bfd1e8921a2245784fc2ef246927,test/filename_only_test_file5

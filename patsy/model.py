@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -6,127 +6,106 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
-class Batch(Base):
-    """
-    Class representing a group of assets in a content stream
-    """
-    
-    __tablename__ = 'batches'
+# Many-to-many relationship between accessions and restores that are perfect matches
+perfect_matches_table = Table('perfect_matches', Base.metadata,
+                              Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
+                              Column('restore_id', Integer, ForeignKey('restores.id'))
+                              )
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    
-    def __repr__(self):
-        return f"<Batch(id='{self.id}', name='{self.name}'>"
+Index('perfect_matches_accession_id', perfect_matches_table.c.accession_id, unique=False)
+Index('perfect_matches_restore_id', perfect_matches_table.c.restore_id, unique=False)
 
 
-class Dirlist(Base):
+# Many-to-many relationship between accessions and restores where filename and bytes
+# are the same, but the MD5 checksum is different
+altered_md5_matches_table = Table('altered_md5_matches', Base.metadata,
+                                  Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
+                                  Column('restore_id', Integer, ForeignKey('restores.id'))
+                                  )
+
+# Many-to-many relationship between accessions and restores where the filename
+# is the same, but the MD5 checksum and bytes are different
+filename_only_matches_table = Table('filename_only_matches', Base.metadata,
+                                    Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
+                                    Column('restore_id', Integer, ForeignKey('restores.id'))
+                                    )
+
+
+class Accession(Base):
     """
     Class representing an authoritative accession record listing
     """
-    
-    __tablename__ = "dirlists"
+
+    __tablename__ = "accessions"
 
     id = Column(Integer, primary_key=True)
+    batch = Column(String)
+    sourcefile = Column(String)
+    sourceline = Column(Integer)
     filename = Column(String)
-    md5 = Column(String)
-    bytes = Column(Integer)
-
-    batch_id = Column(Integer, ForeignKey("batches.id"))
-    batch = relationship("Batch", back_populates="dirlists")
-
-
-    def __repr__(self):
-        return f"<Dirlist(id='{self.id}', filename='{self.filename}'>"
-
-
-class Asset(Base):
-    """
-    Class representing a digital asset under preservation
-    """
-    
-    __tablename__ = "assets"
-
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
+    bytes = Column(BigInteger)
     timestamp = Column(String)
+    relpath = Column(String)
     md5 = Column(String)
-    bytes = Column(Integer)
-    dirlist_line = Column(Integer)
-
-    dirlist_id = Column(Integer, ForeignKey("dirlists.id"))
-    dirlist = relationship("Dirlist", back_populates="assets")
+    perfect_matches = relationship("Restore", secondary=perfect_matches_table, back_populates="perfect_matches")
+    altered_md5_matches = relationship("Restore", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
+    filename_only_matches = relationship("Restore", secondary=filename_only_matches_table,
+                                         back_populates="filename_only_matches")
 
     def __repr__(self):
-        return f"<Asset(name='{self.filename}', " + \
-               f"bytes={self.bytes}, md5='{self.md5}')>"
+        return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
 
 
-class Instance(Base):
+Index('accession_batch_relpath', Accession.batch, Accession.relpath, unique=True)
+Index('accession_md5', Accession.md5, unique=False)
+Index('accession_batch', Accession.batch, unique=False)
+
+
+class Restore(Base):
     """
-    Class representing a copy of a file under preservation
-    """
-
-    __tablename__ = "instances"
-
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
-    md5 = Column(String)
-    bytes = Column(Integer)
-    path = Column(String)
-    action = Column(String)
-
-    asset_id = Column(Integer, ForeignKey("assets.id"))
-
-    def __repr__(self):
-        return f"<Instance(id='{self.id}', name='{self.filename}'>"
-
-
-class RestoredFileList(Base):
-
-    __tablename__ = "restoredfilelists"
-
-    id = Column(Integer, primary_key=True)
-    filename = Column(String)
-    md5 = Column(String)
-    bytes = Column(Integer)
-    commonroot = Column(String)
-
-    def __repr__(self):
-        return f"<RestoredFileList(id='{self.id}', name='{self.filename}'>"
-
-
-class RestoredFile(Base):
-    """
-    Class representing a temporary instance restored from tape backup
+    Class representing a restore record listing
     """
 
     __tablename__ = "restores"
 
     id = Column(Integer, primary_key=True)
-    filename = Column(String)
     md5 = Column(String)
-    bytes = Column(Integer)
-    path = Column(String)
-    relpath = Column(String)
-    action = Column(String)
-
-    restoredfilelist_id = Column(Integer, ForeignKey("restoredfilelists.id"))
-    restoredfilelist = relationship(
-        "RestoredFileList", back_populates="restores"
-        )
+    filename = Column(String)
+    filepath = Column(String)
+    bytes = Column(BigInteger)
+    status = Column(String)
+    perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
+    altered_md5_matches = relationship("Accession", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
+    filename_only_matches = relationship("Accession", secondary=filename_only_matches_table,
+                                         back_populates="filename_only_matches")
+    transfers = relationship("Transfer", back_populates="restore")
 
     def __repr__(self):
-        return f"<RestoredFile(id='{self.id}', name='{self.filename}'>"
+        return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"
 
 
-Batch.dirlists = relationship(
-    "Dirlist", order_by=Dirlist.id, back_populates="batch"
-    )
-Dirlist.assets = relationship(
-    "Asset", order_by=Asset.id, back_populates="dirlist"
-    )
-RestoredFileList.restores = relationship(
-    "RestoredFile", order_by=RestoredFile.path, 
-    back_populates="restoredfilelist"
-    )
+Index('restore_filepath', Restore.filepath, unique=True)
+Index('restore_md5', Restore.md5, unique=False)
+Index('restore_filename', Restore.filename, unique=False)
+
+
+class Transfer(Base):
+    """
+    Class representing a transfer record listing
+    """
+
+    __tablename__ = "transfers"
+
+    id = Column(Integer, primary_key=True)
+    filepath = Column(String)
+    storagepath = Column(String)
+    restore_id = Column(Integer, ForeignKey('restores.id'))
+    restore = relationship("Restore", back_populates="transfers")
+
+    def __repr__(self):
+        return f"<Transfer(id='{self.id}', filepath='{self.filepath}', storagepath='{self.storagepath}'>"
+
+
+Index('transfer_filepath_storagepath', Transfer.filepath, Transfer.storagepath, unique=True)
+Index('transfer_filepath', Transfer.filepath, unique=False)
+Index('transfer_restore_id', Transfer.restore_id, unique=False)

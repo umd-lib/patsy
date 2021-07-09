@@ -1,48 +1,54 @@
-import csv
-import hashlib
-import os
 import sys
+from .model import Accession, Transfer
+from sqlalchemy import asc
 
 
-def calculate_md5(path):
+def get_accessions(session, batch=None):
     """
-    Calclulate and return the object's md5 hash.
+    Queries the database for a list of accessions
+
+    :param session: the Session in which to perform the query
+    :param batch: The name of the batch to limit the search to. Defaults to None,
+                  which means all accessions will be returned.
+    :return: a Query object representing the list of accessions
     """
-    hash = hashlib.md5()
-    with open(path, 'rb') as f:
-        while True:
-            data = f.read(8192)
-            if not data:
-                break
-            else:
-                hash.update(data)
-    return hash.hexdigest()
+    if batch is None:
+        accessions = session.query(Accession)
+    else:
+        accessions = session.query(Accession).filter(Accession.batch == batch)
+
+    return accessions
 
 
-def get_common_root(path):
+def get_batch_names(session):
     """
-    Return the root path common to all files in the dirlist.
-    Assumes that the dirlist is a csv with paths in the 2nd column.
+    Returns a list of all the batch names, i.e. the "batch" field in the
+    Accession table, in alphabetical order
+
+    :param session: the Session in which to perform the query
+    :return: a list of all the batch names, in alphabetical order
     """
-    with open(path) as handle:
-        reader = csv.reader(handle)
-        all_paths = [row[1] for row in reader]
-        if all_paths:
-            return os.path.commonpath(all_paths)
-        else:
-            return None
+
+    batch_names = []
+    query_result = session.query(Accession.batch).distinct().order_by(asc(Accession.batch)).all()
+
+    for row in query_result:
+        batch_names.append(row[0])
+
+    return batch_names
 
 
-def human_readable(bytes):
+def get_unmatched_transfers(session):
     """
-    Return a human-readable representation of the provided number of bytes.
+    Queries the database for a list of all transfers without a matching restore
+
+    :param session: the Session in which to perform the query
+    :return: a Query object representing the list of transfers without a
+             matching restore
     """
-    for n, label in enumerate(['bytes', 'KiB', 'MiB', 'GiB', 'TiB']):
-        value = bytes / (1024 ** n)
-        if value < 1024:
-            return f'{round(value, 2)} {label}'
-        else:
-            continue
+    transfers = session.query(Transfer).filter(Transfer.restore == None)
+
+    return transfers
 
 
 def print_header():
