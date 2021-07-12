@@ -40,3 +40,29 @@ def create_schema(args: argparse.Namespace) -> None:
     engine = session.get_bind()
     print("Creating the schema using the declarative base...")
     Base.metadata.create_all(engine)
+
+    # Create "patsy_record" view
+    with engine.connect() as con:
+        con.execute("DROP VIEW IF EXISTS patsy_record;")
+        rs = con.execute("""
+            CREATE VIEW patsy_record AS
+                SELECT
+                    batches.id as "batch_id",
+                    batches.name as "batch_name",
+                    accessions.id as "accession_id",
+                    accessions.relpath,
+                    accessions.filename,
+                    accessions.extension,
+                    accessions.bytes,
+                    accessions.timestamp,
+                    accessions.md5,
+                    accessions.sha1,
+                    accessions.sha256,
+                    locations.id as "location_id",
+                    locations.storage_provider,
+                    locations.storage_location
+                    FROM batches, accessions, locations, accession_locations
+                    WHERE batches.id = accessions.batch_id AND accessions.id = accession_locations.accession_id AND
+                          accession_locations.location_id = locations.id
+                    ORDER BY batches.id
+        """)
