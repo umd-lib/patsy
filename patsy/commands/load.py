@@ -20,7 +20,7 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: Gateway) -> str:
         file = args.file
         # Display batch configuration information to the user
         print(
@@ -29,8 +29,8 @@ class Command(patsy.core.command.Command):
             '======\n'
         )
 
-        from unittest.mock import MagicMock
-        gateway = MagicMock(Gateway)
+        # from unittest.mock import MagicMock
+        # gateway = MagicMock(Gateway)
 
         load_impl = Load(gateway)
         load_impl.process_file(file)

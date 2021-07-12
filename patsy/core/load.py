@@ -1,6 +1,6 @@
 import csv
 from patsy.core.gateway import Gateway
-from patsy.core.patsy_entry import PatsyEntryFactory
+from patsy.core.patsy_record import PatsyRecordFactory
 from typing import Dict
 import logging
 
@@ -41,8 +41,8 @@ class Load:
         if not self.is_row_valid(csv_line_index, row):
             return
 
-        patsy_entry = PatsyEntryFactory.from_inventory_csv(row)
-        if self.gateway.add(patsy_entry):
+        patsy_record = PatsyRecordFactory.from_inventory_csv(row)
+        if self.gateway.add(patsy_record):
             self.results['rows_loaded'] += 1
         else:
             self.results['rows_skipped'] += 1

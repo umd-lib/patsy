@@ -7,7 +7,7 @@ import sys
 from importlib import import_module
 from patsy import commands, version
 from pkgutil import iter_modules
-
+from patsy.core.db_gateway import DbGateway
 
 def print_header(subcommand: str) -> None:
     """Generate script header and display it in the console."""
@@ -33,6 +33,13 @@ def main() -> None:
         version=version
     )
 
+    parser.add_argument(
+        '-d', '--database',
+        default=':memory:',
+        action='store',
+        help='Path to db file (defaults to in-memory db)',
+    )
+
     subparsers = parser.add_subparsers(title='commands')
 
     # load all defined subcommands from the patsy.commands package
@@ -55,7 +62,8 @@ def main() -> None:
     command = command_modules[args.cmd_name].Command()  # type: ignore[attr-defined]
 
     print_header(args.cmd_name)
-    result = command(args)
+    gateway = DbGateway(args)
+    result = command(args, gateway)
     if result:
         sys.stderr.write(result)
         sys.stderr.write('\n\n')
