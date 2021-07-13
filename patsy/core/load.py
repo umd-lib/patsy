@@ -11,11 +11,13 @@ class Load:
     # Fields that must be present in the CSV, with non-empty content
     REQUIRED_CSV_FIELDS = [
         'BATCH', 'RELPATH', 'FILENAME', 'EXTENSION', 'BYTES', 'MD5',
-        'storageprovider', 'storagepath'
+
     ]
 
     # Fields that must be present, but may be empty
-    ALLOWED_EMPTY_CSV_FIELDS = ['MTIME', 'SHA1', 'SHA256']
+    ALLOWED_EMPTY_CSV_FIELDS = [
+        'MTIME', 'SHA1', 'SHA256', 'storageprovider', 'storagepath'
+    ]
 
     ALL_CSV_FIELDS = REQUIRED_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
 
