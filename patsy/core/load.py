@@ -16,7 +16,7 @@ class Load:
 
     # Fields that must be present, but may be empty
     ALLOWED_EMPTY_CSV_FIELDS = [
-        'MTIME', 'SHA1', 'SHA256', 'storageprovider', 'storagepath'
+        'MTIME', 'MODDATE', 'SHA1', 'SHA256', 'storageprovider', 'storagepath'
     ]
 
     ALL_CSV_FIELDS = REQUIRED_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS

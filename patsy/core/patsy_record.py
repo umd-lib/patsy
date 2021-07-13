@@ -9,7 +9,7 @@ class PatsyRecord:
         pass
 
     def __repr__(self) -> str:
-        return f"{self.__class__}: {self.batch},{self.relpath},{self.md5},{self.storageprovider},{self.storagepath}"
+        return f"{self.__class__}: {self.batch},{self.relpath},{self.md5},{self.storage_provider},{self.storage_location}"
 
 
 class PatsyRecordFactory:
@@ -21,7 +21,7 @@ class PatsyRecordFactory:
         patsy_record.filename = csv_row['FILENAME']
         patsy_record.extension = csv_row['EXTENSION']
         patsy_record.bytes = csv_row['BYTES']
-        patsy_record.mtime = csv_row['MTIME']
+        patsy_record.moddate = csv_row['MODDATE']
         patsy_record.md5 = csv_row['MD5']
         patsy_record.sha1 = csv_row['SHA1']
         patsy_record.sha256 = csv_row['SHA256']
