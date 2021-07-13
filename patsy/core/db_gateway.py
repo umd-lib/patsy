@@ -16,28 +16,21 @@ class DbGateway(Gateway):
     def __init__(self, args):
         use_database_file(args.database)
         self.session = Session()
-        engine = self.session.get_bind()
+        self.batch_ids = {}
 
     def add(self, patsy_record: PatsyRecord) -> bool:
-        # try:
-        #     session = Session()
-
         batch_name = patsy_record.batch
-        try:
+        batch_id = self.batch_ids.get(batch_name, None)
+
+        if batch_id is None:
             batch = self.find_or_create_batch(patsy_record)
+            batch_id = batch.id
+            self.batch_ids[batch_name] = batch_id
 
-            accession = self.find_or_create_accession(batch, patsy_record)
+        accession = self.find_or_create_accession(batch_id, patsy_record)
 
-            location = self.find_or_create_location(accession, patsy_record)
-
-            accession.locations.append(location)
-            location.accessions.append(accession)
-            self.session.commit()
-        except IntegrityError as err:
-            self.session.rollback()
-
-        # finally:
-        #     self.session.close()
+        location = self.find_or_create_location(patsy_record)
+        accession.locations.append(location)
 
     def find_or_create_batch(self, patsy_record: PatsyRecord) -> Batch:
         batch_name = patsy_record.batch
@@ -46,14 +39,15 @@ class DbGateway(Gateway):
         if batch is None:
             batch = Batch(name=batch_name)
             self.session.add(batch)
+            self.session.commit()
 
         return batch
 
-    def find_or_create_accession(self, batch: Batch, patsy_record: PatsyRecord) -> Accession:
+    def find_or_create_accession(self, batch_id: int, patsy_record: PatsyRecord) -> Accession:
         accession = self.session.query(Accession).filter(
-            Accession.batch == batch,
+            Accession.batch_id == batch_id,
             Accession.relpath == patsy_record.relpath
-            ).first()
+        ).first()
 
         if accession is None:
             accession = Accession(
@@ -61,17 +55,16 @@ class DbGateway(Gateway):
                 filename=patsy_record.filename,
                 extension=patsy_record.extension,
                 bytes=patsy_record.bytes,
-                timestamp=patsy_record.mtime,
+                timestamp=patsy_record.moddate,
                 md5=patsy_record.md5,
                 sha1=patsy_record.sha1,
                 sha256=patsy_record.sha256
             )
-            accession.batch = batch
+            accession.batch_id = batch_id
 
         return accession
 
-    def find_or_create_location(self, accession: Accession, patsy_record: PatsyRecord) -> Accession:
-
+    def find_or_create_location(self, patsy_record: PatsyRecord) -> Accession:
         location = self.session.query(Location).filter(
             Location.storage_location == patsy_record.storage_location,
             Location.storage_provider == patsy_record.storage_provider
@@ -85,3 +78,9 @@ class DbGateway(Gateway):
             self.session.add(location)
 
         return location
+
+    def close(self):
+        try:
+            self.session.commit()
+        except IntegrityError as err:
+            self.session.rollback()

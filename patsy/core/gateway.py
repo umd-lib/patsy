@@ -13,3 +13,7 @@ class Gateway(metaclass=abc.ABCMeta):
         addition was performed, False, if the record already existed.
         """
         raise NotImplementedError
+
+    @abc.abstractmethod
+    def close(self) -> None:
+        pass

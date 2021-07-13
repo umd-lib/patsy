@@ -10,6 +10,9 @@ accession_locations_table = Table('accession_locations', Base.metadata,
                                   Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
                                   Column('location_id', Integer, ForeignKey('locations.id')))
 
+Index('accession_locations_accession_id', accession_locations_table.c.accession_id, unique=False)
+Index('accession_locations_location_id', accession_locations_table.c.location_id, unique=False)
+
 
 class Batch(Base):
     """
@@ -53,6 +56,9 @@ class Accession(Base):
 
 Batch.accessions = relationship("Accession", order_by=Accession.id, back_populates="batch")
 
+Index('batch_name', Batch.name)
+Index('accession_batch_relpath', Accession.batch_id, Accession.relpath, unique=True)
+
 
 class Location(Base):
     """
@@ -68,3 +74,6 @@ class Location(Base):
 
     def __repr__(self):
         return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', storage_location='{self.storage_location}'>"
+
+
+Index('location_storage', Location.storage_provider, Location.storage_location, unique=True)
