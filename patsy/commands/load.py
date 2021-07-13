@@ -38,8 +38,9 @@ class Command(patsy.core.command.Command):
         results = load_impl.results
         result_messages = [
             f"Total rows processed: {results['rows_processed']}",
-            f"Rows loaded: {results['rows_loaded']}",
-            f"Rows skipped (already exists): {results['rows_skipped']}",
+            f"Batches added: {results['batches_added']}",
+            f"Accessions added: {results['accessions_added']}",
+            f"Locations added: {results['locations_added']}",
         ]
         has_errors = len(results['errors']) > 0
         if has_errors:

@@ -25,8 +25,9 @@ class Load:
         self.gateway = gateway
         self.results = {
             'rows_processed': 0,  # The total number of rows that were processed
-            'rows_loaded': 0,  # The number of rows loaded into the database
-            'rows_skipped': 0,  # The number of rows that were skipped (already existed in database)
+            'batches_added': 0,
+            'accessions_added': 0,
+            'locations_added': 0,
             'errors': []  # Errors in rows (one entry in list for each row)
         }
 
@@ -34,20 +35,24 @@ class Load:
         csv_line_index = 2  # Starting at two to account for CSV header
         with open(file) as f:
             reader = csv.DictReader(f, delimiter=',')
+            add_result = None
             for row in reader:
-                self.process_csv_row(csv_line_index, row)
+                add_result = self.process_csv_row(csv_line_index, row)
                 self.results['rows_processed'] += 1
                 csv_line_index += 1
+            self.gateway.close()
+
+            if add_result:
+                self.results['batches_added'] = add_result.batches_added
+                self.results['accessions_added'] = add_result.accessions_added
+                self.results['locations_added'] = add_result.locations_added
 
     def process_csv_row(self, csv_line_index: int, row: Dict[str, str]) -> None:
         if not self.is_row_valid(csv_line_index, row):
             return
 
         patsy_record = PatsyRecordFactory.from_inventory_csv(row)
-        if self.gateway.add(patsy_record):
-            self.results['rows_loaded'] += 1
-        else:
-            self.results['rows_skipped'] += 1
+        return self.gateway.add(patsy_record)
 
     def is_row_valid(self, csv_line_index: int, row_dict: Dict[str, str]) -> bool:
         """

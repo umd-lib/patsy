@@ -6,7 +6,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from patsy.database import Session
 from patsy.core.patsy_record import PatsyRecord
 from patsy.model import Batch, Accession, Location
-from patsy.core.gateway import Gateway
+from patsy.core.gateway import Gateway, AddResult
 # from .load_result import LoadResult, FileLoadResult
 # from .progress_notifier import ProgressNotifier
 from patsy.database import use_database_file
@@ -17,8 +17,9 @@ class DbGateway(Gateway):
         use_database_file(args.database)
         self.session = Session()
         self.batch_ids = {}
+        self.add_result = AddResult()
 
-    def add(self, patsy_record: PatsyRecord) -> bool:
+    def add(self, patsy_record: PatsyRecord) -> AddResult:
         batch_name = patsy_record.batch
         batch_id = self.batch_ids.get(batch_name, None)
 
@@ -28,9 +29,9 @@ class DbGateway(Gateway):
             self.batch_ids[batch_name] = batch_id
 
         accession = self.find_or_create_accession(batch_id, patsy_record)
-
         location = self.find_or_create_location(patsy_record)
         accession.locations.append(location)
+        return self.add_result
 
     def find_or_create_batch(self, patsy_record: PatsyRecord) -> Batch:
         batch_name = patsy_record.batch
@@ -40,6 +41,7 @@ class DbGateway(Gateway):
             batch = Batch(name=batch_name)
             self.session.add(batch)
             self.session.commit()
+            self.add_result.batches_added += 1
 
         return batch
 
@@ -61,6 +63,8 @@ class DbGateway(Gateway):
                 sha256=patsy_record.sha256
             )
             accession.batch_id = batch_id
+            self.session.add(accession)
+            self.add_result.accessions_added += 1
 
         return accession
 
@@ -76,6 +80,7 @@ class DbGateway(Gateway):
                 storage_provider=patsy_record.storage_provider
             )
             self.session.add(location)
+            self.add_result.locations_added += 1
 
         return location
 
