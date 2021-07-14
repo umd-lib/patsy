@@ -28,9 +28,8 @@ class TestLoad(unittest.TestCase):
     def test_process_csv_file(self):
         csv_file = 'tests/fixtures/load/colors_inventory.csv'
 
-        self.load.process_file(csv_file)
-        results = self.load.results
-        self.assertEqual(3, results['rows_processed'])
+        load_result = self.load.process_file(csv_file)
+        self.assertEqual(3, load_result.rows_processed)
 
     def test_is_row_valid__empty_dict(self):
         csv_line_index = 2
@@ -38,21 +37,21 @@ class TestLoad(unittest.TestCase):
         row_dict = {}
         self.assertFalse(self.load.is_row_valid(csv_line_index, row_dict))
 
-        self.assertEqual(1, len(self.load.results['errors']))
+        self.assertEqual(1, len(self.load.load_result.errors))
 
     def test_is_row_valid__missing_required_field(self):
         csv_line_index = 2
 
         row_dict = remove_key(self.valid_row_dict, 'BATCH')
         self.assertFalse(self.load.is_row_valid(csv_line_index, row_dict))
-        self.assertEqual(1, len(self.load.results['errors']))
+        self.assertEqual(1, len(self.load.load_result.errors))
 
     def test_is_row_valid__missing_allowed_empty_field(self):
         csv_line_index = 2
 
         row_dict = remove_key(self.valid_row_dict, 'SHA256')
         self.assertFalse(self.load.is_row_valid(csv_line_index, row_dict))
-        self.assertEqual(1, len(self.load.results['errors']))
+        self.assertEqual(1, len(self.load.load_result.errors))
 
     def test_is_row_valid__required_field_no_content(self):
         csv_line_index = 2
@@ -60,7 +59,7 @@ class TestLoad(unittest.TestCase):
         row_dict = self.valid_row_dict.copy()
         row_dict['BATCH'] = ""
         self.assertFalse(self.load.is_row_valid(csv_line_index, row_dict))
-        self.assertEqual(1, len(self.load.results['errors']))
+        self.assertEqual(1, len(self.load.load_result.errors))
 
     def test_is_row_valid__allowed_missing_field_no_content(self):
         csv_line_index = 2
@@ -68,7 +67,7 @@ class TestLoad(unittest.TestCase):
         row_dict = self.valid_row_dict.copy()
         row_dict['SHA256'] = ""
         self.assertTrue(self.load.is_row_valid(csv_line_index, row_dict))
-        self.assertEqual(0, len(self.load.results['errors']))
+        self.assertEqual(0, len(self.load.load_result.errors))
 
 
 def remove_key(dict: Dict[str, str], key: str) -> Dict[str, str]:
