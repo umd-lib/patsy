@@ -27,13 +27,13 @@ class LoadResult():
 class Load:
     # Fields that must be present in the CSV, with non-empty content
     REQUIRED_CONTENT_CSV_FIELDS = [
-        'BATCH', 'RELPATH', 'FILENAME', 'EXTENSION', 'BYTES', 'MD5',
+        'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5',
 
     ]
 
     # Fields that must be present, but may be empty
     ALLOWED_EMPTY_CSV_FIELDS = [
-        'MTIME', 'MODDATE', 'SHA1', 'SHA256'
+        'EXTENSION', 'MTIME', 'MODDATE', 'SHA1', 'SHA256'
     ]
 
     REQUIRED_CSV_FIELDS = REQUIRED_CONTENT_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
