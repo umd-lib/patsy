@@ -62,8 +62,6 @@ class Load:
                     self.load_result.accessions_added += add_result.accessions_added
                     self.load_result.locations_added += add_result.locations_added
 
-            self.gateway.close()
-
         return self.load_result
 
     def process_csv_row(self, csv_line_index: int, row: Dict[str, str]) -> Optional[AddResult]:
