@@ -1,12 +1,22 @@
-from typing import Dict
+from typing import Dict, Optional
 
 
 class PatsyRecord:
     """
     Represents a single accession/location in the database
     """
-    def __init__(self):
-        pass
+    def __init__(self) -> None:
+        self.batch: str = ""
+        self.relpath: str = ""
+        self.filename: str = ""
+        self.extension: str = ""
+        self.bytes: str = ""
+        self.moddate: str = ""
+        self.md5: str = ""
+        self.sha1: str = ""
+        self.sha256: str = ""
+        self.storage_provider: Optional[str] = None
+        self.storage_location: Optional[str] = None
 
     def __repr__(self) -> str:
         return f"{self.__class__}: {self.batch},{self.relpath},{self.md5}," \

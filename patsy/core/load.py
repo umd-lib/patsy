@@ -1,10 +1,19 @@
 import csv
-from patsy.core.db_gateway import DbGateway
+from patsy.core.db_gateway import DbGateway, AddResult
 from patsy.core.patsy_record import PatsyRecordFactory
-from typing import Dict
+from typing import Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class LoadResult():
+    def __init__(self) -> None:
+        self.rows_processed = 0
+        self.batches_added = 0
+        self.accessions_added = 0
+        self.locations_added = 0
+        self.errors: List[str] = []
 
 
 class Load:
@@ -28,33 +37,30 @@ class Load:
 
     def __init__(self, gateway: DbGateway) -> None:
         self.gateway = gateway
-        self.results = {
-            'rows_processed': 0,  # The total number of rows that were processed
-            'batches_added': 0,
-            'accessions_added': 0,
-            'locations_added': 0,
-            'errors': []  # Errors in rows (one entry in list for each row)
-        }
+        self.load_result = LoadResult()
 
-    def process_file(self, file: str) -> None:
+    def process_file(self, file: str) -> LoadResult:
         csv_line_index = 2  # Starting at two to account for CSV header
         with open(file) as f:
             reader = csv.DictReader(f, delimiter=',')
             add_result = None
             for row in reader:
                 add_result = self.process_csv_row(csv_line_index, row)
-                self.results['rows_processed'] += 1
+                self.load_result.rows_processed += 1
                 csv_line_index += 1
+
+                if add_result:
+                    self.load_result.batches_added += add_result.batches_added
+                    self.load_result.accessions_added += add_result.accessions_added
+                    self.load_result.locations_added += add_result.locations_added
+
             self.gateway.close()
 
-            if add_result:
-                self.results['batches_added'] = add_result.batches_added
-                self.results['accessions_added'] = add_result.accessions_added
-                self.results['locations_added'] = add_result.locations_added
+        return self.load_result
 
-    def process_csv_row(self, csv_line_index: int, row: Dict[str, str]) -> None:
+    def process_csv_row(self, csv_line_index: int, row: Dict[str, str]) -> Optional[AddResult]:
         if not self.is_row_valid(csv_line_index, row):
-            return
+            return None
 
         patsy_record = PatsyRecordFactory.from_inventory_csv(row)
         return self.gateway.add(patsy_record)
@@ -76,7 +82,7 @@ class Load:
                     continue
 
         if missing_fields or missing_values:
-            self.results['errors'].append(
+            self.load_result.errors.append(
                 f"Line {csv_line_index}, missing_fields: {missing_fields}, missing_values = {missing_values}"
             )
             return False

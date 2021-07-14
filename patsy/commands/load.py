@@ -31,16 +31,15 @@ class Command(patsy.core.command.Command):
         )
 
         load_impl = Load(gateway)
-        load_impl.process_file(file)
+        load_result = load_impl.process_file(file)
 
-        results = load_impl.results
         result_messages = [
-            f"Total rows processed: {results['rows_processed']}",
-            f"Batches added: {results['batches_added']}",
-            f"Accessions added: {results['accessions_added']}",
-            f"Locations added: {results['locations_added']}",
+            f"Total rows processed: {load_result.rows_processed}",
+            f"Batches added: {load_result.batches_added}",
+            f"Accessions added: {load_result.accessions_added}",
+            f"Locations added: {load_result.locations_added}",
         ]
-        errors = cast(List[str], results['errors'])
+        errors = load_result.errors
         has_errors = len(errors) > 0
         if has_errors:
             result_messages.extend([

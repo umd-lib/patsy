@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 # Many-to-many relationship between accessions and locations
@@ -14,7 +13,7 @@ Index('accession_locations_accession_id', accession_locations_table.c.accession_
 Index('accession_locations_location_id', accession_locations_table.c.location_id, unique=False)
 
 
-class Batch(Base):
+class Batch(Base):  # type: ignore
     """
     Class representing a batch
     """
@@ -24,11 +23,11 @@ class Batch(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Batch(id='{self.id}', name='{self.name}'>"
 
 
-class Accession(Base):
+class Accession(Base):  # type: ignore
     """
     Class representing an authoritative accession record listing
     """
@@ -50,7 +49,7 @@ class Accession(Base):
     locations = relationship(
         "Location", secondary=accession_locations_table, back_populates="accessions")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
 
 
@@ -60,7 +59,7 @@ Index('batch_name', Batch.name)
 Index('accession_batch_relpath', Accession.batch_id, Accession.relpath, unique=True)
 
 
-class Location(Base):
+class Location(Base):  # type: ignore
     """
     Class representing a storage location for an accession.
     """
@@ -72,7 +71,7 @@ class Location(Base):
     storage_location = Column(String)
     accessions = relationship("Accession", secondary=accession_locations_table, back_populates="locations")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', " \
                f"storage_location='{self.storage_location}'>"
 
