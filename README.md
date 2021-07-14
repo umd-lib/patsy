@@ -300,8 +300,21 @@ parameter is required.
 
 ### Exporting Inventory Records for Patsy v2
 
-A "inventory" CSV file can be created for loading into a patsy v2 database
-with the following command:
+The "export_inventory" command exports CSV-formatted information in a
+format that can be loaded into a patsy v2 database.
+
+Before running the command, the "schema" commnd needs to be run once on
+the database to set up the necessary database views:
+
+```
+> python3 -m patsy --database <DATABASE> schema
+```
+
+where \<DATABASE> is the path to the SQLite database. This command only needs
+to be run once per database (if is safe to run more than once).
+
+The "inventory" CSV file can then be created for loading into a patsy v2
+database with the following command:
 
 ```
 > python3 -m patsy --database <DATABASE> export_inventory --batch <BATCH> --output <OUTPUT_FILE>
