@@ -61,8 +61,9 @@ def create_schema(args: argparse.Namespace) -> None:
                     locations.id as "location_id",
                     locations.storage_provider,
                     locations.storage_location
-                    FROM batches, accessions, locations, accession_locations
-                    WHERE batches.id = accessions.batch_id AND accessions.id = accession_locations.accession_id AND
-                          accession_locations.location_id = locations.id
+                    FROM batches
+                    LEFT JOIN accessions ON batches.id = accessions.batch_id
+                    LEFT JOIN accession_locations ON accessions.id = accession_locations.accession_id
+                    LEFT JOIN locations ON accession_locations.location_id = locations.id
                     ORDER BY batches.id
         """)
