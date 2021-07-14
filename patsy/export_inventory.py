@@ -143,6 +143,12 @@ def export_row(writer, row, fields, storage_provider):
         row_dict[field] = row[index]
     path = row_dict['PATH']
     relpath = row_dict['RELPATH']
+    # A few patsy-db v1 entries do not have a RELPATH. In these cases,
+    # assign FILENAME to RELPATH
+    if not relpath:
+        row_dict['RELPATH'] = row_dict['FILENAME']
+        relpath = row_dict['FILENAME']
+
     row_dict["DIRECTORY"] = os.path.dirname(path)
     # Using RELPATH for extension, instead of PATH, because PATH may not be
     # present, while RELPATH is required.
