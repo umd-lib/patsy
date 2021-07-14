@@ -2,9 +2,6 @@ import csv
 from patsy.core.db_gateway import DbGateway, AddResult
 from patsy.core.patsy_record import PatsyRecordFactory
 from typing import Dict, List, Optional
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class LoadResult():

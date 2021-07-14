@@ -2,7 +2,6 @@ import argparse
 import patsy.core.command
 from patsy.core.load import Load
 from patsy.core.db_gateway import DbGateway
-from typing import cast, List
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -51,7 +50,7 @@ class Command(patsy.core.command.Command):
         if not has_errors:
             result_messages.append("\nLOAD SUCCESSFUL")
         else:
-            result_messages.append("\n---- LOAD FAILED ----")
+            result_messages.append("\n---- LOAD COMPLETE WITH ERRORS ----")
 
         result = "\n".join(result_messages)
 

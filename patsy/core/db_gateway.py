@@ -1,7 +1,5 @@
 from argparse import Namespace
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.sql.operators import endswith_op
-from sqlalchemy.sql.sqltypes import TIMESTAMP
 from patsy.database import Session
 from patsy.core.patsy_record import PatsyRecord
 from patsy.model import Batch, Accession, Location
