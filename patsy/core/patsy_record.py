@@ -26,7 +26,7 @@ class PatsyRecordFactory:
         patsy_record.md5 = csv_row['MD5']
         patsy_record.sha1 = csv_row['SHA1']
         patsy_record.sha256 = csv_row['SHA256']
-        patsy_record.storage_provider = csv_row['storageprovider']
-        patsy_record.storage_location = csv_row['storagepath']
+        patsy_record.storage_provider = csv_row.get('storageprovider', None)
+        patsy_record.storage_location = csv_row.get('storagepath', None)
 
         return patsy_record

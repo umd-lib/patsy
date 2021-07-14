@@ -9,17 +9,22 @@ logger = logging.getLogger(__name__)
 
 class Load:
     # Fields that must be present in the CSV, with non-empty content
-    REQUIRED_CSV_FIELDS = [
+    REQUIRED_CONTENT_CSV_FIELDS = [
         'BATCH', 'RELPATH', 'FILENAME', 'EXTENSION', 'BYTES', 'MD5',
 
     ]
 
     # Fields that must be present, but may be empty
     ALLOWED_EMPTY_CSV_FIELDS = [
-        'MTIME', 'MODDATE', 'SHA1', 'SHA256', 'storageprovider', 'storagepath'
+        'MTIME', 'MODDATE', 'SHA1', 'SHA256'
     ]
 
-    ALL_CSV_FIELDS = REQUIRED_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
+    REQUIRED_CSV_FIELDS = REQUIRED_CONTENT_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
+
+    # The following fields are not required in the CSV file
+    ALLOWED_MISSING_FIELDS = [
+        'storageprovider', 'storagepath'
+    ]
 
     def __init__(self, gateway: Gateway) -> None:
         self.gateway = gateway
@@ -61,11 +66,11 @@ class Load:
         missing_fields = []
         missing_values = []
 
-        for key in Load.ALL_CSV_FIELDS:
+        for key in Load.REQUIRED_CSV_FIELDS:
             if key not in row_dict:
                 missing_fields.append(key)
                 continue
-            if key in Load.REQUIRED_CSV_FIELDS:
+            if key in Load.REQUIRED_CONTENT_CSV_FIELDS:
                 if not row_dict[key]:
                     missing_values.append(key)
                     continue
