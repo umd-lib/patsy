@@ -12,6 +12,17 @@ class LoadResult():
         self.locations_added = 0
         self.errors: List[str] = []
 
+    def __repr__(self) -> str:
+        lines = [
+            f"rows_processed='{self.rows_processed}'",
+            f"batches_added='{self.batches_added}'",
+            f"accessions_added='{self.accessions_added}'",
+            f"locations_added='{self.locations_added}'",
+            f"errors='{self.errors}'"
+        ]
+
+        return f"<LoadResult({','.join(lines)})>"
+
 
 class Load:
     # Fields that must be present in the CSV, with non-empty content
