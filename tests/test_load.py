@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
-from patsy.core.gateway import Gateway
+from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from typing import Dict
 
@@ -22,7 +22,7 @@ class TestLoad(unittest.TestCase):
             'storagepath': 'storagepath'
         }
 
-        self.mock_gateway = MagicMock(spec=Gateway)
+        self.mock_gateway = MagicMock(spec=DbGateway)
         self.load = Load(self.mock_gateway)
 
     def test_process_csv_file(self):

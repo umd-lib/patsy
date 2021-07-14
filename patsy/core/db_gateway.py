@@ -1,18 +1,20 @@
-import abc
-import os
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql.operators import endswith_op
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from patsy.database import Session
 from patsy.core.patsy_record import PatsyRecord
 from patsy.model import Batch, Accession, Location
-from patsy.core.gateway import Gateway, AddResult
-# from .load_result import LoadResult, FileLoadResult
-# from .progress_notifier import ProgressNotifier
 from patsy.database import use_database_file
 
 
-class DbGateway(Gateway):
+class AddResult():
+    def __init__(self):
+        self.batches_added = 0
+        self.accessions_added = 0
+        self.locations_added = 0
+
+
+class DbGateway():
     def __init__(self, args):
         use_database_file(args.database)
         self.session = Session()

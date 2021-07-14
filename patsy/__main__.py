@@ -65,6 +65,7 @@ def main() -> None:
     print_header(args.cmd_name)
     gateway = DbGateway(args)
     result = command(args, gateway)
+
     if result:
         sys.stderr.write(result)
         sys.stderr.write('\n\n')

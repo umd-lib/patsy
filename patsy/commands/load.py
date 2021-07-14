@@ -1,7 +1,8 @@
 import argparse
 import patsy.core.command
-from patsy.core.gateway import Gateway
 from patsy.core.load import Load
+from patsy.core.db_gateway import DbGateway
+from typing import cast, List
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -20,7 +21,7 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: Gateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
         file = args.file
         # Display batch configuration information to the user
         print(
@@ -28,9 +29,6 @@ class Command(patsy.core.command.Command):
             f'  - File: {file}\n'
             '======\n'
         )
-
-        # from unittest.mock import MagicMock
-        # gateway = MagicMock(Gateway)
 
         load_impl = Load(gateway)
         load_impl.process_file(file)
@@ -42,13 +40,14 @@ class Command(patsy.core.command.Command):
             f"Accessions added: {results['accessions_added']}",
             f"Locations added: {results['locations_added']}",
         ]
-        has_errors = len(results['errors']) > 0
+        errors = cast(List[str], results['errors'])
+        has_errors = len(errors) > 0
         if has_errors:
             result_messages.extend([
                "\n---Errors----",
-               f"Invalid rows: {len(results['errors'])}",
+               f"Invalid rows: {len(errors)}",
             ])
-            result_messages.extend(results['errors'])
+            result_messages.extend(errors)
 
         if not has_errors:
             result_messages.append("\nLOAD SUCCESSFUL")

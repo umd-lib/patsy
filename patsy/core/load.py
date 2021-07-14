@@ -1,5 +1,5 @@
 import csv
-from patsy.core.gateway import Gateway
+from patsy.core.db_gateway import DbGateway
 from patsy.core.patsy_record import PatsyRecordFactory
 from typing import Dict
 import logging
@@ -26,7 +26,7 @@ class Load:
         'storageprovider', 'storagepath'
     ]
 
-    def __init__(self, gateway: Gateway) -> None:
+    def __init__(self, gateway: DbGateway) -> None:
         self.gateway = gateway
         self.results = {
             'rows_processed': 0,  # The total number of rows that were processed
