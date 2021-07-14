@@ -73,7 +73,8 @@ class Location(Base):
     accessions = relationship("Accession", secondary=accession_locations_table, back_populates="locations")
 
     def __repr__(self):
-        return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', storage_location='{self.storage_location}'>"
+        return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', " \
+               f"storage_location='{self.storage_location}'>"
 
 
 Index('location_storage', Location.storage_provider, Location.storage_location, unique=True)

@@ -9,7 +9,8 @@ class PatsyRecord:
         pass
 
     def __repr__(self) -> str:
-        return f"{self.__class__}: {self.batch},{self.relpath},{self.md5},{self.storage_provider},{self.storage_location}"
+        return f"{self.__class__}: {self.batch},{self.relpath},{self.md5}," \
+               f"{self.storage_provider},{self.storage_location}"
 
 
 class PatsyRecordFactory:

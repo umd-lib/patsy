@@ -9,6 +9,7 @@ from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
 
+
 def print_header(subcommand: str) -> None:
     """Generate script header and display it in the console."""
     title = 'patsy {0}'.format(subcommand)

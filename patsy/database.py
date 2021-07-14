@@ -29,7 +29,7 @@ def use_database_file(database: str) -> None:
     if not db_path.startswith('postgresql:'):
         event.listen(engine, 'connect',
                      lambda dbapi_con, con_record:
-                        dbapi_con.execute('pragma foreign_keys=ON'))
+                         dbapi_con.execute('pragma foreign_keys=ON'))
 
     Session.configure(bind=engine)
 
