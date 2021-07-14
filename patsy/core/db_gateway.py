@@ -30,7 +30,8 @@ class DbGateway(Gateway):
 
         accession = self.find_or_create_accession(batch_id, patsy_record)
         location = self.find_or_create_location(patsy_record)
-        accession.locations.append(location)
+        if location:
+            accession.locations.append(location)
         return self.add_result
 
     def find_or_create_batch(self, patsy_record: PatsyRecord) -> Batch:
@@ -69,6 +70,10 @@ class DbGateway(Gateway):
         return accession
 
     def find_or_create_location(self, patsy_record: PatsyRecord) -> Accession:
+        storage_location = patsy_record.storage_location
+        if not storage_location:
+            return None
+
         location = self.session.query(Location).filter(
             Location.storage_location == patsy_record.storage_location,
             Location.storage_provider == patsy_record.storage_provider
