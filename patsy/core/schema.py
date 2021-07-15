@@ -12,11 +12,11 @@ class Schema:
         print("Creating the schema using the declarative base...")
         Base.metadata.create_all(engine)
 
-        # Create "patsy_record" view
+        # Create "patsy_records" view
         with engine.connect() as con:
-            con.execute("DROP VIEW IF EXISTS patsy_record;")
+            con.execute("DROP VIEW IF EXISTS patsy_records;")
             rs = con.execute("""
-                CREATE VIEW patsy_record AS
+                CREATE VIEW patsy_records AS
                     SELECT
                         batches.id as "batch_id",
                         batches.name as "batch_name",
