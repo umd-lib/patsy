@@ -2,6 +2,17 @@
 
 Command-line client for preservation asset tracking system (PATSy)
 
+## Project Branches
+
+This project uses the "GitHub Flow" branching model (see
+<https://confluence.umd.edu/display/LIB/GitHub+Flow+Model+for+Kubernetes+configuration+%28k8s-%29+repositories>)
+
+The "main" branch represents version 2 (v2) of the "patsy-db" codebase, which
+is incompatible with the "legacy" version 1 (v1) codebase.
+
+Any work on the legacy patsy-db v1 application should be performed on the
+"main-v1" branch.
+
 ## Prerequisites
 
 * Python 3.7
@@ -52,7 +63,7 @@ The following lists the known commands:
 ### Creating a new (empty) database
 
 ```
-> python3 -m patsy --database <DATABASE> schema 
+> python3 -m patsy --database <DATABASE> schema
 ```
 
 where `<DATABASE>` is one of:
@@ -220,7 +231,7 @@ The following fields will be output:
   once.
 * num_accessions_transferred: The number of accessions that have been
   transferred. Accessions that match multiple restore records which have been
-  transferred will only be counted once.  
+  transferred will only be counted once.
 
 ### Unmatched Accessions
 
@@ -286,6 +297,35 @@ will properly remove related entries in the "perfect_matches",
 where <DATABASE> is the path to the SQLite database, and \<BATCH> is
 a batch name (corresponding to the "batch" field in the accession). The \<BATCH>
 parameter is required.
+
+### Exporting Inventory Records for Patsy v2
+
+The "export_inventory" command exports CSV-formatted information in a
+format that can be loaded into a patsy v2 database.
+
+Before running the command, the "schema" commnd needs to be run once on
+the database to set up the necessary database views:
+
+```
+> python3 -m patsy --database <DATABASE> schema
+```
+
+where \<DATABASE> is the path to the SQLite database. This command only needs
+to be run once per database (if is safe to run more than once).
+
+The "inventory" CSV file can then be created for loading into a patsy v2
+database with the following command:
+
+```
+> python3 -m patsy --database <DATABASE> export_inventory --batch <BATCH> --output <OUTPUT_FILE>
+```
+
+where \<DATABASE> is the path to the SQLite database, \<BATCH> is
+a batch name (corresponding to the "batch" field in the accession) and
+<OUTPUT_FILE> is the output filename for the CSV file containing the results.
+Both \<BATCH> and <OUTPUT_FILE> are optional. If \<BATCH> is not provided,
+information about all the batches will be output. If <OUTPUT_FILE> is not
+provided, the output will be printed to standard out.
 
 ## Accession Records
 

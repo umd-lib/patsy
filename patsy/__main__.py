@@ -8,6 +8,7 @@ from .accession import AccessionCsvLoader
 from .aws_manifest import create_manifest_command
 from .batch_stats import batch_stats_command
 from .database import create_schema
+from .export_inventory import export_inventory_command
 from .perfect_matches import find_perfect_matches_command
 from .altered_md5_matches import find_altered_md5_matches_command
 from .filename_only_matches import find_filename_only_matches_command
@@ -56,28 +57,28 @@ def get_args():
 
     # create the parser for the "schema" command
     schema_subcommand = subparsers.add_parser(
-        'schema', 
+        'schema',
         help='Create schema from the declarative base'
         )
 
     # create the parser for the "load_accessions" command
     accessions_subcommand = subparsers.add_parser(
-        'accessions', 
+        'accessions',
         help='Load accession records'
-        )    
+        )
     accessions_subcommand.add_argument(
-        '-s', '--source', 
+        '-s', '--source',
         action='store',
         help='Source of accessions to load'
         )
 
     # create the parser for the "load_restores" command
     restores_subcommand = subparsers.add_parser(
-        'restores', 
+        'restores',
         help='Load restored files table'
-        )    
+        )
     restores_subcommand.add_argument(
-        '-s', '--source', 
+        '-s', '--source',
         action='store',
         help='Source of restores to load'
         )
@@ -225,6 +226,25 @@ def get_args():
          help='filepath for generated .png file'
     )
 
+    export_inventory_subcommand = subparsers.add_parser(
+        'export_inventory',
+        help="Export all records as an 'inventory' manifest file"
+    )
+
+    export_inventory_subcommand.add_argument(
+        '-b', '--batch',
+        action='store',
+        default=None,
+        help='Optional batch name to query. Defaults to querying all batches'
+    )
+
+    export_inventory_subcommand.add_argument(
+        '-o', '--output',
+        action='store',
+        default=None,
+        help='The (optional) file to write the batch stats to in CSV format. Defaults to standard out'
+    )
+
     return parser.parse_args()
 
 
@@ -329,6 +349,12 @@ def main():
                 print(f"Created {file}")
         else:
             print("No files created")
+
+    elif args.cmd == "export_inventory":
+        use_database_file(args.database)
+        result = export_inventory_command(args.batch, args.output)
+        print("----- Export Inventory ----")
+        print(result)
 
     print(f"Actions complete!")
     if args.database == ':memory:':

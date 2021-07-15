@@ -39,3 +39,44 @@ def create_schema(args):
     engine = session.get_bind()
     print("Creating the schema using the declarative base...")
     Base.metadata.create_all(engine)
+
+    # Create view of transferred records
+    with engine.connect() as con:
+        con.execute("DROP VIEW IF EXISTS transferred_inventory_records;")
+        rs = con.execute("""
+            CREATE VIEW transferred_inventory_records AS
+            SELECT
+                accessions.batch as "BATCH",
+                restores.filepath as "PATH",
+                accessions.relpath as "RELPATH",
+                accessions.filename as "FILENAME",
+                accessions.bytes as "BYTES",
+                accessions.timestamp as "timestamp",
+                accessions.md5 as "MD5",
+                transfers.storagepath
+            FROM accessions, restores, transfers, perfect_matches
+            WHERE
+                transfers.restore_id = restores.id AND
+                accessions.id = perfect_matches.accession_id AND
+                perfect_matches.restore_id = restores.id
+            ORDER BY accessions.batch, accessions.relpath
+        """)
+
+    # Create view of untransferred records
+    with engine.connect() as con:
+        con.execute("DROP VIEW IF EXISTS untransferred_inventory_records;")
+        rs = con.execute("""
+            CREATE VIEW untransferred_inventory_records AS
+            SELECT
+              accessions.batch as "BATCH",
+              "" as "PATH",
+              accessions.relpath as "RELPATH",
+              accessions.filename as "FILENAME",
+              accessions.bytes as "BYTES",
+              accessions.timestamp as "timestamp",
+              accessions.md5 as "MD5",
+              "" as "storagepath"
+            FROM accessions
+            LEFT JOIN perfect_matches ON accessions.id = perfect_matches.accession_id
+            WHERE perfect_matches.restore_id is NULL;
+        """)
