@@ -73,6 +73,26 @@ the accession (even if the accession information in the CSV file is different).
 Location information for an existing accession will be added, unless the
 location already exists for that accession.
 
+## Kubernetes
+
+This application can be used with either SQLite or Postgres. For
+development/testing purposes, use of SQLite is perfectly acceptable.
+
+For production use, a Postgres database has been implemented in Kubernetes,
+and a "patsy-db" CLI client is also available.
+
+See the [README.md](https://github.com/umd-lib/k8s-patsy) in
+<https://github.com/umd-lib/k8s-patsy> for more information about using the
+"patsy-db" CLI client and accessing the Postgres database.
+
+## Docker Image
+
+This application provides a "Dockerfile" for generating a Docker image for
+use in Kubernetes. The Dockerfile provides a sample build command.
+
+In order to generate "clean" Docker images, the Docker images should be built
+from a fresh clone of the GitHub repository.
+
 ## License
 
 See the [LICENSE](LICENSE) file for license rights and limitations.
