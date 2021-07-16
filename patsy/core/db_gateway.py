@@ -1,10 +1,11 @@
 from argparse import Namespace
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import text
 from patsy.database import Session
-from patsy.core.patsy_record import PatsyRecord
+from patsy.core.patsy_record import PatsyRecord, PatsyUtils
 from patsy.model import Batch, Accession, Location
 from patsy.database import use_database_file
-from typing import Dict, Optional
+from typing import cast, Dict, List, Optional
 
 
 class AddResult():
@@ -91,8 +92,74 @@ class DbGateway():
 
         return location
 
+    def get_all_batches(self) -> List[Batch]:
+        """
+        Returns a list of all the batches in the database.
+        """
+        result = self.session.query(Batch).order_by(Batch.name.asc()).all()
+        return cast(List[Batch], result)
+
+    def get_batch_by_name(self, name: str) -> Optional[Batch]:
+        """
+        Returns the batch with the given name, or None if a batch with that
+        name is not found.
+        """
+        return cast(Optional[Batch], self.session.query(Batch).filter(Batch.name == name).first())
+
+    def get_batch_records(self, batch_name: str) -> List[PatsyRecord]:
+        """
+        Returns a (possibly empty) List of PatsyRecord objects representing the
+        data from the given batch.
+
+        If a batch does not exist with the given batch_name, an empty list is
+        returned.
+        """
+        SQL_PATSY_RECORD_BY_NAME = \
+            "SELECT * FROM patsy_records WHERE batch_name=:batch_name"
+        sql_stmt = text(SQL_PATSY_RECORD_BY_NAME)
+        sql_stmt = sql_stmt.bindparams(batch_name=batch_name)
+
+        patsy_records: List[PatsyRecord] = []
+
+        if not batch_name:
+            return patsy_records
+
+        engine = self.session.get_bind()
+        with engine.connect() as con:
+            rs = con.execute(sql_stmt).fetchall()
+
+            for row in rs:
+                item = row.items()
+                db_values = {}
+                for (field, value) in item:
+                    db_values[field] = value
+                patsy_record = DbGateway.db_view_to_patsy_record(db_values)
+                patsy_records.append(patsy_record)
+
+        return patsy_records
+
     def close(self) -> None:
         try:
             self.session.commit()
         except IntegrityError as err:
             self.session.rollback()
+
+    @staticmethod
+    def db_view_to_patsy_record(db_values: Dict[str, str]) -> PatsyRecord:
+        """
+        Converts a Dictionary of "patsy_records" View values into a PatsyRecord
+        """
+        patsy_record = PatsyRecord()
+        patsy_record.batch = db_values.get('batch_name', "")
+        patsy_record.relpath = db_values.get('relpath', "")
+        patsy_record.filename = db_values.get('filename', "")
+        patsy_record.extension = db_values.get('extension', "")
+        patsy_record.bytes = str(db_values.get('bytes', 0))
+        patsy_record.moddate = db_values.get('timestamp', "")
+        patsy_record.md5 = db_values.get('md5', "")
+        patsy_record.sha1 = db_values.get('sha1', "")
+        patsy_record.sha256 = db_values.get('sha256', "")
+        patsy_record.storage_provider = db_values.get('storage_provider', None)
+        patsy_record.storage_location = db_values.get('storage_location', None)
+
+        return patsy_record

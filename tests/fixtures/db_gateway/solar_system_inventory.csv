@@ -1,0 +1,4 @@
+BATCH,PATH,DIRECTORY,RELPATH,FILENAME,EXTENSION,BYTES,MTIME,MODDATE,MD5,SHA1,SHA256
+TEST_SOLAR_SYSTEM,/tmp/SolarSystem/binaries/Venus.jpg,/tmp/SolarSystem/binaries,binaries/Venus.jpg,Venus.jpg,JPG,1681236,1623412764,2021-06-11T07:59:24,0dc2e7f5ec7de0202ae54701e547c5c1,b4c783ecfa32ed02ab9d609734362bd7fec5fd08,bfa8ec6972fe083f04d9e494d172adea3f9ff5b360d61f63d9834cd7b98f1afc
+TEST_SOLAR_SYSTEM,/tmp/SolarSystem/binaries/Mars.jpg,/tmp/SolarSystem/binaries,binaries/Mars.jpg,Mars.jpg,JPG,1276159,1617129664,2021-03-30T14:41:04,bafc1dc4937f7ecf7cc707d32500b60d,ad151c157315d9bd36a9c67bdfdb9784c293b7e9,28caf896640bc4ce4ebb850da91eb335440e71aa7477bcf210c29c947faf5cf9
+TEST_SOLAR_SYSTEM,/tmp/SolarSystem/binaries/Jupiter.jpg,/tmp/SolarSystem/binaries,binaries/Jupiter.jpg,Jupiter.jpg,JPG,143547,1617205414,2021-03-31T11:43:34,3e27a8b683b3eb4464218508ed1aafc2,0adbde1f8f2b321c20c489ca5d4e6265f4f65094,c40306b066f21da214e171f076aea57dedfdecff57dbffe095d01850a63c0581
