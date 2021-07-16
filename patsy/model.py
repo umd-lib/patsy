@@ -2,36 +2,32 @@ from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInt
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
-
-# Many-to-many relationship between accessions and restores that are perfect matches
-perfect_matches_table = Table('perfect_matches', Base.metadata,
-                              Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
-                              Column('restore_id', Integer, ForeignKey('restores.id'))
-                              )
-
-Index('perfect_matches_accession_id', perfect_matches_table.c.accession_id, unique=False)
-Index('perfect_matches_restore_id', perfect_matches_table.c.restore_id, unique=False)
-
-
-# Many-to-many relationship between accessions and restores where filename and bytes
-# are the same, but the MD5 checksum is different
-altered_md5_matches_table = Table('altered_md5_matches', Base.metadata,
+# Many-to-many relationship between accessions and locations
+accession_locations_table = Table('accession_locations', Base.metadata,
                                   Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
-                                  Column('restore_id', Integer, ForeignKey('restores.id'))
-                                  )
+                                  Column('location_id', Integer, ForeignKey('locations.id')))
 
-# Many-to-many relationship between accessions and restores where the filename
-# is the same, but the MD5 checksum and bytes are different
-filename_only_matches_table = Table('filename_only_matches', Base.metadata,
-                                    Column('accession_id', Integer, ForeignKey('accessions.id', ondelete='CASCADE')),
-                                    Column('restore_id', Integer, ForeignKey('restores.id'))
-                                    )
+Index('accession_locations_accession_id', accession_locations_table.c.accession_id, unique=False)
+Index('accession_locations_location_id', accession_locations_table.c.location_id, unique=False)
 
 
-class Accession(Base):
+class Batch(Base):  # type: ignore
+    """
+    Class representing a batch
+    """
+
+    __tablename__ = "batches"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+
+    def __repr__(self) -> str:
+        return f"<Batch(id='{self.id}', name='{self.name}'>"
+
+
+class Accession(Base):  # type: ignore
     """
     Class representing an authoritative accession record listing
     """
@@ -39,73 +35,45 @@ class Accession(Base):
     __tablename__ = "accessions"
 
     id = Column(Integer, primary_key=True)
-    batch = Column(String)
-    sourcefile = Column(String)
-    sourceline = Column(Integer)
+    batch_id = Column(Integer, ForeignKey('batches.id'))
+    relpath = Column(String)
     filename = Column(String)
+    extension = Column(String)
     bytes = Column(BigInteger)
     timestamp = Column(String)
-    relpath = Column(String)
     md5 = Column(String)
-    perfect_matches = relationship("Restore", secondary=perfect_matches_table, back_populates="perfect_matches")
-    altered_md5_matches = relationship("Restore", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
-    filename_only_matches = relationship("Restore", secondary=filename_only_matches_table,
-                                         back_populates="filename_only_matches")
+    sha1 = Column(String)
+    sha256 = Column(String)
 
-    def __repr__(self):
+    batch = relationship("Batch", back_populates="accessions")
+    locations = relationship(
+        "Location", secondary=accession_locations_table, back_populates="accessions")
+
+    def __repr__(self) -> str:
         return f"<Accession(id='{self.id}', batch='{self.batch}', relpath='{self.relpath}'>"
 
 
-Index('accession_batch_relpath', Accession.batch, Accession.relpath, unique=True)
-Index('accession_md5', Accession.md5, unique=False)
-Index('accession_batch', Accession.batch, unique=False)
+Batch.accessions = relationship("Accession", order_by=Accession.id, back_populates="batch")
+
+Index('batch_name', Batch.name)
+Index('accession_batch_relpath', Accession.batch_id, Accession.relpath, unique=True)
 
 
-class Restore(Base):
+class Location(Base):  # type: ignore
     """
-    Class representing a restore record listing
+    Class representing a storage location for an accession.
     """
 
-    __tablename__ = "restores"
+    __tablename__ = "locations"
 
     id = Column(Integer, primary_key=True)
-    md5 = Column(String)
-    filename = Column(String)
-    filepath = Column(String)
-    bytes = Column(BigInteger)
-    status = Column(String)
-    perfect_matches = relationship("Accession", secondary=perfect_matches_table, back_populates="perfect_matches")
-    altered_md5_matches = relationship("Accession", secondary=altered_md5_matches_table, back_populates="altered_md5_matches")
-    filename_only_matches = relationship("Accession", secondary=filename_only_matches_table,
-                                         back_populates="filename_only_matches")
-    transfers = relationship("Transfer", back_populates="restore")
+    storage_provider = Column(String)
+    storage_location = Column(String)
+    accessions = relationship("Accession", secondary=accession_locations_table, back_populates="locations")
 
-    def __repr__(self):
-        return f"<Restore(id='{self.id}', filepath='{self.filepath}'>"
+    def __repr__(self) -> str:
+        return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', " \
+               f"storage_location='{self.storage_location}'>"
 
 
-Index('restore_filepath', Restore.filepath, unique=True)
-Index('restore_md5', Restore.md5, unique=False)
-Index('restore_filename', Restore.filename, unique=False)
-
-
-class Transfer(Base):
-    """
-    Class representing a transfer record listing
-    """
-
-    __tablename__ = "transfers"
-
-    id = Column(Integer, primary_key=True)
-    filepath = Column(String)
-    storagepath = Column(String)
-    restore_id = Column(Integer, ForeignKey('restores.id'))
-    restore = relationship("Restore", back_populates="transfers")
-
-    def __repr__(self):
-        return f"<Transfer(id='{self.id}', filepath='{self.filepath}', storagepath='{self.storagepath}'>"
-
-
-Index('transfer_filepath_storagepath', Transfer.filepath, Transfer.storagepath, unique=True)
-Index('transfer_filepath', Transfer.filepath, unique=False)
-Index('transfer_restore_id', Transfer.restore_id, unique=False)
+Index('location_storage', Location.storage_provider, Location.storage_location, unique=True)

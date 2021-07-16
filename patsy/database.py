@@ -1,3 +1,4 @@
+import argparse
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
@@ -6,7 +7,7 @@ from .model import Base
 Session = sessionmaker()
 
 
-def use_database_file(database):
+def use_database_file(database: str) -> None:
     # Set up database file or use in-memory db
     if database == ":memory:":
         print(f"Using a transient in-memory database...")
@@ -28,14 +29,6 @@ def use_database_file(database):
     if not db_path.startswith('postgresql:'):
         event.listen(engine, 'connect',
                      lambda dbapi_con, con_record:
-                        dbapi_con.execute('pragma foreign_keys=ON'))
+                         dbapi_con.execute('pragma foreign_keys=ON'))
 
     Session.configure(bind=engine)
-
-
-def create_schema(args):
-    use_database_file(args.database)
-    session = Session()
-    engine = session.get_bind()
-    print("Creating the schema using the declarative base...")
-    Base.metadata.create_all(engine)
