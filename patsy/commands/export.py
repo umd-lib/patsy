@@ -1,5 +1,7 @@
 import argparse
 import patsy.core.command
+import sys
+
 from patsy.core.export import Export
 from patsy.core.db_gateway import DbGateway
 
@@ -34,7 +36,7 @@ class Command(patsy.core.command.Command):
         batch = args.batch
         output = args.output
         # Display batch configuration information to the user
-        print(
+        sys.stderr.write(
             f'Running export command with the following options:\n\n'
             f'  - batch: {batch}\n'
             f'  - output: {output}\n'
