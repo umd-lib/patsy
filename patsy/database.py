@@ -1,4 +1,6 @@
 import argparse
+import sys
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
@@ -10,18 +12,18 @@ Session = sessionmaker()
 def use_database_file(database: str) -> None:
     # Set up database file or use in-memory db
     if database == ":memory:":
-        print(f"Using a transient in-memory database...")
+        sys.stderr.write(f"Using a transient in-memory database...")
         db_path = f"sqlite:///{database}"
 
     elif database.startswith('postgresql:'):
-        print(f"Using postgres database at {database}")
+        sys.stderr.write(f"Using postgres database at {database}")
         db_path = database
 
     else:
-        print(f"Using database at {database}...")
+        sys.stderr.write(f"Using database at {database}...")
         db_path = f"sqlite:///{database}"
 
-    print("Binding the database session...")
+    sys.stderr.write("Binding the database session...")
 
     engine = create_engine(db_path)
 

@@ -13,7 +13,7 @@ from patsy.core.db_gateway import DbGateway
 def print_header(subcommand: str) -> None:
     """Generate script header and display it in the console."""
     title = 'patsy {0}'.format(subcommand)
-    sys.stdout.write(
+    sys.stderr.write(
         '\n{0}\n{1}\n'.format(title, '=' * len(title))
     )
 

@@ -1,6 +1,6 @@
 import csv
 from patsy.core.db_gateway import DbGateway, AddResult
-from patsy.core.patsy_record import PatsyRecordFactory
+from patsy.core.patsy_record import PatsyUtils
 from typing import Dict, List, Optional
 
 
@@ -25,6 +25,12 @@ class LoadResult():
 
 
 class Load:
+    ALL_CSV_FIELDS = [
+        'BATCH', 'PATH', 'DIRECTORY', 'RELPATH', 'FILENAME', 'EXTENSION',
+        'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256',
+        'storageprovider', 'storagepath'
+    ]
+
     # Fields that must be present in the CSV, with non-empty content
     REQUIRED_CONTENT_CSV_FIELDS = [
         'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5',
@@ -68,7 +74,7 @@ class Load:
         if not self.is_row_valid(csv_line_index, row):
             return None
 
-        patsy_record = PatsyRecordFactory.from_inventory_csv(row)
+        patsy_record = PatsyUtils.from_inventory_csv(row)
         return self.gateway.add(patsy_record)
 
     def is_row_valid(self, csv_line_index: int, row_dict: Dict[str, str]) -> bool:
