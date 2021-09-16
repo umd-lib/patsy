@@ -12,18 +12,18 @@ Session = sessionmaker()
 def use_database_file(database: str) -> None:
     # Set up database file or use in-memory db
     if database == ":memory:":
-        sys.stderr.write(f"Using a transient in-memory database...")
+        sys.stderr.write(f"Using a transient in-memory database...\n")
         db_path = f"sqlite:///{database}"
 
     elif database.startswith('postgresql:'):
-        sys.stderr.write(f"Using postgres database at {database}")
+        sys.stderr.write(f"Using postgres database at {database}\n")
         db_path = database
 
     else:
-        sys.stderr.write(f"Using database at {database}...")
+        sys.stderr.write(f"Using database at {database}...\n")
         db_path = f"sqlite:///{database}"
 
-    sys.stderr.write("Binding the database session...")
+    sys.stderr.write("Binding the database session...\n")
 
     engine = create_engine(db_path)
 

@@ -25,16 +25,19 @@ class LoadResult():
 
 
 class Load:
-    ALL_CSV_FIELDS = [
+    TRANSFER_MANIFEST_CSV_FIELDS = [
         'BATCH', 'PATH', 'DIRECTORY', 'RELPATH', 'FILENAME', 'EXTENSION',
-        'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256',
-        'storageprovider', 'storagepath'
+        'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256'
     ]
+
+    # The following fields are not required in the CSV file
+    ALLOWED_MISSING_FIELDS = ['storageprovider', 'storagepath']
+
+    ALL_CSV_FIELDS = TRANSFER_MANIFEST_CSV_FIELDS + ALLOWED_MISSING_FIELDS
 
     # Fields that must be present in the CSV, with non-empty content
     REQUIRED_CONTENT_CSV_FIELDS = [
-        'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5',
-
+        'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5'
     ]
 
     # Fields that must be present, but may be empty
@@ -44,10 +47,6 @@ class Load:
 
     REQUIRED_CSV_FIELDS = REQUIRED_CONTENT_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
 
-    # The following fields are not required in the CSV file
-    ALLOWED_MISSING_FIELDS = [
-        'storageprovider', 'storagepath'
-    ]
 
     def __init__(self, gateway: DbGateway) -> None:
         self.gateway = gateway

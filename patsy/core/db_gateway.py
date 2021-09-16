@@ -20,6 +20,7 @@ class DbGateway():
         use_database_file(args.database)
         self.session = Session()
         self.batch_ids: Dict[str, int] = {}
+        self.filter_untransferred = args.untransferred
 
     def add(self, patsy_record: PatsyRecord) -> AddResult:
         self.add_result = AddResult()
@@ -116,7 +117,15 @@ class DbGateway():
         """
         SQL_PATSY_RECORD_BY_NAME = \
             "SELECT * FROM patsy_records WHERE batch_name=:batch_name"
-        sql_stmt = text(SQL_PATSY_RECORD_BY_NAME)
+        SQL_PATSY_RECORD_BY_NAME_UNTRANSFERRED = \
+            '''SELECT * FROM patsy_records 
+                WHERE batch_name=:batch_name
+                AND storage_location IS NULL'''
+
+        if self.filter_untransferred:
+            sql_stmt = text(SQL_PATSY_RECORD_BY_NAME_UNTRANSFERRED)
+        else:
+            sql_stmt = text(SQL_PATSY_RECORD_BY_NAME)
         sql_stmt = sql_stmt.bindparams(batch_name=batch_name)
 
         patsy_records: List[PatsyRecord] = []

@@ -48,9 +48,15 @@ class Export:
             return self.export_result
 
     def export_entries(self, batch_list: List[str], file_stream: TextIO) -> None:
-        writer = csv.DictWriter(file_stream, fieldnames=Load.ALL_CSV_FIELDS, extrasaction='ignore')
-
+        if self.gateway.filter_untransferred:
+            fieldnames = Load.TRANSFER_MANIFEST_CSV_FIELDS
+        else:
+            fieldnames = Load.ALL_CSV_FIELDS
+        writer = csv.DictWriter(
+                    file_stream, fieldnames=fieldnames, extrasaction='ignore'
+                    )
         writer.writeheader()
+
         for b in batch_list:
             batch_records = self.gateway.get_batch_records(b)
             if len(batch_records) > 0:
