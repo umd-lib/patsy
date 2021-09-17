@@ -20,7 +20,6 @@ class DbGateway():
         use_database_file(args.database)
         self.session = Session()
         self.batch_ids: Dict[str, int] = {}
-        self.filter_untransferred = args.untransferred
 
     def add(self, patsy_record: PatsyRecord) -> AddResult:
         self.add_result = AddResult()
@@ -107,7 +106,9 @@ class DbGateway():
         """
         return cast(Optional[Batch], self.session.query(Batch).filter(Batch.name == name).first())
 
-    def get_batch_records(self, batch_name: str) -> List[PatsyRecord]:
+    def get_batch_records(
+            self, batch_name: str, untransferred_only=False
+            ) -> List[PatsyRecord]:
         """
         Returns a (possibly empty) List of PatsyRecord objects representing the
         data from the given batch.
@@ -118,11 +119,11 @@ class DbGateway():
         SQL_PATSY_RECORD_BY_NAME = \
             "SELECT * FROM patsy_records WHERE batch_name=:batch_name"
         SQL_PATSY_RECORD_BY_NAME_UNTRANSFERRED = \
-            '''SELECT * FROM patsy_records 
+            '''SELECT * FROM patsy_records
                 WHERE batch_name=:batch_name
                 AND storage_location IS NULL'''
 
-        if self.filter_untransferred:
+        if untransferred_only:
             sql_stmt = text(SQL_PATSY_RECORD_BY_NAME_UNTRANSFERRED)
         else:
             sql_stmt = text(SQL_PATSY_RECORD_BY_NAME)
