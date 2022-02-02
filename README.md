@@ -73,6 +73,34 @@ the accession (even if the accession information in the CSV file is different).
 Location information for an existing accession will be added, unless the
 location already exists for that accession.
 
+### "checksum" command
+
+Retrieves checksums (MD5 (default), SHA1, or SHA256) for one or more accessions,
+looked up by storage location.
+
+```
+> patsy --database <DATABASE> checksum [--md5|--sha1|--sha256] [LOCATION [LOCATIONS...]]
+```
+
+Creates output like this:
+
+```
+088be3fe9a8fd2a7e70e66a602828766  libdc-archivebucket-17lowbw7m2av1/Archive000Florence/Florence.mpg
+fe84e91e0a06906773a5c19a2e9620d9  libdc-archivebucket-17lowbw7m2av1/Archive000Football1/19461130-FB-002-2Qtr.mpg
+9876f8c92e16b73c662a39b23409d0a0  libdc-archivebucket-17lowbw7m2av1/Archive000Football1/19461130-FB-003-2Half.mpg
+```
+
+Instead of listing locations on the command line, the checksum command
+also accepts a CSV file with columns "location" and "destination". If
+the "destination" is present, it is used for the second column. Assuming
+that the "destination" refers to an actual path on a local file
+system, this output can then be fed to `md5sum -c` (or other 
+algorithm-appropriate checksum verification tool).
+
+```
+> patsy --database <DATABASE> checksum [--md5|--sha1|--sha256] --file <CSV_FILE>
+```
+
 ## License
 
 See the [LICENSE](LICENSE) file for license rights and limitations.
