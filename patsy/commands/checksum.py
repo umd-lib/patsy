@@ -1,7 +1,7 @@
 import argparse
 import csv
 import sys
-from typing import Mapping, Optional, Tuple
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 
 import patsy.core.command
 from patsy.core.db_gateway import DbGateway
@@ -73,6 +73,7 @@ def get_checksum(gateway: DbGateway, row: Mapping[str, str], checksum_type: str)
             sys.stderr.write(f'No {checksum_type.upper()} checksum found for "{row["location"]}"\n')
     else:
         sys.stderr.write(f'No accession record found for "{row["location"]}"\n')
+    return None
 
 
 class Command(patsy.core.command.Command):
@@ -81,7 +82,7 @@ class Command(patsy.core.command.Command):
             args.output_type = 'md5'
 
         if getattr(args, 'locations_file', None) is not None:
-            locations = csv.DictReader(args.locations_file)
+            locations: Iterable[Dict[str, str]] = csv.DictReader(args.locations_file)
         else:
             locations = [{'location': location} for location in args.location]
         for row in locations:
