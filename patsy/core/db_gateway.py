@@ -92,6 +92,13 @@ class DbGateway():
 
         return location
 
+    def get_accession_by_location(self, location: str) -> Optional[Accession]:
+        """
+        Returns the Accession with the given location.
+        """
+        result = self.session.query(Accession).join(Location.accessions).filter(Location.storage_location == location)
+        return cast(Optional[Accession], result.first())
+
     def get_all_batches(self) -> List[Batch]:
         """
         Returns a list of all the batches in the database.
