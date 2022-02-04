@@ -29,7 +29,7 @@ class Export:
         self.gateway = gateway
         self.export_result = ExportResult()
 
-    def export(self, batch: str, output: str) -> ExportResult:
+    def export(self, batch: str, output: str, untransferred: bool) -> ExportResult:
         batch_list = []
 
         if batch is None:
@@ -40,19 +40,26 @@ class Export:
 
         if output is None:
             out = sys.stdout
-            self.export_entries(batch_list, out)
+            self.export_entries(batch_list, out, filter)
             return self.export_result
         else:
             with open(output, mode='w') as file_stream:
-                self.export_entries(batch_list, file_stream)
+                self.export_entries(batch_list, file_stream, untransferred)
             return self.export_result
 
-    def export_entries(self, batch_list: List[str], file_stream: TextIO) -> None:
-        writer = csv.DictWriter(file_stream, fieldnames=Load.ALL_CSV_FIELDS, extrasaction='ignore')
-
+    def export_entries(self, batch_list: List[str],
+                       file_stream: TextIO, untransferred: bool) -> None:
+        if untransferred:
+            fieldnames = Load.TRANSFER_MANIFEST_CSV_FIELDS
+        else:
+            fieldnames = Load.ALL_CSV_FIELDS
+        writer = csv.DictWriter(
+                    file_stream, fieldnames=fieldnames, extrasaction='ignore'
+                    )
         writer.writeheader()
+
         for b in batch_list:
-            batch_records = self.gateway.get_batch_records(b)
+            batch_records = self.gateway.get_batch_records(b, untransferred)
             if len(batch_records) > 0:
                 self.export_result.batches_exported += 1
             for patsy_record in batch_records:

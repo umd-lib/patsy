@@ -30,23 +30,33 @@ def configure_cli(subparsers) -> None:  # type: ignore
         help='The (optional) file to write output to. Defaults to standard out'
     )
 
+    parser.add_argument(
+        '-u', '--untransferred',
+        action='store_true',
+        default=False,
+        help='Export only those records with an empty storage_location.'
+    )
+
 
 class Command(patsy.core.command.Command):
     def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
         batch = args.batch
         output = args.output
+        filter = args.untransferred
         # Display batch configuration information to the user
         sys.stderr.write(
             f'Running export command with the following options:\n\n'
             f'  - batch: {batch}\n'
             f'  - output: {output}\n'
+            f'  - untransferred: {filter}\n'
             '======\n'
         )
 
         export_impl = Export(gateway)
-        export_result = export_impl.export(batch, output)
+        export_result = export_impl.export(batch, output, filter)
         result_messages = [
-            f"Total (non-empty) Batches exported: {export_result.batches_exported}",
+            f"Total (non-empty) Batches exported: " +
+            f"{export_result.batches_exported}",
             f"Total rows exported: {export_result.rows_exported}",
             "\nEXPORT COMPLETE"
         ]

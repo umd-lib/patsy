@@ -20,21 +20,23 @@ class LoadResult():
             f"locations_added='{self.locations_added}'",
             f"errors='{self.errors}'"
         ]
-
         return f"<LoadResult({','.join(lines)})>"
 
 
 class Load:
-    ALL_CSV_FIELDS = [
+    TRANSFER_MANIFEST_CSV_FIELDS = [
         'BATCH', 'PATH', 'DIRECTORY', 'RELPATH', 'FILENAME', 'EXTENSION',
-        'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256',
-        'storageprovider', 'storagepath'
+        'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256'
     ]
+
+    # The following fields are not required in the CSV file
+    ALLOWED_MISSING_FIELDS = ['storageprovider', 'storagepath']
+
+    ALL_CSV_FIELDS = TRANSFER_MANIFEST_CSV_FIELDS + ALLOWED_MISSING_FIELDS
 
     # Fields that must be present in the CSV, with non-empty content
     REQUIRED_CONTENT_CSV_FIELDS = [
-        'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5',
-
+        'BATCH', 'RELPATH', 'FILENAME', 'BYTES', 'MD5'
     ]
 
     # Fields that must be present, but may be empty
@@ -43,11 +45,6 @@ class Load:
     ]
 
     REQUIRED_CSV_FIELDS = REQUIRED_CONTENT_CSV_FIELDS + ALLOWED_EMPTY_CSV_FIELDS
-
-    # The following fields are not required in the CSV file
-    ALLOWED_MISSING_FIELDS = [
-        'storageprovider', 'storagepath'
-    ]
 
     def __init__(self, gateway: DbGateway) -> None:
         self.gateway = gateway
@@ -64,20 +61,27 @@ class Load:
                 csv_line_index += 1
 
                 if add_result:
-                    self.load_result.batches_added += add_result.batches_added
-                    self.load_result.accessions_added += add_result.accessions_added
-                    self.load_result.locations_added += add_result.locations_added
+                    self.load_result.batches_added += \
+                        add_result.batches_added
+                    self.load_result.accessions_added += \
+                        add_result.accessions_added
+                    self.load_result.locations_added += \
+                        add_result.locations_added
 
         return self.load_result
 
-    def process_csv_row(self, csv_line_index: int, row: Dict[str, str]) -> Optional[AddResult]:
+    def process_csv_row(
+            self, csv_line_index: int, row: Dict[str, str]
+            ) -> Optional[AddResult]:
         if not self.is_row_valid(csv_line_index, row):
             return None
 
         patsy_record = PatsyUtils.from_inventory_csv(row)
         return self.gateway.add(patsy_record)
 
-    def is_row_valid(self, csv_line_index: int, row_dict: Dict[str, str]) -> bool:
+    def is_row_valid(
+            self, csv_line_index: int, row_dict: Dict[str, str]
+            ) -> bool:
         """
         Returns True if the given row is valid, False otherwise.
         """
@@ -95,7 +99,8 @@ class Load:
 
         if missing_fields or missing_values:
             self.load_result.errors.append(
-                f"Line {csv_line_index}, missing_fields: {missing_fields}, missing_values = {missing_values}"
+                f"Line {csv_line_index}, missing_fields:" +
+                f" {missing_fields}, missing_values = {missing_values}"
             )
             return False
         return True
