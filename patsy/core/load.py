@@ -1,8 +1,10 @@
 import csv
+import logging 
 from patsy.core.db_gateway import DbGateway, AddResult
 from patsy.core.patsy_record import PatsyUtils
 from typing import Dict, List, Optional
 
+LOGGER = logging.getLogger('__name__')
 
 class LoadResult():
     def __init__(self) -> None:
@@ -55,6 +57,7 @@ class Load:
 
     def process_file(self, file: str) -> LoadResult:
         csv_line_index = 2  # Starting at two to account for CSV header
+        LOGGER.info("\n\n##########OPENING FILE##########\n\n")
         with open(file) as f:
             reader = csv.DictReader(f, delimiter=',')
             add_result = None

@@ -1,10 +1,12 @@
 import unittest
+import logging
 from argparse import Namespace
 from patsy.core.schema import Schema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from typing import Dict
 
+#LOGGER = logging.getLogger('__name__')
 
 class TestLoad(unittest.TestCase):
     def setUp(self):
@@ -24,7 +26,8 @@ class TestLoad(unittest.TestCase):
         }
 
         args = Namespace()
-        args.database = ":memory:"
+        #args.database = ":memory:"
+        args.database = "postgresql+psycopg2://aguilarm:aguilarm@localhost:5432/aguilarm"
         self.gateway = DbGateway(args)
         schema = Schema(self.gateway)
         schema.create_schema()
