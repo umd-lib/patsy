@@ -21,7 +21,7 @@ def use_database_file(database: str) -> None:
     sys.stderr.write(str)
     sys.stderr.write("Binding the database session...")
 
-    engine = create_engine(db_path, echo=True)
+    engine = create_engine(db_path)#, echo=True)
 
     # Enable foreign key constraints
     if db_path.startswith('sqlite:'):

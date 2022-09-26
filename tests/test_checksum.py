@@ -14,18 +14,21 @@ from patsy.model import Base
 
 LOGGER = logging.getLogger('__name__')
 
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
+
+#https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
+#https://docs.sqlalchemy.org/en/14/core/compiler.html#changing-compilation-of-types
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
+
 class TestChecksumCommand(unittest.TestCase):
     def setUp(self):
         args = Namespace()
         #args.database = ":memory:"
         args.database = "postgresql+psycopg2://aguilarm:aguilarm@localhost:5432/aguilarm"
         self.gateway = DbGateway(args)
-
-        # Start transaction
-        # engine = self.gateway.session.get_bind()
-        # self.conn = engine.connect()
-        # LOGGER.info("\n\n##########BEGIN TRANSACTION##########\n\n")
-        # self.transaction = self.conn.begin()
     
         LOGGER.info("\n\n##########CREATING SCHEMA##########\n\n")
         schema = Schema(self.gateway)
@@ -47,10 +50,6 @@ class TestChecksumCommand(unittest.TestCase):
         self.command_args.output_file = None
         LOGGER.info("\n\n##########FINISHED SETUP##########\n\n")
 
-        # self.conn = engine.connect()
-        # self.transaction = self.conn.begin()
-
-
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_location_arg(self, mock_out):
         self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
@@ -59,24 +58,10 @@ class TestChecksumCommand(unittest.TestCase):
         LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
         self.checksum_command.__call__(self.command_args, self.gateway)
         
-        # Drop tables at the end of test
-        # self.gateway.session.close_all()
-        # engine = self.gateway.session.get_bind()
-        # Base.metadata.drop_all(engine)
-
-        # Rollback Transaction
-        # self.transaction.rollback()
-        # self.transaction.commit()
-
-        # self.conn.close()
-        # self.tearDown()
-        
         # Compare the answer to what's written in file.
         LOGGER.info("\n\n###########COMPARING###########\n\n")
         expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-        self.assertEqual(expected, mock_out.getvalue())
-        
-        
+        self.assertEqual(expected, mock_out.getvalue())   
 
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_output_type_arg(self, mock_out):
@@ -118,8 +103,7 @@ class TestChecksumCommand(unittest.TestCase):
     
     def tearDown(self):
         self.gateway.close()
-        
-
+        Base.metadata.drop_all(self.gateway.session.get_bind())
 
 class TestGetChecksum(unittest.TestCase):
     def setUp(self):
@@ -186,3 +170,4 @@ class TestGetChecksum(unittest.TestCase):
 
     def tearDown(self):
         self.gateway.close()
+        Base.metadata.drop_all(self.gateway.session.get_bind())

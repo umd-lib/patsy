@@ -1,14 +1,20 @@
 import csv
 import unittest
-import logging
 from patsy.core.patsy_record import PatsyUtils
 from argparse import Namespace
 from patsy.core.schema import Schema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from typing import Dict
+from patsy.model import Base
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
 
-LOGGER = logging.getLogger('__name__')
+#https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
+#https://docs.sqlalchemy.org/en/14/core/compiler.html#changing-compilation-of-types
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
 
 class TestDbGateway(unittest.TestCase):
     def setUp(self):
@@ -28,31 +34,25 @@ class TestDbGateway(unittest.TestCase):
             load.process_file(file)
 
     def test_get_all_batches(self):
-        LOGGER.info("\n ##########GETTING BATCHES##########\n")
         batches = self.gateway.get_all_batches()
 
-        LOGGER.info("\n ##########ASSERTING LENGTH##########\n")
         self.assertEqual(2, len(batches))
         batch_names = [batch.name for batch in batches]
 
-        LOGGER.info("\n ##########CHECKING NAMES##########\n")
         self.assertIn("TEST_COLORS", batch_names)
         self.assertIn("TEST_SOLAR_SYSTEM", batch_names)
 
     def test_get_batch_by_name__batch_does_not_exist(self):
         batch = self.gateway.get_batch_by_name("NON_EXISTENT_BATCH")
-        LOGGER.info("\n ##########ASSERTING BATCH DOESN'T EXIST##########\n")
         self.assertIsNone(batch)
 
     def test_get_batch_by_name__batch_exists(self):
         batch = self.gateway.get_batch_by_name("TEST_COLORS")
         self.assertIsNotNone(batch)
-        LOGGER.info("\n ##########ASSERTING BATCH EXIST##########\n")
         self.assertEqual("TEST_COLORS", batch.name)
 
     def test_get_batch_records__batch_does_not_exist(self):
         patsy_records = self.gateway.get_batch_records("NON_EXISTENT_BATCH")
-        LOGGER.info("\n ##########ASSERTING BATCH RECORD DOESN'T EXIST##########\n")
         self.assertEqual(0, len(patsy_records))
 
     def test_get_batch_records__batch_exists(self):
@@ -72,3 +72,4 @@ class TestDbGateway(unittest.TestCase):
     
     def tearDown(self):
         self.gateway.close()
+        Base.metadata.drop_all(self.gateway.session.get_bind())

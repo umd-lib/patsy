@@ -1,12 +1,18 @@
 import unittest
-import logging
 from argparse import Namespace
 from patsy.core.schema import Schema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from typing import Dict
+from patsy.model import Base
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
 
-#LOGGER = logging.getLogger('__name__')
+#https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
+#https://docs.sqlalchemy.org/en/14/core/compiler.html#changing-compilation-of-types
+@compiles(DropTable, "postgresql")
+def _compile_drop_table(element, compiler, **kwargs):
+    return compiler.visit_drop_table(element) + " CASCADE"
 
 class TestLoad(unittest.TestCase):
     def setUp(self):
@@ -148,7 +154,7 @@ class TestLoad(unittest.TestCase):
 
     def tearDown(self):
         self.gateway.close()
-
+        Base.metadata.drop_all(self.gateway.session.get_bind())
 
 def remove_key(dict: Dict[str, str], key: str) -> Dict[str, str]:
     new_dict = dict.copy()
