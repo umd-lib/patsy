@@ -56,6 +56,11 @@ To run the tests:
 > pytest
 ```
 
+For running the test with Postgres, create a docker container with Postgres first.
+```
+> docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
+```
+
 ## Code Style
 
 Application code style should generally conform to the guidelines in
