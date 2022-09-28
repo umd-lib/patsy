@@ -25,7 +25,7 @@ class TestDbGateway(unittest.TestCase):
 
         args = Namespace()
         #args.database = ":memory:"
-        args.database = "postgresql+psycopg2://aguilarm:aguilarm@localhost:5432/aguilarm"
+        args.database = "postgresql+psycopg2://postgres:password@localhost:5432/postgres"
         self.gateway = DbGateway(args)
         schema = Schema(self.gateway)
         schema.create_schema()

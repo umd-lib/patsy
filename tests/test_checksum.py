@@ -27,20 +27,20 @@ class TestChecksumCommand(unittest.TestCase):
     def setUp(self):
         args = Namespace()
         #args.database = ":memory:"
-        args.database = "postgresql+psycopg2://aguilarm:aguilarm@localhost:5432/aguilarm"
+        args.database = "postgresql+psycopg2://postgres:password@localhost:5432/postgres"
         self.gateway = DbGateway(args)
     
-        LOGGER.info("\n\n##########CREATING SCHEMA##########\n\n")
+        #LOGGER.info("\n\n##########CREATING SCHEMA##########\n\n")
         schema = Schema(self.gateway)
         schema.create_schema()
 
-        LOGGER.info("\n\n##########LOADING##########\n\n")
+        #LOGGER.info("\n\n##########LOADING##########\n\n")
         self.load = Load(self.gateway)
 
-        LOGGER.info("\n\n##########LOADING PROCESS FILE##########\n\n")
+        #LOGGER.info("\n\n##########LOADING PROCESS FILE##########\n\n")
         csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
         self.load.process_file(csv_file)
-        LOGGER.info("\n\n##########FINISHED PROCESS FILE##########\n\n")
+        #LOGGER.info("\n\n##########FINISHED PROCESS FILE##########\n\n")
 
         self.checksum_command = Command()
         # Arguments passed to checksum.Command
@@ -48,18 +48,18 @@ class TestChecksumCommand(unittest.TestCase):
         self.command_args.location = None
         self.command_args.output_type = None
         self.command_args.output_file = None
-        LOGGER.info("\n\n##########FINISHED SETUP##########\n\n")
+        #LOGGER.info("\n\n##########FINISHED SETUP##########\n\n")
 
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_location_arg(self, mock_out):
         self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
 
         # The call command will write to a file
-        LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
+        #LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
         self.checksum_command.__call__(self.command_args, self.gateway)
         
         # Compare the answer to what's written in file.
-        LOGGER.info("\n\n###########COMPARING###########\n\n")
+        #LOGGER.info("\n\n###########COMPARING###########\n\n")
         expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
         self.assertEqual(expected, mock_out.getvalue())   
 
@@ -68,11 +68,11 @@ class TestChecksumCommand(unittest.TestCase):
         self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
         self.command_args.output_type = 'sha1'
         
-        LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
+        #LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
         self.checksum_command.__call__(self.command_args, self.gateway)
 
         expected = '2fa953a48600e1aef0486b4b3a17c6100cfeef80  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-        LOGGER.info("\n\n###########COMPARING###########\n\n")
+        #LOGGER.info("\n\n###########COMPARING###########\n\n")
         self.assertEqual(expected, mock_out.getvalue())
 
     @patch('sys.stdout', new_callable=io.StringIO)
@@ -80,12 +80,12 @@ class TestChecksumCommand(unittest.TestCase):
         with open('tests/fixtures/checksum/locations_file.csv') as f:
             self.command_args.locations_file = f
 
-            LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
+            #LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
             self.checksum_command.__call__(self.command_args, self.gateway)
 
             expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n' \
                        '1041fd1cf84c71183db2d5d95942a41c  test_bucket/TEST_BATCH/colors/sample_red.jpg\n'
-            LOGGER.info("\n\n###########COMPARING###########\n\n")
+            #LOGGER.info("\n\n###########COMPARING###########\n\n")
             self.assertEqual(expected, mock_out.getvalue())
 
     def test_output_file_arg(self):
@@ -95,10 +95,10 @@ class TestChecksumCommand(unittest.TestCase):
                 self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
                 self.command_args.output_file = output_file
 
-                LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
+                #LOGGER.info("\n\n##########CALLING CHECKSUM###########\n\n")
                 self.checksum_command.__call__(self.command_args, self.gateway)
 
-            LOGGER.info("\n\n###########CHECKING SIZE###########\n\n")
+            #LOGGER.info("\n\n###########CHECKING SIZE###########\n\n")
             self.assertEqual(80, os.path.getsize(output_filename))
     
     def tearDown(self):
@@ -109,7 +109,7 @@ class TestGetChecksum(unittest.TestCase):
     def setUp(self):
         args = Namespace()
         #args.database = ":memory:"
-        args.database = "postgresql+psycopg2://aguilarm:aguilarm@localhost:5432/aguilarm"
+        args.database = "postgresql+psycopg2://postgres:password@localhost:5432/postgres"
 
         self.gateway = DbGateway(args)
         schema = Schema(self.gateway)
