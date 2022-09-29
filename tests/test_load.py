@@ -1,20 +1,24 @@
-import unittest
 import pytest
 
 from argparse import Namespace
 from patsy.core.schema import Schema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
-from typing import Dict
 from patsy.model import Base
 from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
+from typing import Dict
 
-pytestmark = pytest.mark.parametrize("addr", [":memory", "postgresql+psycopg2://postgres:password@localhost:5432/postgres"])
+
+pytestmark = pytest.mark.parametrize(
+    "addr", [":memory", "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
+)
+
 
 @compiles(DropTable, "postgresql")
 def _compile_drop_table(element, compiler, **kwargs):
     return compiler.visit_drop_table(element) + " CASCADE"
+
 
 def setUp(obj, addr):
     obj.valid_row_dict = {
@@ -39,12 +43,13 @@ def setUp(obj, addr):
     schema.create_schema()
     obj.load = Load(obj.gateway)
 
+
 def tearDown(obj):
     obj.gateway.close()
     Base.metadata.drop_all(obj.gateway.session.get_bind())
 
-class TestLoad():
 
+class TestLoad():
     def test_process_csv_file(self, addr):
         setUp(self, addr)
         csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
@@ -56,7 +61,7 @@ class TestLoad():
         setUp(self, addr)
         csv_line_index = 2
         row_dict = {}
-        assert self.load.is_row_valid(csv_line_index, row_dict) == False
+        assert self.load.is_row_valid(csv_line_index, row_dict) is False
         assert len(self.load.load_result.errors) == 1
         tearDown(self)
 
@@ -64,7 +69,7 @@ class TestLoad():
         setUp(self, addr)
         csv_line_index = 2
         row_dict = remove_key(self.valid_row_dict, 'BATCH')
-        assert self.load.is_row_valid(csv_line_index, row_dict) == False
+        assert self.load.is_row_valid(csv_line_index, row_dict) is False
         assert len(self.load.load_result.errors) == 1
         tearDown(self)
 
@@ -72,7 +77,7 @@ class TestLoad():
         setUp(self, addr)
         csv_line_index = 2
         row_dict = remove_key(self.valid_row_dict, 'SHA256')
-        assert self.load.is_row_valid(csv_line_index, row_dict) == False
+        assert self.load.is_row_valid(csv_line_index, row_dict) is False
         assert len(self.load.load_result.errors) == 1
         tearDown(self)
 
@@ -81,7 +86,7 @@ class TestLoad():
         csv_line_index = 2
         row_dict = self.valid_row_dict.copy()
         row_dict['BATCH'] = ""
-        assert self.load.is_row_valid(csv_line_index, row_dict) == False
+        assert self.load.is_row_valid(csv_line_index, row_dict) is False
         assert len(self.load.load_result.errors) == 1
         tearDown(self)
 
@@ -90,7 +95,7 @@ class TestLoad():
         csv_line_index = 2
         row_dict = self.valid_row_dict.copy()
         row_dict['SHA256'] = ""
-        assert self.load.is_row_valid(csv_line_index, row_dict) == True
+        assert self.load.is_row_valid(csv_line_index, row_dict) is True
         assert len(self.load.load_result.errors) == 0
         tearDown(self)
 
@@ -176,6 +181,7 @@ class TestLoad():
         assert load_result.locations_added == 3
         assert len(load_result.errors) == 0
         tearDown(self)
+
 
 def remove_key(dict: Dict[str, str], key: str) -> Dict[str, str]:
     new_dict = dict.copy()

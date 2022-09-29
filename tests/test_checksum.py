@@ -1,55 +1,61 @@
 import io
 import os
-import tempfile
-import unittest
-import logging
 import re
+import logging
 import pytest
+import tempfile
+
 
 from argparse import Namespace
 from patsy.commands.checksum import Command, get_checksum
 from patsy.core.schema import Schema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
-from unittest.mock import patch
 from patsy.model import Base
+from sqlalchemy.schema import DropTable
+from sqlalchemy.ext.compiler import compiles
+from unittest.mock import patch
+
 
 LOGGER = logging.getLogger('__name__')
 
-from sqlalchemy.schema import DropTable
-from sqlalchemy.ext.compiler import compiles
 
-pytestmark = pytest.mark.parametrize("addr", [":memory", "postgresql+psycopg2://postgres:password@localhost:5432/postgres"])
+pytestmark = pytest.mark.parametrize(
+    "addr", [":memory", "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
+)
+
 
 @compiles(DropTable, "postgresql")
 def _compile_drop_table(element, compiler, **kwargs):
     return compiler.visit_drop_table(element) + " CASCADE"
 
+
 def tearDown(obj):
-        obj.gateway.close()
-        Base.metadata.drop_all(obj.gateway.session.get_bind())
+    obj.gateway.close()
+    Base.metadata.drop_all(obj.gateway.session.get_bind())
+
 
 def setUp(obj, addr):
-        args = Namespace()
-        args.database = addr
-        obj.gateway = DbGateway(args)
-        schema = Schema(obj.gateway)
-        schema.create_schema()
-        obj.load = Load(obj.gateway)
-        csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-        obj.load.process_file(csv_file)
-        
-        # Arguments passed to checksum.Command
-        obj.checksum_command = Command()
-        obj.command_args = Namespace()
-        obj.command_args.location = None
-        obj.command_args.output_type = None
-        obj.command_args.output_file = None
-        csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-        obj.load.process_file(csv_file)
+    args = Namespace()
+    args.database = addr
+    obj.gateway = DbGateway(args)
+    schema = Schema(obj.gateway)
+    schema.create_schema()
+    obj.load = Load(obj.gateway)
+    csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
+    obj.load.process_file(csv_file)
+
+    # Arguments passed to checksum.Command
+    obj.checksum_command = Command()
+    obj.command_args = Namespace()
+    obj.command_args.location = None
+    obj.command_args.output_type = None
+    obj.command_args.output_file = None
+    csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
+    obj.load.process_file(csv_file)
+
 
 class TestChecksumCommand:
-    
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_location_arg(self, mock_out, addr):
         # The call command will write to a file
@@ -58,7 +64,7 @@ class TestChecksumCommand:
         setUp(self, addr)
         self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
         self.checksum_command.__call__(self.command_args, self.gateway)
-        LOGGER.info(f"{mock_out.getvalue()}")
+        # LOGGER.info(f"{mock_out.getvalue()}")
         expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
         assert mock_out.getvalue() == expected
         tearDown(self)
@@ -69,7 +75,7 @@ class TestChecksumCommand:
         self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
         self.command_args.output_type = 'sha1'
         self.checksum_command.__call__(self.command_args, self.gateway)
-        LOGGER.info(f"{mock_out.getvalue()}")
+        # LOGGER.info(f"{mock_out.getvalue()}")
         expected = '2fa953a48600e1aef0486b4b3a17c6100cfeef80  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
         assert mock_out.getvalue() == expected
         tearDown(self)
@@ -80,11 +86,11 @@ class TestChecksumCommand:
         with open('tests/fixtures/checksum/locations_file.csv') as f:
             self.command_args.locations_file = f
             self.checksum_command.__call__(self.command_args, self.gateway)
-            LOGGER.info(f"{mock_out.getvalue()}")
+            # LOGGER.info(f"{mock_out.getvalue()}")
             expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n' \
                        '1041fd1cf84c71183db2d5d95942a41c  test_bucket/TEST_BATCH/colors/sample_red.jpg\n'
             assert mock_out.getvalue() == expected
-        
+
         tearDown(self)
 
     def test_output_file_arg(self, addr):
@@ -97,11 +103,11 @@ class TestChecksumCommand:
                 self.checksum_command.__call__(self.command_args, self.gateway)
 
             assert os.path.getsize(output_filename) == 80
-        
-        tearDown(self)
-    
-class TestGetChecksum:
 
+        tearDown(self)
+
+
+class TestGetChecksum:
     def test_valid_row_and_md5_checksum__returns_tuple(self, addr):
         setUp(self, addr)
         row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
@@ -134,8 +140,8 @@ class TestGetChecksum:
         setUp(self, addr)
         row = {'location': 'not_a_location_in_database'}
         checksum_and_path = get_checksum(self.gateway, row, 'md5')
-        assert checksum_and_path == None
-        assert re.search(r"No accession record found for .*", mock_err.getvalue()) != None
+        assert checksum_and_path is None
+        assert re.search(r"No accession record found for .*", mock_err.getvalue()) is not None
         tearDown(self)
 
     @patch('sys.stderr', new_callable=io.StringIO)
@@ -144,8 +150,8 @@ class TestGetChecksum:
         row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
         checksum_type = 'invalid_type'
         checksum_and_path = get_checksum(self.gateway, row, checksum_type)
-        assert checksum_and_path == None
-        assert re.search(r"No INVALID_TYPE checksum found .*", mock_err.getvalue()) != None
+        assert checksum_and_path is None
+        assert re.search(r"No INVALID_TYPE checksum found .*", mock_err.getvalue()) is not None
         tearDown(self)
 
     def test_tuple_contains_destination_if_provided(self, addr):

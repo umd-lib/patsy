@@ -3,6 +3,7 @@ from patsy.core.db_gateway import DbGateway, AddResult
 from patsy.core.patsy_record import PatsyUtils
 from typing import Dict, List, Optional
 
+
 class LoadResult():
     def __init__(self) -> None:
         self.rows_processed = 0

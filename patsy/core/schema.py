@@ -9,7 +9,7 @@ class Schema:
     def create_schema(self) -> str:
         session = self.gateway.session
         engine = session.get_bind()
-        #print("Creating the schema using the declarative base...")
+        # print("Creating the schema using the declarative base...")
         Base.metadata.create_all(engine)
 
         # Create "patsy_records" view
