@@ -21,7 +21,7 @@ LOGGER = logging.getLogger('__name__')
 
 
 pytestmark = pytest.mark.parametrize(
-    "addr", [":memory", "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
+    "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
 )
 
 
