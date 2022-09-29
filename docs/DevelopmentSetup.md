@@ -50,16 +50,35 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 
 ## Running the tests
 
-To run the tests:
+First create a docker container with Postgres first.
+
+```
+> docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
+```
+
+Then run pytest, which will run all test twice,
+with a Sqlite database and a Postgres database
 
 ```
 > pytest
 ```
 
-For running the test with Postgres, create a docker container with Postgres first.
+## Test Coverage Report
+
+A test coverage report can be generated using "pytest-cov":
+Note: create a docker container first as mentioned previously
+
 ```
-> docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
+> pytest --cov=patsy tests/
 ```
+
+To generate an HTML report:
+
+```
+> pytest --cov-report html --cov=patsy tests/
+```
+
+The report will be written to the "htmlcov/" directory.
 
 ## Code Style
 
@@ -70,22 +89,6 @@ to check compliance with the guidelines can be run using:
 ```
 > pycodestyle .
 ```
-
-## Test Coverage Report
-
-A test coverage report can be generated using "pytest-cov":
-
-```
-> pytest --cov=patsy tests/
-```
-
-to generate an HTML report:
-
-```
-> pytest --cov-report html --cov=patsy tests/
-```
-
-The report will be written to the "htmlcov/" directory.
 
 ## Python Type Hinting
 
