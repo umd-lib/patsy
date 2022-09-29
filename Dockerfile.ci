@@ -24,4 +24,4 @@ RUN apt-get update && \
 
 # WORKDIR /root/patsy-db
 # RUN git checkout feature/LIBITD-1754
-# RUN pip install -e .[dev,test]
+# RUN pip install -e .[dev,test] 
