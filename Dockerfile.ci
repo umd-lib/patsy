@@ -23,5 +23,5 @@ RUN apt-get update && \
 #     git clone https://github.com/aguilarm-umd/patsy-db.git
 
 # WORKDIR /root/patsy-db
-# RUN git checkout feature/LIBITD-1754
+# RUN git checkout feature/LIBITD-1754 
 # RUN pip install -e .[dev,test] 
