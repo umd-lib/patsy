@@ -21,7 +21,7 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 > pyenv install 3.7.10 --skip-existing
 ```
 
-## Installation for development
+## Installation for Development
 
 1) Clone the "patsy-db" Git repository:
 
@@ -48,7 +48,7 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 > pip install -e .[dev,test]
 ```
 
-## Running the tests
+## Running The Tests
 
 First create a docker container with Postgres first.
 
