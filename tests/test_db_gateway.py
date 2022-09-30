@@ -2,18 +2,22 @@ import csv
 import pytest
 
 from argparse import Namespace
+from patsy.commands.schema import Command
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from patsy.core.patsy_record import PatsyUtils
-from patsy.core.schema import Schema
 from patsy.model import Base
 from sqlalchemy.schema import DropTable
 from sqlalchemy.ext.compiler import compiles
 
 
-pytestmark = pytest.mark.parametrize(
-    "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
-)
+# pytestmark = pytest.mark.parametrize(
+#     "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
+# )
+
+@pytest.fixture
+def addr(request):
+    return request.config.getoption('--base-url')
 
 
 @compiles(DropTable, "postgresql")
@@ -30,8 +34,9 @@ def setUp(obj, addr):
     args = Namespace()
     args.database = addr
     obj.gateway = DbGateway(args)
-    schema = Schema(obj.gateway)
-    schema.create_schema()
+    # schema = Schema(obj.gateway)
+    # schema.create_schema()
+    Command.__call__(obj, obj.gateway)
     for file in test_db_files:
         load = Load(obj.gateway)
         load.process_file(file)

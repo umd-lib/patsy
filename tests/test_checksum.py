@@ -8,7 +8,7 @@ import tempfile
 
 from argparse import Namespace
 from patsy.commands.checksum import Command, get_checksum
-from patsy.core.schema import Schema
+from patsy.commands.schema import Command as CommandSchema
 from patsy.core.db_gateway import DbGateway
 from patsy.core.load import Load
 from patsy.model import Base
@@ -20,9 +20,13 @@ from unittest.mock import patch
 LOGGER = logging.getLogger('__name__')
 
 
-pytestmark = pytest.mark.parametrize(
-    "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
-)
+# pytestmark = pytest.mark.parametrize(
+#     "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
+# )
+
+@pytest.fixture
+def addr(request):
+    return request.config.getoption('--base-url')
 
 
 @compiles(DropTable, "postgresql")
@@ -39,11 +43,8 @@ def setUp(obj, addr):
     args = Namespace()
     args.database = addr
     obj.gateway = DbGateway(args)
-    schema = Schema(obj.gateway)
-    schema.create_schema()
-    obj.load = Load(obj.gateway)
-    csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-    obj.load.process_file(csv_file)
+    # schema = Schema(obj.gateway)
+    # schema.create_schema()
 
     # Arguments passed to checksum.Command
     obj.checksum_command = Command()
@@ -51,8 +52,13 @@ def setUp(obj, addr):
     obj.command_args.location = None
     obj.command_args.output_type = None
     obj.command_args.output_file = None
+
+    CommandSchema.__call__(obj, obj.gateway)
+    obj.load = Load(obj.gateway)
     csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
     obj.load.process_file(csv_file)
+
+    
 
 
 class TestChecksumCommand:
