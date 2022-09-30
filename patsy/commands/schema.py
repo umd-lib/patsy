@@ -16,6 +16,6 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, gateway: DbGateway) -> str:
         schema_impl = Schema(gateway)
         return schema_impl.create_schema()
