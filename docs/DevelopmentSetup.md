@@ -50,17 +50,22 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 
 ## Running The Tests
 
-First create a docker container with Postgres first.
+```
+> pytest
+```
+
+By default, running pytest will run the test in an Sqlite in memory database.
+To run the test against a Postgres database, first create a docker container with
+Postgres.
 
 ```
 > docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
 ```
 
-Then run pytest, which will run all test twice,
-with a Sqlite database and a Postgres database
+Then run pytest with this additional parameter
 
 ```
-> pytest
+> pytest --base-url="postgresql+psycopg2://postgres:password@localhost:5432/postgres"
 ```
 
 ## Test Coverage Report
