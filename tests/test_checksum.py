@@ -58,8 +58,6 @@ def setUp(obj, addr):
     csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
     obj.load.process_file(csv_file)
 
-    
-
 
 class TestChecksumCommand:
     @patch('sys.stdout', new_callable=io.StringIO)
