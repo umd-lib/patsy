@@ -3,8 +3,8 @@ import pytest
 
 from argparse import Namespace
 from patsy.commands.schema import Command
+from patsy.commands.load import Command as LoadCommand
 from patsy.core.db_gateway import DbGateway
-from patsy.core.load import Load
 from patsy.core.patsy_record import PatsyUtils
 from patsy.model import Base
 from sqlalchemy.schema import DropTable
@@ -38,8 +38,10 @@ def setUp(obj, addr):
     # schema.create_schema()
     Command.__call__(obj, obj.gateway)
     for file in test_db_files:
-        load = Load(obj.gateway)
-        load.process_file(file)
+        args.file = file
+        LoadCommand.__call__(obj, args, obj.gateway)
+        # load = Load(obj.gateway)
+        # load.process_file(file)
 
 
 def tearDown(obj):
@@ -80,15 +82,20 @@ class TestDbGateway:
         setUp(self, addr)
         patsy_records = self.gateway.get_batch_records("TEST_COLORS")
         expected_patsy_records = []
+        expected_csv = []
         with open("tests/fixtures/db_gateway/colors_inventory.csv") as f:
             reader = csv.DictReader(f, delimiter=',')
             for row in reader:
-                expected_patsy_records.append(PatsyUtils.from_inventory_csv(row))
+                row_record = PatsyUtils.from_inventory_csv(row)
+                expected_patsy_records.append(row_record)
+                expected_csv.append(PatsyUtils.to_csv(row_record))
 
         assert len(expected_patsy_records) >= 0
         assert len(expected_patsy_records) == len(patsy_records)
 
         for p in patsy_records:
+            record_csv = PatsyUtils.to_csv(p)
             assert p in expected_patsy_records
+            assert record_csv in expected_csv
 
         tearDown(self)
