@@ -46,7 +46,7 @@ def setUp(obj, addr):
     obj.gateway = DbGateway(args)
     # schema = Schema(obj.gateway)
     # schema.create_schema()
-    Command.__call__(obj, obj.gateway)
+    Command.__call__(obj, args, obj.gateway)
     obj.load = Load(obj.gateway)
 
 

@@ -36,7 +36,7 @@ def setUp(obj, addr):
     obj.gateway = DbGateway(args)
     # schema = Schema(obj.gateway)
     # schema.create_schema()
-    Command.__call__(obj, obj.gateway)
+    Command.__call__(obj, args, obj.gateway)
     for file in test_db_files:
         args.file = file
         LoadCommand.__call__(obj, args, obj.gateway)

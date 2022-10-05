@@ -53,7 +53,7 @@ def setUp(obj, addr):
     obj.command_args.output_type = None
     obj.command_args.output_file = None
 
-    CommandSchema.__call__(obj, obj.gateway)
+    CommandSchema.__call__(obj, args, obj.gateway)
     obj.load = Load(obj.gateway)
     csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
     obj.load.process_file(csv_file)
