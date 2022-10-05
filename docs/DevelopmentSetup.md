@@ -21,7 +21,7 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 > pyenv install 3.7.10 --skip-existing
 ```
 
-## Installation for development
+## Installation for Development
 
 1) Clone the "patsy-db" Git repository:
 
@@ -48,13 +48,42 @@ Once "pyenv" and "pyenv-virtualenv" have been installed, install Python 3.7.10:
 > pip install -e .[dev,test]
 ```
 
-## Running the tests
-
-To run the tests:
+## Running The Tests
 
 ```
 > pytest
 ```
+
+By default, running pytest will run the test in an Sqlite in memory database.
+To run the test against a Postgres database, first create a docker container with
+Postgres.
+
+```
+> docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
+```
+
+Then run pytest with this additional parameter
+
+```
+> pytest --base-url="postgresql+psycopg2://postgres:password@localhost:5432/postgres"
+```
+
+## Test Coverage Report
+
+A test coverage report can be generated using "pytest-cov":
+Note: create a docker container first as mentioned previously
+
+```
+> pytest --cov=patsy tests/
+```
+
+To generate an HTML report:
+
+```
+> pytest --cov-report html --cov=patsy tests/
+```
+
+The report will be written to the "htmlcov/" directory.
 
 ## Code Style
 
@@ -65,22 +94,6 @@ to check compliance with the guidelines can be run using:
 ```
 > pycodestyle .
 ```
-
-## Test Coverage Report
-
-A test coverage report can be generated using "pytest-cov":
-
-```
-> pytest --cov=patsy tests/
-```
-
-to generate an HTML report:
-
-```
-> pytest --cov-report html --cov=patsy tests/
-```
-
-The report will be written to the "htmlcov/" directory.
 
 ## Python Type Hinting
 
