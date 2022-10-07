@@ -1,5 +1,4 @@
 import pytest
-import filecmp
 
 from argparse import Namespace
 from patsy.commands.schema import Command
@@ -44,7 +43,7 @@ def setUp(obj, addr):
     obj.args = Namespace()
     obj.args.database = addr
     obj.gateway = DbGateway(obj.args)
-    Command.__call__(obj, obj.gateway)
+    Command.__call__(obj, obj.args, obj.gateway)
     obj.load = Load(obj.gateway)
 
 
@@ -56,60 +55,63 @@ def tearDown(obj):
 class TestExport:
     def test_export_aws_archiver(self, addr):
         # Load file into database
-        setUp(self, addr)
-        csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-        export_file = 'tests/fixtures/export/colors_inventory-aws-archiver-export.csv'
-        load_result = self.load.process_file(csv_file)
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 3
-        assert len(load_result.errors) == 0
+        try:
+            setUp(self, addr)
+            csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
+            export_file = 'tests/fixtures/export/colors_inventory-aws-archiver-export.csv'
+            load_result = self.load.process_file(csv_file)
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 3
+            assert len(load_result.errors) == 0
 
-        # Then export it
-        self.args.batch = None
-        self.args.output = export_file
-        ExportCommand.__call__(self, self.args, self.gateway)
+            self.gateway.session.commit()
 
-        # Tear down and setup again
-        tearDown(self)
-        setUp(self, addr)
+            # Then export it
+            self.args.batch = None
+            self.args.output = export_file
+            ExportCommand.__call__(self, self.args, self.gateway)
 
-        # Then load it again and check for the same results
-        load_result = self.load.process_file(export_file)
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 3
-        assert len(load_result.errors) == 0
-        tearDown(self)
+            # Then load it again and check for the same results
+            self.load = Load(self.gateway)
+            load_result = self.load.process_file(export_file)
+
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_export_preserve(self, addr):
         # Load
-        setUp(self, addr)
-        csv_file = 'tests/fixtures/load/colors_inventory-preserve.csv'
-        export_file = 'tests/fixtures/export/colors_inventory-preserve-export.csv'
-        load_result = self.load.process_file(csv_file)
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 0
-        assert len(load_result.errors) == 0
+        try:
+            setUp(self, addr)
+            csv_file = 'tests/fixtures/load/colors_inventory-preserve.csv'
+            export_file = 'tests/fixtures/export/colors_inventory-preserve-export.csv'
+            load_result = self.load.process_file(csv_file)
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
 
-        # Export
-        self.args.batch = None
-        self.args.output = export_file
-        ExportCommand.__call__(self, self.args, self.gateway)
+            self.gateway.session.commit()
 
-        # Teardown/Setup
-        tearDown(self)
-        setUp(self, addr)
+            # Export
+            self.args.batch = None
+            self.args.output = export_file
+            ExportCommand.__call__(self, self.args, self.gateway)
 
-        # Compare
-        load_result = self.load.process_file(export_file)
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 0
-        assert len(load_result.errors) == 0
-        tearDown(self)
+            # Compare
+            self.load = Load(self.gateway)
+            load_result = self.load.process_file(export_file)
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
