@@ -53,12 +53,12 @@ def tearDown(obj):
 
 
 class TestExport:
-    def test_export_aws_archiver(self, addr):
+    def test_export_aws_archiver(self, addr, tmpdir):
         # Load file into database
         try:
             setUp(self, addr)
             csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-            export_file = 'tests/fixtures/export/colors_inventory-aws-archiver-export.csv'
+            export_file = tmpdir.join("colors_inventory-preserve-export.csv")
             load_result = self.load.process_file(csv_file)
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
@@ -85,12 +85,12 @@ class TestExport:
         finally:
             tearDown(self)
 
-    def test_export_preserve(self, addr):
+    def test_export_preserve(self, addr, tmpdir):
         # Load
         try:
             setUp(self, addr)
             csv_file = 'tests/fixtures/load/colors_inventory-preserve.csv'
-            export_file = 'tests/fixtures/export/colors_inventory-preserve-export.csv'
+            export_file = tmpdir.join("colors_inventory-preserve-export.csv")
             load_result = self.load.process_file(csv_file)
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
