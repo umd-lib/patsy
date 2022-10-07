@@ -36,7 +36,7 @@ def setUp(obj, addr):
     obj.gateway = DbGateway(args)
     # schema = Schema(obj.gateway)
     # schema.create_schema()
-    Command.__call__(obj, obj.gateway)
+    Command.__call__(obj, args, obj.gateway)
     for file in test_db_files:
         args.file = file
         LoadCommand.__call__(obj, args, obj.gateway)
@@ -51,51 +51,61 @@ def tearDown(obj):
 
 class TestDbGateway:
     def test_get_all_batches(self, addr):
-        setUp(self, addr)
-        batches = self.gateway.get_all_batches()
-        assert len(batches) == 2
-        batch_names = [batch.name for batch in batches]
-        assert "TEST_COLORS" in batch_names
-        assert "TEST_SOLAR_SYSTEM" in batch_names
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            batches = self.gateway.get_all_batches()
+            assert len(batches) == 2
+            batch_names = [batch.name for batch in batches]
+            assert "TEST_COLORS" in batch_names
+            assert "TEST_SOLAR_SYSTEM" in batch_names
+        finally:
+            tearDown(self)
 
     def test_get_batch_by_name__batch_does_not_exist(self, addr):
-        setUp(self, addr)
-        batch = self.gateway.get_batch_by_name("NON_EXISTENT_BATCH")
-        assert batch is None
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            batch = self.gateway.get_batch_by_name("NON_EXISTENT_BATCH")
+            assert batch is None
+        finally:
+            tearDown(self)
 
     def test_get_batch_by_name__batch_exists(self, addr):
-        setUp(self, addr)
-        batch = self.gateway.get_batch_by_name("TEST_COLORS")
-        assert batch is not None
-        assert batch.name == "TEST_COLORS"
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            batch = self.gateway.get_batch_by_name("TEST_COLORS")
+            assert batch is not None
+            assert batch.name == "TEST_COLORS"
+        finally:
+            tearDown(self)
 
     def test_get_batch_records__batch_does_not_exist(self, addr):
-        setUp(self, addr)
-        patsy_records = self.gateway.get_batch_records("NON_EXISTENT_BATCH")
-        assert len(patsy_records) == 0
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            patsy_records = self.gateway.get_batch_records("NON_EXISTENT_BATCH")
+            assert len(patsy_records) == 0
+        finally:
+            tearDown(self)
 
     def test_get_batch_records__batch_exists(self, addr):
-        setUp(self, addr)
-        patsy_records = self.gateway.get_batch_records("TEST_COLORS")
-        expected_patsy_records = []
-        expected_csv = []
-        with open("tests/fixtures/db_gateway/colors_inventory.csv") as f:
-            reader = csv.DictReader(f, delimiter=',')
-            for row in reader:
-                row_record = PatsyUtils.from_inventory_csv(row)
-                expected_patsy_records.append(row_record)
-                expected_csv.append(PatsyUtils.to_csv(row_record))
+        try:
+            setUp(self, addr)
+            patsy_records = self.gateway.get_batch_records("TEST_COLORS")
+            expected_patsy_records = []
+            expected_csv = []
+            with open("tests/fixtures/db_gateway/colors_inventory.csv") as f:
+                reader = csv.DictReader(f, delimiter=',')
+                for row in reader:
+                    row_record = PatsyUtils.from_inventory_csv(row)
+                    expected_patsy_records.append(row_record)
+                    expected_csv.append(PatsyUtils.to_csv(row_record))
 
-        assert len(expected_patsy_records) >= 0
-        assert len(expected_patsy_records) == len(patsy_records)
+            assert len(expected_patsy_records) >= 0
+            assert len(expected_patsy_records) == len(patsy_records)
 
-        for p in patsy_records:
-            record_csv = PatsyUtils.to_csv(p)
-            assert p in expected_patsy_records
-            assert record_csv in expected_csv
+            for p in patsy_records:
+                record_csv = PatsyUtils.to_csv(p)
+                assert p in expected_patsy_records
+                assert record_csv in expected_csv
 
-        tearDown(self)
+        finally:
+            tearDown(self)

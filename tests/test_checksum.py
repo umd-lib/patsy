@@ -53,7 +53,7 @@ def setUp(obj, addr):
     obj.command_args.output_type = None
     obj.command_args.output_file = None
 
-    CommandSchema.__call__(obj, obj.gateway)
+    CommandSchema.__call__(obj, args, obj.gateway)
     obj.load = Load(obj.gateway)
     csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
     obj.load.process_file(csv_file)
@@ -64,104 +64,122 @@ class TestChecksumCommand:
     def test_location_arg(self, mock_out, addr):
         # The call command will write to a file
         # and compare the answer to what's written in file.
-
-        setUp(self, addr)
-        self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
-        self.checksum_command.__call__(self.command_args, self.gateway)
-        # LOGGER.info(f"{mock_out.getvalue()}")
-        expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-        assert mock_out.getvalue() == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
+            self.checksum_command.__call__(self.command_args, self.gateway)
+            # LOGGER.info(f"{mock_out.getvalue()}")
+            expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
+            assert mock_out.getvalue() == expected
+        finally:
+            tearDown(self)
 
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_output_type_arg(self, mock_out, addr):
-        setUp(self, addr)
-        self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
-        self.command_args.output_type = 'sha1'
-        self.checksum_command.__call__(self.command_args, self.gateway)
-        # LOGGER.info(f"{mock_out.getvalue()}")
-        expected = '2fa953a48600e1aef0486b4b3a17c6100cfeef80  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-        assert mock_out.getvalue() == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
+            self.command_args.output_type = 'sha1'
+            self.checksum_command.__call__(self.command_args, self.gateway)
+            # LOGGER.info(f"{mock_out.getvalue()}")
+            expected = '2fa953a48600e1aef0486b4b3a17c6100cfeef80  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
+            assert mock_out.getvalue() == expected
+        finally:
+            tearDown(self)
 
     @patch('sys.stdout', new_callable=io.StringIO)
     def test_locations_file_arg(self, mock_out, addr):
-        setUp(self, addr)
-        with open('tests/fixtures/checksum/locations_file.csv') as f:
-            self.command_args.locations_file = f
-            self.checksum_command.__call__(self.command_args, self.gateway)
-            # LOGGER.info(f"{mock_out.getvalue()}")
-            expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n' \
-                       '1041fd1cf84c71183db2d5d95942a41c  test_bucket/TEST_BATCH/colors/sample_red.jpg\n'
-            assert mock_out.getvalue() == expected
-
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            with open('tests/fixtures/checksum/locations_file.csv') as f:
+                self.command_args.locations_file = f
+                self.checksum_command.__call__(self.command_args, self.gateway)
+                # LOGGER.info(f"{mock_out.getvalue()}")
+                expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n' \
+                           '1041fd1cf84c71183db2d5d95942a41c  test_bucket/TEST_BATCH/colors/sample_red.jpg\n'
+                assert mock_out.getvalue() == expected
+        finally:
+            tearDown(self)
 
     def test_output_file_arg(self, addr):
-        setUp(self, addr)
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            output_filename = os.path.join(tmpdirname, 'test_output_file.csv')
-            with open(output_filename, 'w') as output_file:
-                self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
-                self.command_args.output_file = output_file
-                self.checksum_command.__call__(self.command_args, self.gateway)
+        try:
+            setUp(self, addr)
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                output_filename = os.path.join(tmpdirname, 'test_output_file.csv')
+                with open(output_filename, 'w') as output_file:
+                    self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
+                    self.command_args.output_file = output_file
+                    self.checksum_command.__call__(self.command_args, self.gateway)
 
-            assert os.path.getsize(output_filename) == 80
+                assert os.path.getsize(output_filename) == 80
 
-        tearDown(self)
+        finally:
+            tearDown(self)
 
 
 class TestGetChecksum:
     def test_valid_row_and_md5_checksum__returns_tuple(self, addr):
-        setUp(self, addr)
-        row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
-        expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
-        checksum_and_path = get_checksum(self.gateway, row, 'md5')
-        assert checksum_and_path == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
+            expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
+            checksum_and_path = get_checksum(self.gateway, row, 'md5')
+            assert checksum_and_path == expected
+        finally:
+            tearDown(self)
 
     def test_valid_row_and_sha1_checksum__returns_tuple(self, addr):
-        setUp(self, addr)
-        row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
-        expected = ('2fa953a48600e1aef0486b4b3a17c6100cfeef80', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
-        checksum_and_path = get_checksum(self.gateway, row, 'sha1')
-        assert checksum_and_path == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
+            expected = ('2fa953a48600e1aef0486b4b3a17c6100cfeef80', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
+            checksum_and_path = get_checksum(self.gateway, row, 'sha1')
+            assert checksum_and_path == expected
+        finally:
+            tearDown(self)
 
     def test_gvalid_row_and_sha256_checksum__returns_tuple(self, addr):
-        setUp(self, addr)
-        row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
-        expected = (
-            'e80dd1c34dbdc98521138eacc0e921683d8c9970a1f7cfe75bbfff56d5638238',
-            'test_bucket/TEST_BATCH/colors/sample_blue.jpg'
-        )
-        checksum_and_path = get_checksum(self.gateway, row, 'sha256')
-        assert checksum_and_path == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
+            expected = (
+                'e80dd1c34dbdc98521138eacc0e921683d8c9970a1f7cfe75bbfff56d5638238',
+                'test_bucket/TEST_BATCH/colors/sample_blue.jpg'
+            )
+            checksum_and_path = get_checksum(self.gateway, row, 'sha256')
+            assert checksum_and_path == expected
+        finally:
+            tearDown(self)
 
     @patch('sys.stderr', new_callable=io.StringIO)
     def test_location_not_found_returns__None_and_displays_error(self, mock_err, addr):
-        setUp(self, addr)
-        row = {'location': 'not_a_location_in_database'}
-        checksum_and_path = get_checksum(self.gateway, row, 'md5')
-        assert checksum_and_path is None
-        assert re.search(r"No accession record found for .*", mock_err.getvalue()) is not None
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'not_a_location_in_database'}
+            checksum_and_path = get_checksum(self.gateway, row, 'md5')
+            assert checksum_and_path is None
+            assert re.search(r"No accession record found for .*", mock_err.getvalue()) is not None
+        finally:
+            tearDown(self)
 
     @patch('sys.stderr', new_callable=io.StringIO)
     def test_checksum_type_not_found_returns__None_and_displays_error(self, mock_err, addr):
-        setUp(self, addr)
-        row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
-        checksum_type = 'invalid_type'
-        checksum_and_path = get_checksum(self.gateway, row, checksum_type)
-        assert checksum_and_path is None
-        assert re.search(r"No INVALID_TYPE checksum found .*", mock_err.getvalue()) is not None
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
+            checksum_type = 'invalid_type'
+            checksum_and_path = get_checksum(self.gateway, row, checksum_type)
+            assert checksum_and_path is None
+            assert re.search(r"No INVALID_TYPE checksum found .*", mock_err.getvalue()) is not None
+        finally:
+            tearDown(self)
 
     def test_tuple_contains_destination_if_provided(self, addr):
-        setUp(self, addr)
-        row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg', 'destination': 'DESTINATION'}
-        expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'DESTINATION')
-        checksum_and_path = get_checksum(self.gateway, row, 'md5')
-        assert checksum_and_path == expected
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg', 'destination': 'DESTINATION'}
+            expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'DESTINATION')
+            checksum_and_path = get_checksum(self.gateway, row, 'md5')
+            assert checksum_and_path == expected
+        finally:
+            tearDown(self)
