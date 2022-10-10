@@ -57,136 +57,160 @@ def tearDown(obj):
 
 class TestLoad():
     def test_process_csv_file(self, addr):
-        setUp(self, addr)
-        csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
-        load_result = self.load.process_file(csv_file)
-        assert load_result.rows_processed == 3
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
+            load_result = self.load.process_file(csv_file)
+            assert load_result.rows_processed == 3
+        finally:
+            tearDown(self)
 
     def test_is_row_valid__empty_dict(self, addr):
-        setUp(self, addr)
-        csv_line_index = 2
-        row_dict = {}
-        assert self.load.is_row_valid(csv_line_index, row_dict) is False
-        assert len(self.load.load_result.errors) == 1
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_line_index = 2
+            row_dict = {}
+            assert self.load.is_row_valid(csv_line_index, row_dict) is False
+            assert len(self.load.load_result.errors) == 1
+        finally:
+            tearDown(self)
 
     def test_is_row_valid__missing_required_field(self, addr):
-        setUp(self, addr)
-        csv_line_index = 2
-        row_dict = remove_key(self.valid_row_dict, 'BATCH')
-        assert self.load.is_row_valid(csv_line_index, row_dict) is False
-        assert len(self.load.load_result.errors) == 1
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_line_index = 2
+            row_dict = remove_key(self.valid_row_dict, 'BATCH')
+            assert self.load.is_row_valid(csv_line_index, row_dict) is False
+            assert len(self.load.load_result.errors) == 1
+        finally:
+            tearDown(self)
 
     def test_is_row_valid__missing_allowed_empty_field(self, addr):
-        setUp(self, addr)
-        csv_line_index = 2
-        row_dict = remove_key(self.valid_row_dict, 'SHA256')
-        assert self.load.is_row_valid(csv_line_index, row_dict) is False
-        assert len(self.load.load_result.errors) == 1
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_line_index = 2
+            row_dict = remove_key(self.valid_row_dict, 'SHA256')
+            assert self.load.is_row_valid(csv_line_index, row_dict) is False
+            assert len(self.load.load_result.errors) == 1
+        finally:
+            tearDown(self)
 
     def test_is_row_valid__required_field_no_content(self, addr):
-        setUp(self, addr)
-        csv_line_index = 2
-        row_dict = self.valid_row_dict.copy()
-        row_dict['BATCH'] = ""
-        assert self.load.is_row_valid(csv_line_index, row_dict) is False
-        assert len(self.load.load_result.errors) == 1
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_line_index = 2
+            row_dict = self.valid_row_dict.copy()
+            row_dict['BATCH'] = ""
+            assert self.load.is_row_valid(csv_line_index, row_dict) is False
+            assert len(self.load.load_result.errors) == 1
+        finally:
+            tearDown(self)
 
     def test_is_row_valid__allowed_missing_field_no_content(self, addr):
-        setUp(self, addr)
-        csv_line_index = 2
-        row_dict = self.valid_row_dict.copy()
-        row_dict['SHA256'] = ""
-        assert self.load.is_row_valid(csv_line_index, row_dict) is True
-        assert len(self.load.load_result.errors) == 0
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            csv_line_index = 2
+            row_dict = self.valid_row_dict.copy()
+            row_dict['SHA256'] = ""
+            assert self.load.is_row_valid(csv_line_index, row_dict) is True
+            assert len(self.load.load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_load__file_with_invalid_rows(self, addr):
-        setUp(self, addr)
-        load_result = self.load.process_file('tests/fixtures/load/invalid_inventory.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 2
-        assert load_result.locations_added == 2
-        assert len(load_result.errors) == 1
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            load_result = self.load.process_file('tests/fixtures/load/invalid_inventory.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 2
+            assert load_result.locations_added == 2
+            assert len(load_result.errors) == 1
+        finally:
+            tearDown(self)
 
     def test_load__file_with_valid_rows(self, addr):
-        setUp(self, addr)
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 3
-        assert len(load_result.errors) == 0
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 3
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_load__file_with_multiple_accessions_one_location(self, addr):
-        setUp(self, addr)
-        load_result = self.load.process_file('tests/fixtures/load/multiple_accessions_one_location.csv')
-        assert load_result.rows_processed == 2
-        assert load_result.batches_added == 2
-        assert load_result.accessions_added == 2
-        assert load_result.locations_added == 1
-        assert len(load_result.errors) == 0
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            load_result = self.load.process_file('tests/fixtures/load/multiple_accessions_one_location.csv')
+            assert load_result.rows_processed == 2
+            assert load_result.batches_added == 2
+            assert load_result.accessions_added == 2
+            assert load_result.locations_added == 1
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_load__file_with_valid_rows_loaded_twice(self, addr):
-        setUp(self, addr)
+        try:
+            setUp(self, addr)
 
-        # First load
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 3
-        assert len(load_result.errors) == 0
+            # First load
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 3
+            assert len(load_result.errors) == 0
 
-        # Second load - nothing should be added
-        self.load = Load(self.gateway)
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 0
-        assert load_result.accessions_added == 0
-        assert load_result.locations_added == 0
-        assert len(load_result.errors) == 0
-        tearDown(self)
+            # Second load - nothing should be added
+            self.load = Load(self.gateway)
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_load__file_from_preserve_tool(self, addr):
-        setUp(self, addr)
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-preserve.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 0
-        assert len(load_result.errors) == 0
-        tearDown(self)
+        try:
+            setUp(self, addr)
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-preserve.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
     def test_load__file_from_preserve_tool_then_archiver_update(self, addr):
-        setUp(self, addr)
+        try:
+            setUp(self, addr)
 
-        # First load uses "preserve" file
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-preserve.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 1
-        assert load_result.accessions_added == 3
-        assert load_result.locations_added == 0
-        assert len(load_result.errors) == 0
+            # First load uses "preserve" file
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-preserve.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 1
+            assert load_result.accessions_added == 3
+            assert load_result.locations_added == 0
+            assert len(load_result.errors) == 0
 
-        # Second load updates the locations using the "asw-archiver" file,
-        # only locations should be added.
-        self.load = Load(self.gateway)
-        load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
-        assert load_result.rows_processed == 3
-        assert load_result.batches_added == 0
-        assert load_result.accessions_added == 0
-        assert load_result.locations_added == 3
-        assert len(load_result.errors) == 0
-        tearDown(self)
+            # Second load updates the locations using the "asw-archiver" file,
+            # only locations should be added.
+            self.load = Load(self.gateway)
+            load_result = self.load.process_file('tests/fixtures/load/colors_inventory-aws-archiver.csv')
+            assert load_result.rows_processed == 3
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.locations_added == 3
+            assert len(load_result.errors) == 0
+        finally:
+            tearDown(self)
 
 
 def remove_key(dict: Dict[str, str], key: str) -> Dict[str, str]:
