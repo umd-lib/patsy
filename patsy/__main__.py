@@ -36,9 +36,9 @@ def main() -> None:
 
     parser.add_argument(
         '-d', '--database',
-        default=':memory:',
+        default=None,
         action='store',
-        help='Path to db file (defaults to in-memory db)',
+        help='Path to db file (defaults to None)',
     )
 
     subparsers = parser.add_subparsers(title='commands')

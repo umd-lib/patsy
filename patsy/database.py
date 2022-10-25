@@ -1,4 +1,5 @@
 import sys
+import os
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -7,7 +8,17 @@ from sqlalchemy.orm import sessionmaker
 Session = sessionmaker()
 
 
-def use_database_file(database: str) -> None:
+def use_database_file(database) -> None:
+    envDatabase = os.getenv('PATSY_DATABASE')
+    if database is not None:
+        database_helper(database)
+    elif envDatabase is not None:
+        database_helper(envDatabase)
+    else:
+        raise Exception("Database not given and no environment variable set")
+
+
+def database_helper(database: str) -> None:
     # Set up database file or use in-memory db
     if database.startswith('postgresql+psycopg2:'):
         db_path = database
