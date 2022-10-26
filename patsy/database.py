@@ -33,8 +33,8 @@ def database_helper(database: str) -> None:
            if database == (':memory:')
            else f"Using database at {database}...")
 
-    sys.stderr.write(str)
-    sys.stderr.write("Binding the database session...")
+    sys.stderr.write(f"{str}\n")
+    sys.stderr.write("Binding the database session...\n")
     engine = create_engine(db_path)
 
     # Enable foreign key constraints
