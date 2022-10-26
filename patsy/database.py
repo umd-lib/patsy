@@ -8,6 +8,10 @@ from sqlalchemy.orm import sessionmaker
 Session = sessionmaker()
 
 
+class DatabaseNotSetError(Exception):
+    pass
+
+
 def use_database_file(database) -> None:
     envDatabase = os.getenv('PATSY_DATABASE')
     if database is not None:
@@ -15,7 +19,7 @@ def use_database_file(database) -> None:
     elif envDatabase is not None:
         database_helper(envDatabase)
     else:
-        raise Exception("Database not given and no environment variable set")
+        raise DatabaseNotSetError
 
 
 def database_helper(database: str) -> None:

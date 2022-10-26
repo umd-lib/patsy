@@ -8,6 +8,7 @@ from importlib import import_module
 from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
+from patsy.database import DatabaseNotSetError
 
 
 def print_header(subcommand: str) -> None:
@@ -63,13 +64,19 @@ def main() -> None:
     command = command_modules[args.cmd_name].Command()  # type: ignore[attr-defined]
 
     print_header(args.cmd_name)
-    gateway = DbGateway(args)
-    result = command(args, gateway)
-    gateway.close()
 
-    if result:
-        sys.stderr.write(result)
-        sys.stderr.write('\n\n')
+    try:
+        gateway = DbGateway(args)
+        result = command(args, gateway)
+        gateway.close()
+
+        if result:
+            sys.stderr.write(result)
+            sys.stderr.write('\n\n')
+    except DatabaseNotSetError:
+        sys.stderr.write('Database not set. Either supply the "-d" argument to this command or set the "PATSY_DATABASE" environment variable.')
+        # exit with a non-zero code to indicate to the shell that the command failed to run
+        sys.exit(1)
 
 
 if __name__ == "__main__":
