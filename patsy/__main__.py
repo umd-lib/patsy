@@ -74,7 +74,7 @@ def main() -> None:
             sys.stderr.write(result)
             sys.stderr.write('\n\n')
     except DatabaseNotSetError:
-        sys.stderr.write('Database not set. Either supply the "-d" argument to this command or set the "PATSY_DATABASE" environment variable.')
+        sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.')
         # exit with a non-zero code to indicate to the shell that the command failed to run
         sys.exit(1)
 
