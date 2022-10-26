@@ -42,6 +42,17 @@ run against.
 For SQLite databases, this is typically the filename of the SQLite database
 file.
 
+The "--database" argument can be ommited if the user specifies a database to
+connect to as an environment variable. The environment variable must be named
+"PATSY_DATABASE".
+
+```
+> export PATSY_DATABASE={database url}
+```
+
+The "--database" argument can still be passed in to override the environment
+variable temporarily.
+
 ### "schema" command
 
 Creates the database schema.
