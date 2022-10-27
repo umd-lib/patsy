@@ -109,3 +109,4 @@ thumbs.db
 dump/
 .vscode
 .idea
+:memory

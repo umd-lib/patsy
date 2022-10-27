@@ -9,6 +9,7 @@ from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
 from patsy.database import DatabaseNotSetError
+from sqlalchemy.exc import OperationalError
 
 
 def print_header(subcommand: str) -> None:
@@ -74,7 +75,11 @@ def main() -> None:
             sys.stderr.write(result)
             sys.stderr.write('\n\n')
     except DatabaseNotSetError:
-        sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.')
+        sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
+        # exit with a non-zero code to indicate to the shell that the command failed to run
+        sys.exit(1)
+    except OperationalError:
+        sys.stderr.write('The URL did not work. Is the URL correct? Are you connected to the VPN?\n')
         # exit with a non-zero code to indicate to the shell that the command failed to run
         sys.exit(1)
 
