@@ -8,7 +8,7 @@ from importlib import import_module
 from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
-from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError
+from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError, InvalidTimeError
 from patsy.database import DatabaseNotSetError
 from sqlalchemy.exc import OperationalError
 
@@ -88,6 +88,9 @@ def main() -> None:
     except MissingHeadersError:
         sys.stderr.write('The headers to access the ApTrust API were not set. \
                           Provide them as an argument to the sync command or as environment variables in the shell.\n')
+        sys.exit(1)
+    except InvalidTimeError:
+        sys.stderr.write('Both time arguments were provided. Only provide one of them.\n')
         sys.exit(1)
 
 

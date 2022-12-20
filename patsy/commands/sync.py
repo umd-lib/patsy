@@ -5,7 +5,7 @@ import patsy.core.command
 
 from patsy.model import Accession
 from patsy.core.db_gateway import DbGateway
-from patsy.core.sync import Sync, InvalidHeadersError
+from patsy.core.sync import Sync, InvalidHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -30,6 +30,20 @@ def configure_cli(subparsers) -> None:  # type: ignore
         action='store',
         default=None,
         help='The header key for the ApTrust API'
+    )
+
+    parser.add_argument(
+        '-tb', '--timebefore',
+        action='store',
+        default=None,
+        help='Checks for bags created before the given timestamp.'
+    )
+
+    parser.add_argument(
+        '-ta', '--timeafter',
+        action='store',
+        default=None,
+        help='Checks for bags created after the given timestamp.'
     )
 
 
@@ -58,7 +72,15 @@ class Command(patsy.core.command.Command):
         }
 
         sync = Sync(gateway=gateway, headers=headers)
-        sync_result = sync.process()
+
+        if args.timebefore and args.timeafter:
+            raise InvalidTimeError
+        elif args.timebefore:
+            sync_result = sync.process(created_at__lteq=args.timebefore)
+        elif args.timeafter:
+            sync_result = sync.process(created_at__gteq=args.timeafter)
+        else:
+            sync_result = sync.process()
 
         result_messages = [
             f"Total files processed: {sync_result.files_processed}",

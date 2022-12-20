@@ -4,7 +4,6 @@ import re
 from patsy.model import Accession, Batch, Location
 from patsy.core.db_gateway import DbGateway
 
-from sqlalchemy.exc import InvalidRequestError
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from pathlib import Path
@@ -15,6 +14,10 @@ class InvalidStatusCodeError(Exception):
 
 
 class MissingHeadersError(Exception):
+    pass
+
+
+class InvalidTimeError(Exception):
     pass
 
 
@@ -137,9 +140,12 @@ class Sync:
 
         return ()
 
-    def process(self) -> SyncResult:
-        # Check if bags was optionally given
-        if not bags:
+    def process(self, **params) -> SyncResult:
+        if 'created_at__lteq' in params:
+            bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000, created_at__lteq=params['created_at__lteq'])
+        elif 'created_at__gteq' in params:
+            bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000, created_at__gteq=params['created_at__gteq'])
+        else:
             bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000)
 
         # Get all the objects and loop over them

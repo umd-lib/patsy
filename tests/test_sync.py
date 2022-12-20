@@ -24,11 +24,18 @@ def _compile_drop_table(element, compiler, **kwargs):
     return compiler.visit_drop_table(element) + " CASCADE"
 
 
-def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False):
-    headers = {
-        'X-Pharos-API-User': "not being used",  # os.getenv('X_PHAROS_NAME'),
-        'X-Pharos-API-Key': "not being used",  # os.getenv('X_PHAROS_KEY')
-    }
+def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False, head: bool = False):
+    if head:
+        headers = {
+            'X-Pharos-API-User': os.getenv('X_PHAROS_NAME'),  # os.getenv('X_PHAROS_NAME'),
+            'X-Pharos-API-Key': os.getenv('X_PHAROS_KEY'),  # os.getenv('X_PHAROS_KEY')
+        }
+    else:
+        headers = {
+            'X-Pharos-API-User': "not being used",  # os.getenv('X_PHAROS_NAME'),
+            'X-Pharos-API-Key': "not being used",  # os.getenv('X_PHAROS_KEY')
+        }
+
     args = Namespace(database=addr)
 
     obj.gateway = DbGateway(args)
@@ -188,6 +195,30 @@ class TestSync:
 
             assert files_processed - locations_added == 0
             assert not self.sync.sync_results.files_not_found
+
+        finally:
+            tearDown(self, False)
+
+    def test_process(self, addr):
+        try:
+            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+
+            sync_result = self.sync.process()
+            locations_added = sync_result.locations_added
+
+            assert locations_added == 12
+
+        finally:
+            tearDown(self, False)
+
+    def test_specify_time(self, addr):
+        try:
+            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+
+            sync_result = self.sync.process(created_at__gteq='2022-08-01')
+            locations_added = sync_result.locations_added
+
+            assert locations_added == 12
 
         finally:
             tearDown(self, False)
