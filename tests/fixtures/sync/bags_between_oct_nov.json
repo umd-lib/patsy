@@ -1,0 +1,35 @@
+{
+    "count": 1,
+    "next": "",
+    "previous": "",
+    "results": [
+        {
+            "id": 248166,
+            "title": "Maryland Public Television, FY2019 (21679)",
+            "description": "Digitized videotapes from the Maryland Public Television archives. Various series include: Afloat and a Boat, Afro-American Perspectives, Calculus, Bean Sprouts, Bees and Honey, Book, Look and Listen, Common Issues in World Regions, Counterplot, Economic Perspectives, Enter Metrics, International Edition, Interactions, The Language, Love, Tennis, Maryland..., Of Earth & Man, Old Houseworks, State Circle, Working Woman, Inside Maryland, Madeline Cooks, Maryland Chapter & Verse. Also includes limited-term or individual programs.",
+            "identifier": "umd.edu/archive0160",
+            "alt_identifier": "mdu.archive0160.apt20220928",
+            "access": "consortia",
+            "bag_name": "archive0160",
+            "institution_id": 27,
+            "created_at": "2022-10-19T19:02:19.745032Z",
+            "updated_at": "2022-10-19T19:02:19.745032Z",
+            "state": "A",
+            "etag": "c6338d7374ea0d2eb3cf33b77e4eb685-10000",
+            "bag_group_identifier": "scua.mmc.mpt",
+            "storage_option": "Glacier-Deep-VA",
+            "bagit_profile_identifier": "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json",
+            "source_organization": "University of Maryland College Park",
+            "internal_sender_identifier": "",
+            "internal_sender_description": "",
+            "institution_name": "University of Maryland",
+            "institution_identifier": "umd.edu",
+            "institution_type": "MemberInstitution",
+            "institution_parent_id": 0,
+            "file_count": 245,
+            "size": 3239764102675,
+            "payload_file_count": 243,
+            "payload_size": 3239764101545
+        }
+    ]
+}
