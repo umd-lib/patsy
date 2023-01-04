@@ -53,13 +53,15 @@ class Sync:
     def get_request(self, endpoint: str, **params) -> list:
         results = []
         r = requests.get(url=Sync.APTRUST_URL + endpoint, params=params, headers=self.headers)
-        # print(r.url)
+        print('URL: ' + r.url)
         next_page = r.json().get('next')
+        print('NEXT PAGE: ' + next_page)
 
         while next_page != '' and r.status_code == 200:
             results += r.json().get('results')
             r = requests.get(url=Sync.APTRUST_URL + next_page, headers=self.headers)
             next_page = r.json().get('next')
+            print('NEXT PAGE: ' + next_page)
 
         if r.status_code == 200:
             results += r.json().get('results')

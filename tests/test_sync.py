@@ -1,7 +1,7 @@
 import os
 import json
 import pytest
-import pdb
+import httpretty
 
 from argparse import Namespace
 from patsy.core.sync import Sync
@@ -83,13 +83,13 @@ class TestSync:
         finally:
             tearDown(self)
 
-    # The objects.json file has 30 bags
+    # The baglist.json file has 30 bags
     # Only 1 should be in the database
     def test_batches(self, addr):
         try:
             setUp(self, addr, load=True)
 
-            with open('tests/fixtures/sync/objects.json') as f:
+            with open('tests/fixtures/sync/baglist.json') as f:
                 bags = json.load(f)
 
             amount_in_db = len(list(filter(lambda x: self.sync.check_batch(x), bags)))
@@ -118,7 +118,8 @@ class TestSync:
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added
 
-            assert files_processed - locations_added == 0
+            assert files_processed == 12
+            assert locations_added == 12
             assert not self.sync.sync_results.files_not_found
 
         finally:
@@ -141,7 +142,8 @@ class TestSync:
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added
 
-            assert files_processed - locations_added == 0
+            assert files_processed == 12
+            assert locations_added == 12
             assert not self.sync.sync_results.files_not_found
 
         finally:
@@ -167,12 +169,13 @@ class TestSync:
             locations_added = self.sync.sync_results.locations_added
             duplicate_files = self.sync.sync_results.duplicate_files
 
-            assert files_processed - locations_added == 12
+            assert files_processed == 24
+            assert locations_added == 12
             assert duplicate_files == 12
             assert not self.sync.sync_results.files_not_found
 
         finally:
-            tearDown(self, False)
+            tearDown(self)
 
     # Using a modified CSV file which uses the same path but with the
     # Storage provider changed to AWS
@@ -197,28 +200,148 @@ class TestSync:
             assert not self.sync.sync_results.files_not_found
 
         finally:
-            tearDown(self, False)
+            tearDown(self)
 
-    def test_process(self, addr):
+    @httpretty.activate
+    def test_aptrust_without_time(self, addr):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
+
+            # Create mock urls for getting the bags
+            # and getting the files from archive0149
+            # since its in the database
+            mock_object_url = 'https://repo.aptrust.org/member-api/v3/objects?per_page=10000'
+            mock_file_url = 'https://repo.aptrust.org/member-api/v3/files?intellectual_object_id=246810&per_page=3986'
+
+            with open('tests/fixtures/sync/bags.json') as f:
+                body1 = f.read()
+
+            with open('tests/fixtures/sync/archive149_request.json') as f:
+                body2 = f.read()
+
+            httpretty.register_uri(
+                httpretty.GET,
+                mock_object_url,
+                body=body1,
+                status=200,
+                content_type="application/json"
+            )
+
+            httpretty.register_uri(
+                httpretty.GET,
+                mock_file_url,
+                body=body2,
+                status=200,
+                content_type="application/json"
+            )
 
             sync_result = self.sync.process()
-            locations_added = sync_result.locations_added
 
-            assert locations_added == 12
+            assert len(sync_result.files_not_found) == 0
+            assert sync_result.files_processed == 12
+            assert sync_result.locations_added == 12
+            assert sync_result.duplicate_files == 0
 
         finally:
-            tearDown(self, False)
+            tearDown(self)
 
-    def test_specify_time(self, addr):
+    @httpretty.activate
+    def test_aptrust_specify_timebefore(self, addr):
         try:
             setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
-            sync_result = self.sync.process(created_at__gteq='2022-08-01')
-            locations_added = sync_result.locations_added
+            # Create mock urls for getting the bags,
+            # not for getting the files though, because
+            # since the bag isn't in the database, the files
+            # wont be processed.
+            mock_url = 'https://repo.aptrust.org/member-api/v3/objects?per_page=10000&created_at__lteq=2022-08-05'
 
-            assert locations_added == 12
+            with open('tests/fixtures/sync/bags_before_aug5.json') as f:
+                body1 = f.read()
+
+            httpretty.register_uri(
+                httpretty.GET,
+                mock_url,
+                body=body1,
+                status=200,
+                content_type="application/json"
+            )
+
+            sync_result = self.sync.process(created_at__lteq='2022-08-05')
+
+            # print(sync_result.files_not_found)
+            # print(sync_result.files_processed)
+            # print(sync_result.locations_added)
+            # print(sync_result.duplicate_files)
+
+            # Since archive 132 isn't in the test database,
+            # none of the files in the batch should be processed,
+            # so the results should all be 0
+            assert len(sync_result.files_not_found) == 0
+            assert sync_result.files_processed == 0
+            assert sync_result.locations_added == 0
+            assert sync_result.duplicate_files == 0
 
         finally:
-            tearDown(self, False)
+            tearDown(self)
+
+    @httpretty.activate
+    def test_aptrust_specify_timeafter(self, addr):
+        try:
+            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+
+            # Create mock urls for just getting the bags,
+            # same as above
+            mock_url = 'https://repo.aptrust.org/member-api/v3/objects?created_at__gteq=2022-10-01'
+
+            with open('tests/fixtures/sync/bags_after_oct.json') as f:
+                body1 = f.read()
+
+            httpretty.register_uri(
+                httpretty.GET,
+                mock_url,
+                body=body1,
+                status=200,
+                content_type="application/json"
+            )
+
+            sync_result = self.sync.process(created_at__gteq='2022-10-01')
+
+            assert len(sync_result.files_not_found) == 0
+            assert sync_result.files_processed == 0
+            assert sync_result.locations_added == 0
+            assert sync_result.duplicate_files == 0
+
+        finally:
+            tearDown(self)
+
+    @httpretty.activate
+    def test_aptrust_specify_both(self, addr):
+        try:
+            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+
+            # Create mock urls for just getting the bags,
+            # same as above
+            mock_url = \
+                'https://repo.aptrust.org/member-api/v3/objects?created_at__gteq=2022-10-01&created_at__lteq=2022-11-01'
+
+            with open('tests/fixtures/sync/bags_between_oct_nov.json') as f:
+                body1 = f.read()
+
+            httpretty.register_uri(
+                httpretty.GET,
+                mock_url,
+                body=body1,
+                status=200,
+                content_type="application/json"
+            )
+
+            sync_result = self.sync.process(created_at__gteq='2022-10-01', created_at__lteq='2022-11-01')
+
+            assert len(sync_result.files_not_found) == 0
+            assert sync_result.files_processed == 0
+            assert sync_result.locations_added == 0
+            assert sync_result.duplicate_files == 0
+
+        finally:
+            tearDown(self)

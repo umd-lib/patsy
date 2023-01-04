@@ -3,6 +3,7 @@ import sys
 import argparse
 import patsy.core.command
 
+from datetime import datetime
 from patsy.model import Accession
 from patsy.core.db_gateway import DbGateway
 from patsy.core.sync import Sync, InvalidHeadersError, InvalidTimeError
@@ -74,7 +75,14 @@ class Command(patsy.core.command.Command):
         sync = Sync(gateway=gateway, headers=headers)
 
         if args.timebefore and args.timeafter:
-            raise InvalidTimeError
+            time_before = datetime.strptime(args.timebefore, '%Y-%m-%d').date()
+            time_after = datetime.strptime(args.timebefore, '%Y-%m-%d').date()
+
+            if time_after >= time_before:
+                raise InvalidTimeError
+
+            sync_result = sync.process(created_at__lteq=args.timebefore, created_at__gteq=args.timeafter)
+
         elif args.timebefore:
             sync_result = sync.process(created_at__lteq=args.timebefore)
         elif args.timeafter:
