@@ -111,12 +111,33 @@ Instead of listing locations on the command line, the checksum command
 also accepts a CSV file with columns "location" and "destination". If
 the "destination" is present, it is used for the second column. Assuming
 that the "destination" refers to an actual path on a local file
-system, this output can then be fed to `md5sum -c` (or other 
+system, this output can then be fed to `md5sum -c` (or other
 algorithm-appropriate checksum verification tool).
 
 ```bash
 > patsy --database <DATABASE> checksum [--md5|--sha1|--sha256] --file <CSV_FILE>
 ```
+
+### "sync" command
+
+Store locations of accessions in ApTrust to PATSy.
+
+```bash
+> patsy --database <DATABASE> sync --name <API-NAME> --key <API-KEY> [--timebefore|--timeafter] <YEAR-MONTH-DAY>
+```
+
+The API-NAME and API-KEY are the X-Pharos-API-User and X-Pharos_API-Key respectively. They are required for the command.
+These can be provided in the command or can be added as command-line arguments:
+
+```bash
+> export X_PHAROS_KEY=your-email
+> export X_PHAROS_KEY=the-secret-key
+```
+
+Providing the parameters has more priority than providing them as command-line arguments.
+
+The timebefore and timeafter parameters are dates you can provide to specify what bags to access from ApTrust.
+The dates should be formatted in year-month-day format (####-##-##).
 
 ## License
 

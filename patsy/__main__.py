@@ -8,6 +8,7 @@ from importlib import import_module
 from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
+from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError, InvalidTimeError
 from patsy.database import DatabaseNotSetError
 from sqlalchemy.exc import OperationalError
 
@@ -76,12 +77,22 @@ def main() -> None:
             sys.stderr.write('\n\n')
     except DatabaseNotSetError:
         sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
-        # exit with a non-zero code to indicate to the shell that the command failed to run
         sys.exit(1)
-    except OperationalError as e:
-        error = str(e.orig)
-        sys.stderr.write(f'SQLAlchemy OperationalError: {error}\n')
-        # exit with a non-zero code to indicate to the shell that the command failed to run
+    except OperationalError:
+        sys.stderr.write('The URL did not work. Is the URL correct? Are you connected to the VPN?\n')
+        sys.exit(1)
+    except InvalidStatusCodeError:
+        sys.stderr.write(
+            'An error occured when using the API. This could be due to the servers, '
+            'or the headers provided may be incorrect.\n'
+        )
+        sys.exit(1)
+    except MissingHeadersError:
+        sys.stderr.write('The headers to access the ApTrust API were not set. \
+                          Provide them as an argument to the sync command or as environment variables in the shell.\n')
+        sys.exit(1)
+    except InvalidTimeError:
+        sys.stderr.write('Both time arguments were provided. Only provide one of them.\n')
         sys.exit(1)
 
 
