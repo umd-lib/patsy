@@ -78,8 +78,9 @@ def main() -> None:
         sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
         # exit with a non-zero code to indicate to the shell that the command failed to run
         sys.exit(1)
-    except OperationalError:
-        sys.stderr.write('The URL did not work. Is the URL correct? Are you connected to the VPN?\n')
+    except OperationalError as e:
+        error = str(e.orig)
+        sys.stderr.write(f'SQLAlchemy OperationalError: {error}\n')
         # exit with a non-zero code to indicate to the shell that the command failed to run
         sys.exit(1)
 
