@@ -52,16 +52,13 @@ class Sync:
 
     def get_request(self, endpoint: str, **params) -> list:
         results = []
-        r = requests.get(url=Sync.APTRUST_URL + endpoint, params=params, headers=self.headers)
-        # print('URL: ' + r.url)
+        r = requests.get(url=self.APTRUST_URL + endpoint, params=params, headers=self.headers)
         next_page = r.json().get('next')
-        # print('NEXT PAGE: ' + next_page)
 
         while next_page != '' and r.status_code == 200:
             results += r.json().get('results')
-            r = requests.get(url=Sync.APTRUST_URL + next_page, headers=self.headers)
+            r = requests.get(url=self.APTRUST_URL + next_page, headers=self.headers)
             next_page = r.json().get('next')
-            # print('NEXT PAGE: ' + next_page)
 
         if r.status_code == 200:
             results += r.json().get('results')
@@ -115,13 +112,13 @@ class Sync:
 
             location = self.gateway.session.query(Location) \
                            .filter(Location.storage_location == id,
-                                   Location.storage_provider == "ApTrust") \
+                                   Location.storage_provider == "APTrust") \
                            .first()
 
             if location is None:
                 location = Location(
                     storage_location=id,
-                    storage_provider="ApTrust",
+                    storage_provider="APTrust",
                 )
                 self.gateway.session.add(location)
                 match.locations.append(location)
@@ -144,11 +141,11 @@ class Sync:
 
     def process(self, **params) -> SyncResult:
         if 'created_at__lteq' in params:
-            bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000, created_at__lteq=params['created_at__lteq'])
+            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000, created_at__lteq=params['created_at__lteq'])
         elif 'created_at__gteq' in params:
-            bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000, created_at__gteq=params['created_at__gteq'])
+            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000, created_at__gteq=params['created_at__gteq'])
         else:
-            bags = self.get_request(Sync.OBJECT_REQUEST, per_page=10000)
+            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000)
 
         # Get all the objects and loop over them
         for bag in bags:
@@ -165,9 +162,9 @@ class Sync:
 
                 per_page = bag.get('payload_file_count')
                 object_id = bag.get('id')
-                files = self.get_request(Sync.FILE_REQUEST, intellectual_object_id=object_id, per_page=per_page)
+                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=per_page)
 
-                identifiers = list(map(lambda x: x.get('identifier'), files))
+                identifiers = [f.get('identifiers') for f in files]
                 self.check_or_add_files(identifiers, accessions)
 
         return self.sync_results

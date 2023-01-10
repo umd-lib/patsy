@@ -82,8 +82,10 @@ def main() -> None:
         sys.stderr.write('The URL did not work. Is the URL correct? Are you connected to the VPN?\n')
         sys.exit(1)
     except InvalidStatusCodeError:
-        sys.stderr.write('An error occured when using the API. This could be due to the servers, \
-                          or the headers provided may be incorrect.\n')
+        sys.stderr.write(
+            'An error occured when using the API. This could be due to the servers, '
+            'or the headers provided may be incorrect.\n'
+        )
         sys.exit(1)
     except MissingHeadersError:
         sys.stderr.write('The headers to access the ApTrust API were not set. \

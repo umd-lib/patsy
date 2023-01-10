@@ -23,7 +23,7 @@ def configure_cli(subparsers) -> None:  # type: ignore
         '-n', '--name',
         action='store',
         default=None,
-        help='The header name for the ApTrust API'
+        help='The header name for the APTrust API'
     )
 
     parser.add_argument(
@@ -52,6 +52,8 @@ class Command(patsy.core.command.Command):
     def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
         x_pharos_name = args.name
         x_pharos_key = args.key
+        timebefore = args.timebefore
+        timeafter = args.timeafter
 
         if x_pharos_name is None or x_pharos_key is None:
             x_pharos_name = os.getenv('X_PHAROS_NAME')
@@ -63,7 +65,8 @@ class Command(patsy.core.command.Command):
         sys.stderr.write(
             f'Running sync command with the following options:\n\n'
             f'  - Header name: {x_pharos_name}\n'
-            f'  - Header key: {x_pharos_key}\n'
+            f'  - Bags created before the given timestamp: {timebefore}\n'
+            f'  - Bags created after the given timestamp: {timeafter}\n'
             '======\n'
         )
 
@@ -74,19 +77,19 @@ class Command(patsy.core.command.Command):
 
         sync = Sync(gateway=gateway, headers=headers)
 
-        if args.timebefore and args.timeafter:
-            time_before = datetime.strptime(args.timebefore, '%Y-%m-%d').date()
-            time_after = datetime.strptime(args.timebefore, '%Y-%m-%d').date()
+        if timebefore and timeafter:
+            tb = datetime.strptime(timebefore, '%Y-%m-%d').date()
+            ta = datetime.strptime(timeafter, '%Y-%m-%d').date()
 
-            if time_after >= time_before:
+            if ta >= tb:
                 raise InvalidTimeError
 
-            sync_result = sync.process(created_at__lteq=args.timebefore, created_at__gteq=args.timeafter)
+            sync_result = sync.process(created_at__lteq=timebefore, created_at__gteq=timeafter)
 
-        elif args.timebefore:
-            sync_result = sync.process(created_at__lteq=args.timebefore)
-        elif args.timeafter:
-            sync_result = sync.process(created_at__gteq=args.timeafter)
+        elif timebefore:
+            sync_result = sync.process(created_at__lteq=timebefore)
+        elif timeafter:
+            sync_result = sync.process(created_at__gteq=timeafter)
         else:
             prior_week = (datetime.now() - timedelta(days=7)).date()
             sync_result = sync.process(created_at__gteq=prior_week)
