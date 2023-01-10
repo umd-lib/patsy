@@ -164,7 +164,7 @@ class Sync:
                 object_id = bag.get('id')
                 files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=per_page)
 
-                identifiers = [f.get('identifiers') for f in files]
+                identifiers = [f.get('identifier') for f in files]
                 self.check_or_add_files(identifiers, accessions)
 
         return self.sync_results
