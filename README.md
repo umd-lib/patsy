@@ -53,6 +53,12 @@ connect to as an environment variable. The environment variable must be named
 The "--database" argument can still be passed in to override the environment
 variable temporarily.
 
+If you want to connect to a Postgres database, format the uri as the following:
+
+```bash
+postgres+psycopg2://<user>:<password>@address:port/database
+```
+
 ### "schema" command
 
 Creates the database schema.
