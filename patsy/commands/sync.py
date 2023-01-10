@@ -3,7 +3,7 @@ import sys
 import argparse
 import patsy.core.command
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from patsy.model import Accession
 from patsy.core.db_gateway import DbGateway
 from patsy.core.sync import Sync, InvalidHeadersError, InvalidTimeError
@@ -88,7 +88,8 @@ class Command(patsy.core.command.Command):
         elif args.timeafter:
             sync_result = sync.process(created_at__gteq=args.timeafter)
         else:
-            sync_result = sync.process()
+            prior_week = (datetime.now() - timedelta(days=7)).date()
+            sync_result = sync.process(created_at__gteq=prior_week)
 
         result_messages = [
             f"Total files processed: {sync_result.files_processed}",
