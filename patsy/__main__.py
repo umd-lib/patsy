@@ -78,8 +78,9 @@ def main() -> None:
     except DatabaseNotSetError:
         sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
         sys.exit(1)
-    except OperationalError:
-        sys.stderr.write('The URL did not work. Is the URL correct? Are you connected to the VPN?\n')
+    except OperationalError as e:
+        error = str(e.orig)
+        sys.stderr.write(f'SQLAlchemy OperationalError: {error}\n')
         sys.exit(1)
     except InvalidStatusCodeError:
         sys.stderr.write(
@@ -88,8 +89,8 @@ def main() -> None:
         )
         sys.exit(1)
     except MissingHeadersError:
-        sys.stderr.write('The headers to access the ApTrust API were not set. \
-                          Provide them as an argument to the sync command or as environment variables in the shell.\n')
+        sys.stderr.write('The headers to access the ApTrust API were not set. '
+                         'Provide them as an argument to the sync command or as environment variables in the shell.\n')
         sys.exit(1)
     except InvalidTimeError:
         sys.stderr.write('Both time arguments were provided. Only provide one of them.\n')
