@@ -32,9 +32,9 @@ about that command:
 > patsy load --help
 ```
 
-### Common Arguments
+## Common Arguments
 
-## "database" argument
+### "database" argument
 
 The "--database" argument is used to specify the database the command should
 run against.
