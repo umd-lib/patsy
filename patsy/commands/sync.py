@@ -6,7 +6,7 @@ import patsy.core.command
 from datetime import datetime, timedelta
 from patsy.model import Accession
 from patsy.core.db_gateway import DbGateway
-from patsy.core.sync import Sync, InvalidHeadersError, InvalidTimeError
+from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -60,7 +60,7 @@ class Command(patsy.core.command.Command):
             x_pharos_key = os.getenv('X_PHAROS_KEY')
 
             if x_pharos_name is None or x_pharos_key is None:
-                raise InvalidHeadersError
+                raise MissingHeadersError
 
         sys.stderr.write(
             f'Running sync command with the following options:\n\n'
@@ -94,11 +94,12 @@ class Command(patsy.core.command.Command):
             prior_week = (datetime.now() - timedelta(days=7)).date()
             sync_result = sync.process(created_at__gteq=prior_week)
 
+        splt_files_not_found = '\n'.join(sync_result.files_not_found)
         result_messages = [
             f"Total files processed: {sync_result.files_processed}",
             f"Total locations added: {sync_result.locations_added}",
-            f"Total duplicate files found: {sync_result.duplicate_files}"
-            f"FILES NOT FOUND:\n{'\n'.join(sync_result.files_not_found)}"
+            f"Total duplicate files found: {sync_result.duplicate_files}",
+            f"FILES NOT FOUND:\n{splt_files_not_found}"
         ]
 
         result = '\n'.join(result_messages)
