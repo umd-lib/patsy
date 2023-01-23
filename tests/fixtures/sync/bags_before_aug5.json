@@ -1,0 +1,35 @@
+{
+    "count": 1,
+    "next": "",
+    "previous": "",
+    "results": [
+        {
+            "id": 245798,
+            "title": "Godowsky Manuscript Archive, FY2018",
+            "description": "Digitized manuscripts from the papers of composer Leopold Godowsky housed in the Michelle Smith Performing Arts Library. Papers date from the period 1963-1970.",
+            "identifier": "umd.edu/archive0132",
+            "alt_identifier": "mdu.archive0132.apt20220804",
+            "access": "consortia",
+            "bag_name": "archive0132",
+            "institution_id": 27,
+            "created_at": "2022-08-04T19:04:43.494149Z",
+            "updated_at": "2022-08-04T19:04:43.494149Z",
+            "state": "A",
+            "etag": "85229c2c7d3e79a8cf26efa722efea82-4716",
+            "bag_group_identifier": "scpa.godowsky",
+            "storage_option": "Glacier-Deep-VA",
+            "bagit_profile_identifier": "https://raw.githubusercontent.com/APTrust/preservation-services/master/profiles/aptrust-v2.2.json",
+            "source_organization": "University of Maryland College Park",
+            "internal_sender_identifier": "",
+            "internal_sender_description": "",
+            "institution_name": "University of Maryland",
+            "institution_identifier": "umd.edu",
+            "institution_type": "MemberInstitution",
+            "institution_parent_id": 0,
+            "file_count": 1040,
+            "size": 79111058782,
+            "payload_file_count": 1038,
+            "payload_size": 79111058031
+        }
+    ]
+}

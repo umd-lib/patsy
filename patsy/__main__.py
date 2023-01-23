@@ -8,6 +8,9 @@ from importlib import import_module
 from patsy import commands, version
 from pkgutil import iter_modules
 from patsy.core.db_gateway import DbGateway
+from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError, InvalidTimeError
+from patsy.database import DatabaseNotSetError
+from sqlalchemy.exc import OperationalError
 
 
 def print_header(subcommand: str) -> None:
@@ -36,9 +39,9 @@ def main() -> None:
 
     parser.add_argument(
         '-d', '--database',
-        default=':memory:',
+        default=None,
         action='store',
-        help='Path to db file (defaults to in-memory db)',
+        help='Path to db file (defaults to None)',
     )
 
     subparsers = parser.add_subparsers(title='commands')
@@ -63,13 +66,35 @@ def main() -> None:
     command = command_modules[args.cmd_name].Command()  # type: ignore[attr-defined]
 
     print_header(args.cmd_name)
-    gateway = DbGateway(args)
-    result = command(args, gateway)
-    gateway.close()
 
-    if result:
-        sys.stderr.write(result)
-        sys.stderr.write('\n\n')
+    try:
+        gateway = DbGateway(args)
+        result = command(args, gateway)
+        gateway.close()
+
+        if result:
+            sys.stderr.write(result)
+            sys.stderr.write('\n\n')
+    except DatabaseNotSetError:
+        sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
+        sys.exit(1)
+    except OperationalError as e:
+        error = str(e.orig)
+        sys.stderr.write(f'SQLAlchemy OperationalError: {error}\n')
+        sys.exit(1)
+    except InvalidStatusCodeError:
+        sys.stderr.write(
+            'An error occured when using the API. This could be due to the servers, '
+            'or the headers provided may be incorrect.\n'
+        )
+        sys.exit(1)
+    except MissingHeadersError:
+        sys.stderr.write('The headers to access the ApTrust API were not set. '
+                         'Provide them as an argument to the sync command or as environment variables in the shell.\n')
+        sys.exit(1)
+    except InvalidTimeError:
+        sys.stderr.write('Both time arguments were provided. Only provide one of them.\n')
+        sys.exit(1)
 
 
 if __name__ == "__main__":
