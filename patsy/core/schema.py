@@ -6,7 +6,7 @@ class Schema:
     def __init__(self, gateway: DbGateway) -> None:
         self.gateway = gateway
 
-    def create_schema(self) -> str:
+    def create_schema(self) -> None:
         session = self.gateway.session
         engine = session.get_bind()
         # print("Creating the schema using the declarative base...")
@@ -15,7 +15,7 @@ class Schema:
         # Create "patsy_records" view
         with engine.connect() as con:
             con.execute("DROP VIEW IF EXISTS patsy_records;")
-            rs = con.execute("""
+            con.execute("""
                 CREATE VIEW patsy_records AS
                     SELECT
                         batches.id as "batch_id",
@@ -38,5 +38,3 @@ class Schema:
                         LEFT JOIN locations ON accession_locations.location_id = locations.id
                         ORDER BY batches.id
             """)
-
-        return "Schema created"

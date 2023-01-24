@@ -1,5 +1,7 @@
-import argparse
 import patsy.core.command
+import argparse
+import logging
+
 from patsy.core.db_gateway import DbGateway
 from patsy.core.schema import Schema
 
@@ -16,6 +18,7 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> None:
         schema_impl = Schema(gateway)
-        return schema_impl.create_schema()
+        schema_impl.create_schema()
+        logging.info("Schema created")

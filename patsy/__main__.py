@@ -2,23 +2,26 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import logging
 import sys
 
-from importlib import import_module
-from patsy import commands, version
-from pkgutil import iter_modules
-from patsy.core.db_gateway import DbGateway
 from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError, InvalidTimeError
 from patsy.database import DatabaseNotSetError
+from patsy.core.db_gateway import DbGateway
 from sqlalchemy.exc import OperationalError
+from patsy import commands, version
+from importlib import import_module
+from pkgutil import iter_modules
+
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level="INFO")
 
 
 def print_header(subcommand: str) -> None:
     """Generate script header and display it in the console."""
-    title = 'patsy {0}'.format(subcommand)
-    sys.stderr.write(
-        '\n{0}\n{1}\n'.format(title, '=' * len(title))
-    )
+    title = f'Command ran: {subcommand}'
+    logging.info(title)
 
 
 def main() -> None:
@@ -65,7 +68,7 @@ def main() -> None:
     # get the selected subcommand
     command = command_modules[args.cmd_name].Command()  # type: ignore[attr-defined]
 
-    print_header(args.cmd_name)
+    logging.info(f"Command ran: {args.cmd_name}")
 
     try:
         gateway = DbGateway(args)
@@ -75,25 +78,35 @@ def main() -> None:
         if result:
             sys.stderr.write(result)
             sys.stderr.write('\n\n')
+
     except DatabaseNotSetError:
-        sys.stderr.write('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.\n')
+        logging.error('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.')
         sys.exit(1)
+
     except OperationalError as e:
         error = str(e.orig)
-        sys.stderr.write(f'SQLAlchemy OperationalError: {error}\n')
+        logging.error(error)
         sys.exit(1)
+
     except InvalidStatusCodeError:
-        sys.stderr.write(
-            'An error occured when using the API. This could be due to the servers, '
-            'or the headers provided may be incorrect.\n'
+        logging.error(
+            'An error occured when using the API. This could be due to the servers, \
+             or the headers provided may be incorrect.'
         )
         sys.exit(1)
+
     except MissingHeadersError:
-        sys.stderr.write('The headers to access the ApTrust API were not set. '
-                         'Provide them as an argument to the sync command or as environment variables in the shell.\n')
+        logging.error(
+            'The headers to access the ApTrust API were not set. \
+             Provide them as an argument to the sync command or as environment variables in the shell.'
+        )
         sys.exit(1)
+
     except InvalidTimeError:
-        sys.stderr.write('Both time arguments were provided. Only provide one of them.\n')
+        logging.error(
+            'The time arguments provided conflict with each other. \
+             Make sure that the "timeafter" argument is a date that comes before the "timebefore" argument.'
+        )
         sys.exit(1)
 
 
