@@ -31,7 +31,7 @@ def database_helper(database: str) -> None:
     else:
         logging.debug("Switching to using SQLite as the adapter")
         db_path = f"sqlite:///{database}"
-        logging.info(f"Using SQLite database at {url}")
+        logging.info(f"Using SQLite database at {db_path}")
 
     logging.info("Binding the database session...")
     engine = create_engine(db_path)
