@@ -1,4 +1,5 @@
 import requests
+import logging
 import re
 
 from patsy.model import Accession, Batch, Location
@@ -23,16 +24,23 @@ class InvalidTimeError(Exception):
 
 @dataclass
 class SyncResult():
+    files_duplicated: List[str] = field(default_factory=list)
     files_not_found: List[str] = field(default_factory=list)
+    skipped_batches: List[str] = field(default_factory=list)
     files_processed: int = 0
     locations_added: int = 0
     duplicate_files: int = 0
+    batches_skipped: int = 0
 
     def __repr__(self) -> str:
         lines = [
-            f"files_processed: '{self.files_processed}'",
-            f"locations_added: '{self.locations_added}'",
+            f"files_processed: {self.files_processed}",
+            f"locations_added: {self.locations_added}",
+            f"duplicate_files: {self.duplicate_files}",
+            f"batches_skipped: {self.batches_skipped}",
             f"Identifiers not in PATSy: '{self.files_not_found}'"
+            f"Files already in PATSy: '{self.files_duplicated}'"
+            f"Batches that were skipped: '{self.skipped_batches}"
         ]
 
         return f"<LoadResult({','.join(lines)})>"
@@ -56,20 +64,29 @@ class Sync:
         next_page = r.json().get('next')
 
         while next_page != '' and r.status_code == 200:
-            results += r.json().get('results')
+            get_results = r.json().get('results')
+            if get_results is None:
+                logging.info("There was nothing to get!")
+                return []
+
+            results.extend(get_results)
             r = requests.get(url=self.APTRUST_URL + next_page, headers=self.headers)
             next_page = r.json().get('next')
 
-        if r.status_code == 200:
-            results += r.json().get('results')
-            return results
-        else:
-            raise InvalidStatusCodeError
+        if r.status_code != 200:
+            logging.warning(f"Got a {r.status_code} status code, skipping this get request.")
+            return []
+
+        get_results = r.json().get('results')
+        results.extend(get_results)
+        return results
 
     def parse_name(self, batchname: str) -> str:
         if batchname.startswith('archive'):
             batch_number = batchname[7:]
-            return 'Archive' + re.sub(r'^0(\d\d\d)', r'\1', batch_number)
+            remove_first_digit = re.sub(r'^0(\d\d\d)', r'\1', batch_number)
+            remove_letters = re.sub(r'\D', '', remove_first_digit)
+            return 'Archive' + remove_letters
         elif batchname.startswith('pca'):
             return batchname
         elif batchname.startswith('pcb'):
@@ -105,30 +122,29 @@ class Sync:
                 self.sync_results.files_not_found.append(id)
                 continue
 
-            # Add and update
-            if not add:
-                self.sync_results.locations_added += 1
-                continue
-
             location = self.gateway.session.query(Location) \
                            .filter(Location.storage_location == id,
                                    Location.storage_provider == "APTrust") \
                            .first()
 
             if location is None:
-                location = Location(
-                    storage_location=id,
-                    storage_provider="APTrust",
-                )
-                self.gateway.session.add(location)
-                match.locations.append(location)
+                if add:
+                    location = Location(
+                        storage_location=id,
+                        storage_provider="APTrust",
+                    )
+                    self.gateway.session.add(location)
+                    match.locations.append(location)
+
                 self.sync_results.locations_added += 1
             else:
                 self.sync_results.duplicate_files += 1
+                self.sync_results.files_duplicated.append(id)
 
     def check_batch(self, bag: dict) -> tuple:
         # Check if archive in PATSy
         batch_name = self.parse_name(bag.get('bag_name'))
+        logging.info(f"Checking if {batch_name} in database.")
         query = self.gateway.session.query(Batch) \
                     .filter(Batch.name == batch_name) \
                     .first()
@@ -140,13 +156,7 @@ class Sync:
         return ()
 
     def process(self, **params) -> SyncResult:
-        if 'created_at__lteq' in params:
-            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000, created_at__lteq=params['created_at__lteq'])
-        elif 'created_at__gteq' in params:
-            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000, created_at__gteq=params['created_at__gteq'])
-        else:
-            bags = self.get_request(self.OBJECT_REQUEST, per_page=10000)
-
+        bags = self.get_request(self.OBJECT_REQUEST, per_page=1000, **params)
         # Get all the objects and loop over them
         for bag in bags:
             in_patsy = self.check_batch(bag)
@@ -154,17 +164,28 @@ class Sync:
             # If bag was found in PATSy, go through the files in the bag
             if in_patsy:
                 batch_id, batch_name = in_patsy
-                print(f'Querying files from {batch_name}')
-
                 accessions = self.gateway.session.query(Accession) \
                                  .filter(Accession.batch_id == batch_id) \
                                  .all()
 
-                per_page = bag.get('payload_file_count')
+                logging.info(f'Attempting to check files from {batch_name}')
                 object_id = bag.get('id')
-                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=per_page)
+                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000)
 
-                identifiers = [f.get('identifier') for f in files]
-                self.check_or_add_files(identifiers, accessions)
+                if files:
+                    logging.info("Successfully retrieved files!")
+                    identifiers = [f.get('identifier') for f in files]
+                    self.check_or_add_files(identifiers, accessions, add=True)
 
+                else:
+                    logging.warning("Batch was skipped!")
+                    self.sync_results.batches_skipped += 1
+                    self.sync_results.skipped_batches.append(bag.get('bag_name'))
+
+            else:
+                logging.warning("Batch was not found in database! Skipping this batch!")
+                self.sync_results.batches_skipped += 1
+                self.sync_results.skipped_batches.append(bag.get('bag_name'))
+
+        logging.info("FINISHED PROCESS")
         return self.sync_results
