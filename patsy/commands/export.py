@@ -1,9 +1,9 @@
-import argparse
 import patsy.core.command
-import sys
+import argparse
+import logging
 
-from patsy.core.export import Export
 from patsy.core.db_gateway import DbGateway
+from patsy.core.export import Export
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -32,25 +32,17 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> None:
         batch = args.batch
         output = args.output
-        # Display batch configuration information to the user
-        sys.stderr.write(
-            f'Running export command with the following options:\n\n'
-            f'  - batch: {batch}\n'
-            f'  - output: {output}\n'
-            '======\n'
-        )
+
+        inputs = {"Batch": batch, "Output": output}
+
+        logging.info(f'Running export command with the following options. {inputs}')
 
         export_impl = Export(gateway)
         export_result = export_impl.export(batch, output)
-        result_messages = [
-            f"Total (non-empty) Batches exported: {export_result.batches_exported}",
-            f"Total rows exported: {export_result.rows_exported}",
-            "\nEXPORT COMPLETE"
-        ]
 
-        result = "\n".join(result_messages)
-
-        return result
+        logging.info(f"Total (non-empty) Batches exported: {export_result.batches_exported}")
+        logging.info(f"Total rows exported: {export_result.rows_exported}")
+        logging.info("EXPORT COMPLETE")

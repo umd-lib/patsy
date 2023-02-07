@@ -14,7 +14,7 @@ setup(
         'console_scripts': ['patsy=patsy.__main__:main']
         },
     install_requires=[i.strip() for i in open("requirements.txt").readlines()],
-    python_requires='>=3.7',
+    python_requires='>=3.10',
     extras_require={  # Optional
        'dev': ['pycodestyle==2.7.0', 'mypy==0.910'],
        'test': ['pytest==7.1.3', 'pytest-cov==2.12.1'],

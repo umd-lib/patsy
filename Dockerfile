@@ -1,15 +1,8 @@
-# Dockerfile for use by the continuous integration server (ci), in order to
-# build and test the application.
-#
-# This Dockerfile provides the appropriate environment for building and testing
-# the application. It should _not_ be used for creating Docker images for use
-# in production.
-
 FROM python:3.10.9-slim
 
+# Install Postgres as pre requisite
 RUN apt-get update && \
     apt-get install -y build-essential && \
-    apt-get install -y git && \
     apt-get install -y lsb-release && \
     apt-get install -y wget && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
@@ -18,3 +11,17 @@ RUN apt-get update && \
     apt-get -y install postgresql && \
     apt-get -y install libpq-dev && \
     apt-get clean
+
+RUN mkdir patsy
+WORKDIR /patsy
+
+COPY requirements.txt .
+COPY patsy ./patsy
+COPY README.md .
+COPY setup.cfg .
+COPY setup.py .
+COPY LICENSE .
+
+RUN pip install -e .[dev,test]
+
+ENTRYPOINT [ "patsy" ]

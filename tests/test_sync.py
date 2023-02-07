@@ -63,6 +63,11 @@ class TestSync:
             assert self.sync.parse_name('archive0100') == 'Archive100'
             assert self.sync.parse_name('archive1000') == 'Archive1000'
 
+            assert self.sync.parse_name('archive0001a') == 'Archive001'
+            assert self.sync.parse_name('archive0010a') == 'Archive010'
+            assert self.sync.parse_name('archive0100a') == 'Archive100'
+            assert self.sync.parse_name('archive1000a') == 'Archive1000'
+
         finally:
             tearDown(self)
 

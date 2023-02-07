@@ -1,7 +1,9 @@
-import argparse
 import patsy.core.command
-from patsy.core.load import Load
+import argparse
+import logging
+
 from patsy.core.db_gateway import DbGateway
+from patsy.core.load import Load
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -20,38 +22,29 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> None:
         file = args.file
+        inputs = {"file": file}
         # Display batch configuration information to the user
-        print(
-            f'Running load command with the following options:\n\n'
-            f'  - File: {file}\n'
-            '======\n'
-        )
+        logging.info(f'Running load command with the following options: {inputs}')
 
         load_impl = Load(gateway)
         load_result = load_impl.process_file(file)
 
-        result_messages = [
-            f"Total rows processed: {load_result.rows_processed}",
-            f"Batches added: {load_result.batches_added}",
-            f"Accessions added: {load_result.accessions_added}",
-            f"Locations added: {load_result.locations_added}",
-        ]
+        logging.info(f"Total rows processed: {load_result.rows_processed}")
+        logging.info(f"Batches added: {load_result.batches_added}")
+        logging.info(f"Accessions added: {load_result.accessions_added}")
+        logging.info(f"Locations added: {load_result.locations_added}")
+
         errors = load_result.errors
-        has_errors = len(errors) > 0
-        if has_errors:
-            result_messages.extend([
-               "\n---Errors----",
-               f"Invalid rows: {len(errors)}",
-            ])
-            result_messages.extend(errors)
+        error_amount = len(errors)
 
-        if not has_errors:
-            result_messages.append("\nLOAD SUCCESSFUL")
+        if error_amount > 0:
+            logging.warning(f"Amount of invalid rows: {error_amount}")
+            for error in errors:
+                logging.warning(f"Invalid row: {error}")
+
+            logging.warning("LOAD COMPLETE WITH ERRORS")
+
         else:
-            result_messages.append("\n---- LOAD COMPLETE WITH ERRORS ----")
-
-        result = "\n".join(result_messages)
-
-        return result
+            logging.info("LOAD SUCCESSFUL")

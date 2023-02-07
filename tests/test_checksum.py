@@ -1,28 +1,16 @@
-import io
-import os
-import re
-import logging
-import pytest
 import tempfile
+import pytest
+import os
 
-
-from argparse import Namespace
-from patsy.commands.checksum import Command, get_checksum
 from patsy.commands.schema import Command as CommandSchema
-from patsy.core.db_gateway import DbGateway
-from patsy.core.load import Load
-from patsy.model import Base
-from sqlalchemy.schema import DropTable
+from patsy.commands.checksum import Command, get_checksum
 from sqlalchemy.ext.compiler import compiles
-from unittest.mock import patch
+from patsy.core.db_gateway import DbGateway
+from sqlalchemy.schema import DropTable
+from patsy.core.load import Load
+from argparse import Namespace
+from patsy.model import Base
 
-
-LOGGER = logging.getLogger('__name__')
-
-
-# pytestmark = pytest.mark.parametrize(
-#     "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
-# )
 
 @pytest.fixture
 def addr(request):
@@ -43,8 +31,6 @@ def setUp(obj, addr):
     args = Namespace()
     args.database = addr
     obj.gateway = DbGateway(args)
-    # schema = Schema(obj.gateway)
-    # schema.create_schema()
 
     # Arguments passed to checksum.Command
     obj.checksum_command = Command()
@@ -60,44 +46,38 @@ def setUp(obj, addr):
 
 
 class TestChecksumCommand:
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_location_arg(self, mock_out, addr):
+    def test_location_arg(self, capsys, addr):
         # The call command will write to a file
         # and compare the answer to what's written in file.
         try:
             setUp(self, addr)
             self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
             self.checksum_command.__call__(self.command_args, self.gateway)
-            # LOGGER.info(f"{mock_out.getvalue()}")
             expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-            assert mock_out.getvalue() == expected
+            assert capsys.readouterr().out == expected
         finally:
             tearDown(self)
 
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_output_type_arg(self, mock_out, addr):
+    def test_output_type_arg(self, capsys, addr):
         try:
             setUp(self, addr)
             self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
             self.command_args.output_type = 'sha1'
             self.checksum_command.__call__(self.command_args, self.gateway)
-            # LOGGER.info(f"{mock_out.getvalue()}")
             expected = '2fa953a48600e1aef0486b4b3a17c6100cfeef80  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
-            assert mock_out.getvalue() == expected
+            assert capsys.readouterr().out == expected
         finally:
             tearDown(self)
 
-    @patch('sys.stdout', new_callable=io.StringIO)
-    def test_locations_file_arg(self, mock_out, addr):
+    def test_locations_file_arg(self, capsys, addr):
         try:
             setUp(self, addr)
             with open('tests/fixtures/checksum/locations_file.csv') as f:
                 self.command_args.locations_file = f
                 self.checksum_command.__call__(self.command_args, self.gateway)
-                # LOGGER.info(f"{mock_out.getvalue()}")
                 expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n' \
                            '1041fd1cf84c71183db2d5d95942a41c  test_bucket/TEST_BATCH/colors/sample_red.jpg\n'
-                assert mock_out.getvalue() == expected
+                assert capsys.readouterr().out == expected
         finally:
             tearDown(self)
 
@@ -151,26 +131,24 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    @patch('sys.stderr', new_callable=io.StringIO)
-    def test_location_not_found_returns__None_and_displays_error(self, mock_err, addr):
+    def test_location_not_found_returns__None_and_displays_error(self, caplog, addr):
         try:
             setUp(self, addr)
             row = {'location': 'not_a_location_in_database'}
             checksum_and_path = get_checksum(self.gateway, row, 'md5')
             assert checksum_and_path is None
-            assert re.search(r"No accession record found for .*", mock_err.getvalue()) is not None
+            assert 'No accession record found for "not_a_location_in_database"' in caplog.text
         finally:
             tearDown(self)
 
-    @patch('sys.stderr', new_callable=io.StringIO)
-    def test_checksum_type_not_found_returns__None_and_displays_error(self, mock_err, addr):
+    def test_checksum_type_not_found_returns__None_and_displays_error(self, caplog, addr):
         try:
             setUp(self, addr)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
             checksum_type = 'invalid_type'
             checksum_and_path = get_checksum(self.gateway, row, checksum_type)
             assert checksum_and_path is None
-            assert re.search(r"No INVALID_TYPE checksum found .*", mock_err.getvalue()) is not None
+            assert 'No INVALID_TYPE checksum found for "test_bucket/TEST_BATCH/colors/sample_blue.jpg"' in caplog.text
         finally:
             tearDown(self)
 

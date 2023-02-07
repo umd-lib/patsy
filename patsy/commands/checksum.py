@@ -1,9 +1,10 @@
+import patsy.core.command
 import argparse
+import logging
 import csv
 import sys
-from typing import Dict, Iterable, Mapping, Optional, Tuple
 
-import patsy.core.command
+from typing import Dict, Iterable, Mapping, Optional, Tuple
 from patsy.core.db_gateway import DbGateway
 
 
@@ -70,9 +71,10 @@ def get_checksum(gateway: DbGateway, row: Mapping[str, str], checksum_type: str)
         elif checksum_type == 'sha256' and accession.sha256:
             return accession.sha256, destination
         else:
-            sys.stderr.write(f'No {checksum_type.upper()} checksum found for "{row["location"]}"\n')
+            logging.warning(f'No {checksum_type.upper()} checksum found for "{row["location"]}"')
     else:
-        sys.stderr.write(f'No accession record found for "{row["location"]}"\n')
+        logging.warning(f'No accession record found for "{row["location"]}"')
+
     return None
 
 

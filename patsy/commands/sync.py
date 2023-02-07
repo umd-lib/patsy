@@ -1,12 +1,13 @@
-import os
-import sys
-import argparse
 import patsy.core.command
+import argparse
+import logging
+import sys
+import os
 
+from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
+from patsy.core.db_gateway import DbGateway
 from datetime import datetime, timedelta
 from patsy.model import Accession
-from patsy.core.db_gateway import DbGateway
-from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -49,7 +50,7 @@ def configure_cli(subparsers) -> None:  # type: ignore
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> None:
         x_pharos_name = args.name
         x_pharos_key = args.key
         timebefore = args.timebefore
@@ -62,13 +63,8 @@ class Command(patsy.core.command.Command):
             if x_pharos_name is None or x_pharos_key is None:
                 raise MissingHeadersError
 
-        sys.stderr.write(
-            f'Running sync command with the following options:\n\n'
-            f'  - Header name: {x_pharos_name}\n'
-            f'  - Bags created before the given timestamp: {timebefore}\n'
-            f'  - Bags created after the given timestamp: {timeafter}\n'
-            '======\n'
-        )
+        inputs = {"tb": timebefore, "ta": timeafter}
+        logging.info(f"Running sync command with the following options: {inputs}")
 
         headers = {
             'X-Pharos-API-User': x_pharos_name,
@@ -94,14 +90,28 @@ class Command(patsy.core.command.Command):
             prior_week = (datetime.now() - timedelta(days=7)).date()
             sync_result = sync.process(created_at__gteq=prior_week)
 
-        splt_files_not_found = '\n'.join(sync_result.files_not_found)
-        result_messages = [
-            f"Total files processed: {sync_result.files_processed}",
-            f"Total locations added: {sync_result.locations_added}",
-            f"Total duplicate files found: {sync_result.duplicate_files}",
-            f"FILES NOT FOUND:\n{splt_files_not_found}"
-        ]
+        files_processed = sync_result.files_processed
+        locations_added = sync_result.locations_added
+        files_not_found = sync_result.files_not_found
+        files_duplicated = sync_result.files_duplicated
+        duplicate_amount = sync_result.duplicate_files
+        batches_skipped = sync_result.batches_skipped
+        skipped_batches = sync_result.skipped_batches
 
-        result = '\n'.join(result_messages)
+        if len(files_not_found) > 0:
+            logging.warning(f"AMOUNT OF FILES NOT FOUND: {len(files_not_found)}")
+            for f in files_not_found:
+                logging.warning(f"FILE NOT FOUND: {f}")
 
-        return result
+        if duplicate_amount > 0:
+            logging.warning(f"AMOUNT OF DUPLICATE FILES FOUND: {duplicate_amount}")
+            for f in files_duplicated:
+                logging.warning(f"FILE ALREADY IN DATABASE: {f}")
+
+        if batches_skipped > 0:
+            logging.warning(f"AMOUNT OF BATCHES SKIPPED: {batches_skipped}")
+            for b in skipped_batches:
+                logging.warning(f"BATCH SKIPPED: {b}")
+
+        logging.info(f"Total files processed: {files_processed}")
+        logging.info(f"Total locations added: {locations_added}")

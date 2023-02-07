@@ -1,4 +1,4 @@
-import sys
+import logging
 import os
 
 from sqlalchemy import create_engine, event
@@ -26,15 +26,14 @@ def database_helper(database: str) -> None:
     # Set up database file or use in-memory db
     if database.startswith('postgresql+psycopg2:'):
         db_path = database
+        url = db_path.split('@', 1)[1]
+        logging.info(f"Using PostgreSQL database at {url}")
     else:
+        logging.debug("Switching to using SQLite as the adapter")
         db_path = f"sqlite:///{database}"
+        logging.info(f"Using SQLite database at {db_path}")
 
-    str = ("Using a transient in-memory database..."
-           if database == (':memory:')
-           else f"Using database at {database}...")
-
-    sys.stderr.write(f"{str}\n")
-    sys.stderr.write("Binding the database session...\n")
+    logging.info("Binding the database session...")
     engine = create_engine(db_path)
 
     # Enable foreign key constraints
