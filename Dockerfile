@@ -3,7 +3,6 @@ FROM python:3.10.9-slim
 # Install Postgres as pre requisite
 RUN apt-get update && \
     apt-get install -y build-essential && \
-    apt-get install -y git && \
     apt-get install -y lsb-release && \
     apt-get install -y wget && \
     sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
@@ -16,11 +15,13 @@ RUN apt-get update && \
 RUN mkdir patsy
 WORKDIR /patsy
 
-ADD requirements.txt .
-ADD patsy ./patsy
-ADD README.md .
-ADD setup.cfg .
-ADD setup.py .
-ADD LICENSE .
+COPY requirements.txt .
+COPY patsy ./patsy
+COPY README.md .
+COPY setup.cfg .
+COPY setup.py .
+COPY LICENSE .
 
 RUN pip install -e .[dev,test]
+
+ENTRYPOINT [ "patsy" ]
