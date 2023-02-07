@@ -84,28 +84,30 @@ def main() -> None:
         sys.exit(1)
 
     except OperationalError as e:
-        error = str(e.orig)
+        # Some error messages created contain multiple lines and tabs
+        # I'm removing them so that splunk has an easier time parsing them
+        error = str(e.orig).replace('\n', ' ').replace('\t', '')
         logging.error(error)
         sys.exit(1)
 
     except InvalidStatusCodeError:
         logging.error(
-            'An error occured when using the API. This could be due to the servers, \
-             or the headers provided may be incorrect.'
+            'An error occured when using the API. This could be due to the servers, '
+            'or the headers provided may be incorrect.'
         )
         sys.exit(1)
 
     except MissingHeadersError:
         logging.error(
-            'The headers to access the ApTrust API were not set. \
-             Provide them as an argument to the sync command or as environment variables in the shell.'
+            'The headers to access the ApTrust API were not set. '
+            'Provide them as an argument to the sync command or as environment variables in the shell.'
         )
         sys.exit(1)
 
     except InvalidTimeError:
         logging.error(
-            'The time arguments provided conflict with each other. \
-             Make sure that the "timeafter" argument is a date that comes before the "timebefore" argument.'
+            'The time arguments provided conflict with each other. '
+            'Make sure that the "timeafter" argument is a date that comes before the "timebefore" argument.'
         )
         sys.exit(1)
 

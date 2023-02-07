@@ -92,16 +92,26 @@ class Command(patsy.core.command.Command):
 
         files_processed = sync_result.files_processed
         locations_added = sync_result.locations_added
-        duplicates = sync_result.duplicate_files
         files_not_found = sync_result.files_not_found
-
-        logging.info(f"Total files processed: {files_processed}")
-        logging.info(f"Total locations added: {locations_added}")
-
-        if duplicates > 0:
-            logging.warning(f"TOTAL DUPLICATE FILES FOUND: {sync_result.duplicate_files}")
+        files_duplicated = sync_result.files_duplicated
+        duplicate_amount = sync_result.duplicate_files
+        batches_skipped = sync_result.batches_skipped
+        skipped_batches = sync_result.skipped_batches
 
         if len(files_not_found) > 0:
             logging.warning(f"AMOUNT OF FILES NOT FOUND: {len(files_not_found)}")
             for f in files_not_found:
                 logging.warning(f"FILE NOT FOUND: {f}")
+
+        if duplicate_amount > 0:
+            logging.warning(f"AMOUNT OF DUPLICATE FILES FOUND: {duplicate_amount}")
+            for f in files_duplicated:
+                logging.warning(f"FILE ALREADY IN DATABASE: {f}")
+
+        if batches_skipped > 0:
+            logging.warning(f"AMOUNT OF BATCHES SKIPPED: {batches_skipped}")
+            for b in skipped_batches:
+                logging.warning(f"BATCH SKIPPED: {b}")
+
+        logging.info(f"Total files processed: {files_processed}")
+        logging.info(f"Total locations added: {locations_added}")

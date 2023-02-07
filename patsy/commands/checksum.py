@@ -72,10 +72,9 @@ def get_checksum(gateway: DbGateway, row: Mapping[str, str], checksum_type: str)
             return accession.sha256, destination
         else:
             logging.warning(f'No {checksum_type.upper()} checksum found for "{row["location"]}"')
-            # sys.stderr.write(f'No {checksum_type.upper()} checksum found for "{row["location"]}"\n')
     else:
         logging.warning(f'No accession record found for "{row["location"]}"')
-        # sys.stderr.write(f'No accession record found for "{row["location"]}"\n')
+
     return None
 
 
