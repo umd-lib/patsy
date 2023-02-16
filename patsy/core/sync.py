@@ -110,7 +110,10 @@ class Sync:
         # match will be None if no match was found
         return None
 
-    def check_or_add_files(self, identifiers: list, accessions: list, add: bool = False) -> None:
+    def check_or_add_files(self, batch: str, identifiers: list, accessions: list, add: bool = False) -> None:
+        amount_files_added: int = 0
+        amount_not_found: int = 0
+
         # Go through the identifiers
         for id in identifiers:
             # Add processed file and check the path
@@ -120,6 +123,7 @@ class Sync:
             if match is None:
                 # Add the identifier to the list of not found files
                 self.sync_results.files_not_found.append(id)
+                amount_not_found += 1
                 continue
 
             location = self.gateway.session.query(Location) \
@@ -137,14 +141,21 @@ class Sync:
                     match.locations.append(location)
 
                 self.sync_results.locations_added += 1
+                amount_files_added += 1
             else:
                 self.sync_results.duplicate_files += 1
                 self.sync_results.files_duplicated.append(id)
 
+        if amount_files_added > 0:
+            logging.info(f"Amount of files added as locations to {batch}: {amount_files_added}")
+
+        if amount_not_found > 2:
+            logging.info(f"Amount of files not matched in {batch}: {amount_not_found}")
+
     def check_batch(self, bag: dict) -> tuple:
         # Check if archive in PATSy
         batch_name = self.parse_name(bag.get('bag_name'))
-        logging.info(f"Checking if {batch_name} in database.")
+        logging.debug(f"Checking if {batch_name} in database.")
         query = self.gateway.session.query(Batch) \
                     .filter(Batch.name == batch_name) \
                     .first()
@@ -154,6 +165,18 @@ class Sync:
             return query.id, query.name
 
         return ()
+
+    def check_new_locations(self, name: str) -> bool:
+        session = self.gateway.session
+        engine = session.get_bind()
+        with engine.connect() as con:
+            rs = con.execute("select * from patsy_records where batch_name = %(batch_name)s \
+                              and storage_provider = 'APTrust'",
+                             {'batch_name': name})
+            if not rs:
+                return True
+
+        return False
 
     def process(self, **params) -> SyncResult:
         bags = self.get_request(self.OBJECT_REQUEST, per_page=1000, **params)
@@ -168,14 +191,18 @@ class Sync:
                                  .filter(Accession.batch_id == batch_id) \
                                  .all()
 
-                logging.info(f'Attempting to check files from {batch_name}')
+                if self.check_new_locations(batch_name):
+                    logging.info(f"Found a batch that didn't have APTrust locations in PATSy: {bag.get('title')}")
+                    logging.info(f"There are {bag.get('file_count')} files in the batch")
+
+                logging.debug(f'Attempting to check files from {batch_name}')
                 object_id = bag.get('id')
                 files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000)
 
                 if files:
-                    logging.info("Successfully retrieved files!")
+                    logging.debug("Successfully retrieved files!")
                     identifiers = [f.get('identifier') for f in files]
-                    self.check_or_add_files(identifiers, accessions, add=True)
+                    self.check_or_add_files(batch_name, identifiers, accessions, add=True)
 
                 else:
                     logging.warning("Batch was skipped!")
@@ -187,5 +214,5 @@ class Sync:
                 self.sync_results.batches_skipped += 1
                 self.sync_results.skipped_batches.append(bag.get('bag_name'))
 
-        logging.info("FINISHED PROCESS")
+        logging.debug("FINISHED PROCESS")
         return self.sync_results
