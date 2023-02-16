@@ -15,7 +15,7 @@ from pkgutil import iter_modules
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S',
-                    level="INFO")
+                    level="DEBUG")
 
 
 def print_header(subcommand: str) -> None:
