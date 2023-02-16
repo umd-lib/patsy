@@ -63,9 +63,6 @@ class Command(patsy.core.command.Command):
             if x_pharos_name is None or x_pharos_key is None:
                 raise MissingHeadersError
 
-        inputs = {"tb": timebefore, "ta": timeafter}
-        logging.info(f"Running sync command with the following options: {inputs}")
-
         headers = {
             'X-Pharos-API-User': x_pharos_name,
             'X-Pharos-API-Key': x_pharos_key
@@ -80,14 +77,18 @@ class Command(patsy.core.command.Command):
             if ta >= tb:
                 raise InvalidTimeError
 
+            logging.info(f"Accessing bags created before {timebefore}, but also after {timeafter}")
             sync_result = sync.process(created_at__lteq=timebefore, created_at__gteq=timeafter)
 
         elif timebefore:
+            logging.info(f"Accessing bags created before {prior_week}")
             sync_result = sync.process(created_at__lteq=timebefore)
         elif timeafter:
+            logging.info(f"Accessing bags created after {prior_week}")
             sync_result = sync.process(created_at__gteq=timeafter)
         else:
             prior_week = (datetime.now() - timedelta(days=7)).date()
+            logging.info(f"Accessing bags created after {prior_week}")
             sync_result = sync.process(created_at__gteq=prior_week)
 
         files_processed = sync_result.files_processed
@@ -98,20 +99,19 @@ class Command(patsy.core.command.Command):
         batches_skipped = sync_result.batches_skipped
         skipped_batches = sync_result.skipped_batches
 
-        if len(files_not_found) > 0:
-            logging.warning(f"AMOUNT OF FILES NOT FOUND: {len(files_not_found)}")
-            for f in files_not_found:
-                logging.warning(f"FILE NOT FOUND: {f}")
+        # I'll leave it in here because it could be useful to see one day, but as of now
+        # it clogs up the log files so it's probably best to not log.
+        # for f in files_duplicated:
+        #     logging.debug(f"FILE ALREADY IN DATABASE: {f}")
 
-        if duplicate_amount > 0:
-            logging.warning(f"AMOUNT OF DUPLICATE FILES FOUND: {duplicate_amount}")
-            for f in files_duplicated:
-                logging.warning(f"FILE ALREADY IN DATABASE: {f}")
+        for f in files_not_found:
+            logging.warning(f"FILE NOT FOUND: {f}")
 
-        if batches_skipped > 0:
-            logging.warning(f"AMOUNT OF BATCHES SKIPPED: {batches_skipped}")
-            for b in skipped_batches:
-                logging.warning(f"BATCH SKIPPED: {b}")
+        for b in skipped_batches:
+            logging.warning(f"Batch was skipped: {b}")
 
         logging.info(f"Total files processed: {files_processed}")
         logging.info(f"Total locations added: {locations_added}")
+        logging.info(f"Amount of files not found: {len(files_not_found)}")
+        logging.info(f"Amount of files already in PATSy: {duplicate_amount}")
+        logging.info(f"Amount of batches skipped: {batches_skipped}")
