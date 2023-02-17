@@ -2,11 +2,12 @@ import requests
 import logging
 import re
 
-from patsy.model import Accession, Batch, Location
+from patsy.model import Accession, Batch, Location, accession_locations_table
 from patsy.core.db_gateway import DbGateway
 
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
+from sqlalchemy import text
 from pathlib import Path
 
 
@@ -113,11 +114,13 @@ class Sync:
     def check_or_add_files(self, batch: str, identifiers: list, accessions: list, add: bool = False) -> None:
         amount_files_added: int = 0
         amount_not_found: int = 0
+        amount_files_processed: int = 0
 
         # Go through the identifiers
         for id in identifiers:
             # Add processed file and check the path
             self.sync_results.files_processed += 1
+            amount_files_processed += 1
             match = self.check_path(id, accessions)
 
             if match is None:
@@ -147,10 +150,10 @@ class Sync:
                 self.sync_results.files_duplicated.append(id)
 
         if amount_files_added > 0:
-            logging.info(f"Amount of files added as locations to {batch}: {amount_files_added}")
+            logging.info(f"Processed batch {batch}: {amount_files_added}/{amount_files_processed} files matched")
 
         if amount_not_found > 2:
-            logging.info(f"Amount of files not matched in {batch}: {amount_not_found}")
+            logging.info(f"Processed batch {batch}: {amount_not_found}/{amount_files_processed} not matched")
 
     def check_batch(self, bag: dict) -> tuple:
         # Check if archive in PATSy
@@ -170,9 +173,14 @@ class Sync:
         session = self.gateway.session
         engine = session.get_bind()
         with engine.connect() as con:
-            rs = con.execute("select * from patsy_records where batch_name = %(batch_name)s \
-                              and storage_provider = 'APTrust'",
-                             {'batch_name': name})
+            t = text("SELECT * FROM patsy_records WHERE batch_name=:name and storage_provider = 'APTrust'")
+            rs = con.execute(t, name=name)
+            # rs = con.execute(
+            #     # "SELECT * FROM patsy_records WHERE batch_name = %(name)s and storage_provider = 'APTrust'",
+            #     # "SELECT * FROM patsy_records WHERE batch_name = %s and storage_provider = 'APTrust'",
+            #     # {"name": name}
+            #     (name, )
+            # )
             if not rs:
                 return True
 

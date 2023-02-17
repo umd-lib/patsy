@@ -108,10 +108,10 @@ class Command(patsy.core.command.Command):
             logging.warning(f"FILE NOT FOUND: {f}")
 
         for b in skipped_batches:
-            logging.warning(f"Batch was skipped: {b}")
+            logging.warning(f"APTrust object {b} could not be matched to a batch in PATSy")
 
-        logging.info(f"Total files processed: {files_processed}")
-        logging.info(f"Total locations added: {locations_added}")
-        logging.info(f"Amount of files not found: {len(files_not_found)}")
-        logging.info(f"Amount of files already in PATSy: {duplicate_amount}")
-        logging.info(f"Amount of batches skipped: {batches_skipped}")
+        logging.info(f"Files deposited in APTrust: {files_processed}")
+        logging.info(f"APTrust locations matched: {locations_added}")
+        logging.info(f"APTrust locations not matched: {len(files_not_found)}")
+        logging.info(f"Locations already in PATSy: {duplicate_amount}")
+        logging.info(f"APTrust objects not matched: {batches_skipped}")
