@@ -28,10 +28,11 @@ class SyncResult():
     files_duplicated: List[str] = field(default_factory=list)
     files_not_found: List[str] = field(default_factory=list)
     skipped_batches: List[str] = field(default_factory=list)
+    batches_processed: int = 0
+    batches_skipped: int = 0
     files_processed: int = 0
     locations_added: int = 0
     duplicate_files: int = 0
-    batches_skipped: int = 0
 
     def __repr__(self) -> str:
         lines = [
@@ -62,25 +63,22 @@ class Sync:
     def get_request(self, endpoint: str, **params) -> list:
         results = []
         r = requests.get(url=self.APTRUST_URL + endpoint, params=params, headers=self.headers)
-        next_page = r.json().get('next')
 
-        while next_page != '' and r.status_code == 200:
+        while r.status_code == 200:
             get_results = r.json().get('results')
             if get_results is None:
-                logging.info("There was nothing to get!")
+                logging.info("There was no results to retrieve from the get request.")
                 return []
 
             results.extend(get_results)
-            r = requests.get(url=self.APTRUST_URL + next_page, headers=self.headers)
             next_page = r.json().get('next')
+            if next_page == '':
+                return results
 
-        if r.status_code != 200:
-            logging.warning(f"Got a {r.status_code} status code, skipping this get request.")
-            return []
+            r = requests.get(url=self.APTRUST_URL + next_page, headers=self.headers)
 
-        get_results = r.json().get('results')
-        results.extend(get_results)
-        return results
+        logging.warning(f"Got a {r.status_code} status code, skipping this get request.")
+        return []
 
     def parse_name(self, batchname: str) -> str:
         if batchname.startswith('archive'):
@@ -150,10 +148,10 @@ class Sync:
                 self.sync_results.files_duplicated.append(id)
 
         if amount_files_added > 0:
-            logging.info(f"Processed batch {batch}: {amount_files_added}/{amount_files_processed} files matched")
+            logging.info(f"Batch {batch}: {amount_files_added}/{amount_files_processed} files matched")
 
         if amount_not_found > 2:
-            logging.info(f"Processed batch {batch}: {amount_not_found}/{amount_files_processed} not matched")
+            logging.info(f"Batch {batch}: {amount_not_found}/{amount_files_processed} not matched")
 
     def check_batch(self, bag: dict) -> tuple:
         # Check if archive in PATSy
@@ -175,12 +173,7 @@ class Sync:
         with engine.connect() as con:
             t = text("SELECT * FROM patsy_records WHERE batch_name=:name and storage_provider = 'APTrust'")
             rs = con.execute(t, name=name)
-            # rs = con.execute(
-            #     # "SELECT * FROM patsy_records WHERE batch_name = %(name)s and storage_provider = 'APTrust'",
-            #     # "SELECT * FROM patsy_records WHERE batch_name = %s and storage_provider = 'APTrust'",
-            #     # {"name": name}
-            #     (name, )
-            # )
+
             if not rs:
                 return True
 
@@ -191,6 +184,7 @@ class Sync:
         # Get all the objects and loop over them
         for bag in bags:
             in_patsy = self.check_batch(bag)
+            self.sync_results.batches_processed += 1
 
             # If bag was found in PATSy, go through the files in the bag
             if in_patsy:
