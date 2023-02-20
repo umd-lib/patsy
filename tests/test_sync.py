@@ -46,6 +46,7 @@ def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load:
         Command.__call__(obj, args, obj.gateway)
         obj.load = Load(obj.gateway)
         obj.load.process_file(csv_file)
+        obj.gateway.session.commit()
 
 
 def tearDown(obj, tear: bool = True):
