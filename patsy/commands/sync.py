@@ -77,18 +77,20 @@ class Command(patsy.core.command.Command):
             if ta >= tb:
                 raise InvalidTimeError
 
-            logging.info(f"Accessing bags created before {timebefore}, but also after {timeafter}")
+            logging.info(f"Dates: {timeafter} to {timebefore}")
             sync_result = sync.process(created_at__lteq=timebefore, created_at__gteq=timeafter)
 
         elif timebefore:
-            logging.info(f"Accessing bags created before {prior_week}")
+            logging.info(f"Dates: - to {timebefore}")
             sync_result = sync.process(created_at__lteq=timebefore)
         elif timeafter:
-            logging.info(f"Accessing bags created after {prior_week}")
+            now = datetime.now().strftime('%Y-%m-%d')
+            logging.info(f"Dates: {timeafter} to {now}")
             sync_result = sync.process(created_at__gteq=timeafter)
         else:
+            now = datetime.now().strftime('%Y-%m-%d')
             prior_week = (datetime.now() - timedelta(days=7)).date()
-            logging.info(f"Accessing bags created after {prior_week}")
+            logging.info(f"Dates: {prior_week} to {now}")
             sync_result = sync.process(created_at__gteq=prior_week)
 
         files_processed = sync_result.files_processed
@@ -98,6 +100,8 @@ class Command(patsy.core.command.Command):
         duplicate_amount = sync_result.duplicate_files
         batches_skipped = sync_result.batches_skipped
         skipped_batches = sync_result.skipped_batches
+        batches_processed = sync_result.batches_processed
+        batches_matched = batches_processed - batches_skipped
 
         # I'll leave it in here because it could be useful to see one day, but as of now
         # it clogs up the log files so it's probably best to not log.
@@ -110,8 +114,12 @@ class Command(patsy.core.command.Command):
         for b in skipped_batches:
             logging.warning(f"APTrust object {b} could not be matched to a batch in PATSy")
 
-        logging.info(f"Files deposited in APTrust: {files_processed}")
-        logging.info(f"APTrust locations matched: {locations_added}")
-        logging.info(f"APTrust locations not matched: {len(files_not_found)}")
-        logging.info(f"Locations already in PATSy: {duplicate_amount}")
-        logging.info(f"APTrust objects not matched: {batches_skipped}")
+        logging.info(
+            f'APTrust objects analyzed: {batches_processed} '
+            f'({batches_matched} matched, {batches_skipped} not matched)'
+        )
+        # if I put these strings in the log directly, comma seperated, it'll error
+        s1 = f'Locations analyzed: {files_processed}'
+        s2 = f'({duplicate_amount} previously matched,'
+        s3 = f'{locations_added} new matches, {len(files_not_found)} not matched)'
+        logging.info('%s %s %s', s1, s2, s3)
