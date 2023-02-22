@@ -46,6 +46,7 @@ def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load:
         Command.__call__(obj, args, obj.gateway)
         obj.load = Load(obj.gateway)
         obj.load.process_file(csv_file)
+        obj.gateway.session.commit()
 
 
 def tearDown(obj, tear: bool = True):
@@ -118,7 +119,7 @@ class TestSync:
                              .all()
 
             identifiers = list(map(lambda x: x.get('identifier'), files))
-            self.sync.check_or_add_files(identifiers, accessions)
+            self.sync.check_or_add_files('placeholder', identifiers, accessions)
 
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added
@@ -142,7 +143,7 @@ class TestSync:
                              .all()
 
             identifiers = list(map(lambda x: x.get('identifier'), files))
-            self.sync.check_or_add_files(identifiers, accessions, True)
+            self.sync.check_or_add_files('placeholder', identifiers, accessions, True)
 
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added
@@ -166,9 +167,9 @@ class TestSync:
                              .all()
 
             identifiers = list(map(lambda x: x.get('identifier'), files))
-            self.sync.check_or_add_files(identifiers, accessions, True)
+            self.sync.check_or_add_files('placeholder', identifiers, accessions, True)
             self.gateway.session.commit()
-            self.sync.check_or_add_files(identifiers, accessions, True)
+            self.sync.check_or_add_files('placeholder', identifiers, accessions, True)
 
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added
@@ -196,7 +197,7 @@ class TestSync:
                              .all()
 
             identifiers = list(map(lambda x: x.get('identifier'), files))
-            self.sync.check_or_add_files(identifiers, accessions, True)
+            self.sync.check_or_add_files('placeholder', identifiers, accessions, True)
 
             files_processed = self.sync.sync_results.files_processed
             locations_added = self.sync.sync_results.locations_added

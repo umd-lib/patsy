@@ -1,13 +1,11 @@
-import patsy.core.command
 import argparse
 import logging
-import sys
 import os
-
-from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
-from patsy.core.db_gateway import DbGateway
 from datetime import datetime, timedelta
-from patsy.model import Accession
+
+import patsy.core.command
+from patsy.core.db_gateway import DbGateway
+from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -63,9 +61,6 @@ class Command(patsy.core.command.Command):
             if x_pharos_name is None or x_pharos_key is None:
                 raise MissingHeadersError
 
-        inputs = {"tb": timebefore, "ta": timeafter}
-        logging.info(f"Running sync command with the following options: {inputs}")
-
         headers = {
             'X-Pharos-API-User': x_pharos_name,
             'X-Pharos-API-Key': x_pharos_key
@@ -80,38 +75,44 @@ class Command(patsy.core.command.Command):
             if ta >= tb:
                 raise InvalidTimeError
 
+            logging.info(f"Dates: {timeafter} to {timebefore}")
             sync_result = sync.process(created_at__lteq=timebefore, created_at__gteq=timeafter)
 
         elif timebefore:
+            logging.info(f"Dates: - to {timebefore}")
             sync_result = sync.process(created_at__lteq=timebefore)
         elif timeafter:
+            now = datetime.now().strftime('%Y-%m-%d')
+            logging.info(f"Dates: {timeafter} to {now}")
             sync_result = sync.process(created_at__gteq=timeafter)
         else:
+            now = datetime.now().strftime('%Y-%m-%d')
             prior_week = (datetime.now() - timedelta(days=7)).date()
+            logging.info(f"Dates: {prior_week} to {now}")
             sync_result = sync.process(created_at__gteq=prior_week)
 
         files_processed = sync_result.files_processed
         locations_added = sync_result.locations_added
         files_not_found = sync_result.files_not_found
-        files_duplicated = sync_result.files_duplicated
         duplicate_amount = sync_result.duplicate_files
         batches_skipped = sync_result.batches_skipped
         skipped_batches = sync_result.skipped_batches
+        batches_processed = sync_result.batches_processed
+        batches_matched = batches_processed - batches_skipped
 
-        if len(files_not_found) > 0:
-            logging.warning(f"AMOUNT OF FILES NOT FOUND: {len(files_not_found)}")
-            for f in files_not_found:
-                logging.warning(f"FILE NOT FOUND: {f}")
+        for f in files_not_found:
+            logging.warning(f"FILE NOT FOUND: {f}")
 
-        if duplicate_amount > 0:
-            logging.warning(f"AMOUNT OF DUPLICATE FILES FOUND: {duplicate_amount}")
-            for f in files_duplicated:
-                logging.warning(f"FILE ALREADY IN DATABASE: {f}")
+        for b in skipped_batches:
+            logging.warning(f"APTrust object {b} could not be matched to a batch in PATSy")
 
-        if batches_skipped > 0:
-            logging.warning(f"AMOUNT OF BATCHES SKIPPED: {batches_skipped}")
-            for b in skipped_batches:
-                logging.warning(f"BATCH SKIPPED: {b}")
-
-        logging.info(f"Total files processed: {files_processed}")
-        logging.info(f"Total locations added: {locations_added}")
+        logging.info(
+            f'APTrust objects analyzed: {batches_processed} '
+            f'({batches_matched} matched, {batches_skipped} not matched)'
+        )
+        logging.info(
+            f'Locations analyzed: {files_processed} '
+            f'({duplicate_amount} previously matched, '
+            f'{locations_added} new matches, '
+            f'{len(files_not_found)} not matched)'
+        )
