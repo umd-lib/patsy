@@ -112,8 +112,9 @@ class Command(patsy.core.command.Command):
             f'APTrust objects analyzed: {batches_processed} '
             f'({batches_matched} matched, {batches_skipped} not matched)'
         )
-        # if I put these strings in the log directly, comma seperated, it'll error
-        s1 = f'Locations analyzed: {files_processed}'
-        s2 = f'({duplicate_amount} previously matched,'
-        s3 = f'{locations_added} new matches, {len(files_not_found)} not matched)'
-        logging.info('%s %s %s', s1, s2, s3)
+        logging.info(
+            f'Locations analyzed: {files_processed} '
+            f'({duplicate_amount} previously matched, '
+            f'{locations_added} new matches, '
+            f'{len(files_not_found)} not matched)'
+        )
