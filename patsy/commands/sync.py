@@ -96,17 +96,11 @@ class Command(patsy.core.command.Command):
         files_processed = sync_result.files_processed
         locations_added = sync_result.locations_added
         files_not_found = sync_result.files_not_found
-        files_duplicated = sync_result.files_duplicated
         duplicate_amount = sync_result.duplicate_files
         batches_skipped = sync_result.batches_skipped
         skipped_batches = sync_result.skipped_batches
         batches_processed = sync_result.batches_processed
         batches_matched = batches_processed - batches_skipped
-
-        # I'll leave it in here because it could be useful to see one day, but as of now
-        # it clogs up the log files so it's probably best to not log.
-        # for f in files_duplicated:
-        #     logging.debug(f"FILE ALREADY IN DATABASE: {f}")
 
         for f in files_not_found:
             logging.warning(f"FILE NOT FOUND: {f}")
