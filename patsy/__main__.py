@@ -8,6 +8,7 @@ import sys
 from patsy.core.sync import MissingHeadersError, InvalidStatusCodeError, InvalidTimeError
 from patsy.database import DatabaseNotSetError
 from patsy.core.db_gateway import DbGateway
+from dotenv import load_dotenv
 from sqlalchemy.exc import OperationalError
 from patsy import commands, version
 from importlib import import_module
@@ -70,6 +71,8 @@ def main() -> None:
 
     logging.info(f"Command ran: {args.cmd_name}")
 
+    load_dotenv()
+
     try:
         gateway = DbGateway(args)
         result = command(args, gateway)
@@ -92,7 +95,7 @@ def main() -> None:
 
     except InvalidStatusCodeError:
         logging.error(
-            'An error occured when using the API. This could be due to the servers, '
+            'An error occurred when using the API. This could be due to the servers, '
             'or the headers provided may be incorrect.'
         )
         sys.exit(1)

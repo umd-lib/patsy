@@ -1,13 +1,11 @@
-import patsy.core.command
 import argparse
 import logging
-import sys
 import os
-
-from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
-from patsy.core.db_gateway import DbGateway
 from datetime import datetime, timedelta
-from patsy.model import Accession
+
+import patsy.core.command
+from patsy.core.db_gateway import DbGateway
+from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
@@ -96,17 +94,11 @@ class Command(patsy.core.command.Command):
         files_processed = sync_result.files_processed
         locations_added = sync_result.locations_added
         files_not_found = sync_result.files_not_found
-        files_duplicated = sync_result.files_duplicated
         duplicate_amount = sync_result.duplicate_files
         batches_skipped = sync_result.batches_skipped
         skipped_batches = sync_result.skipped_batches
         batches_processed = sync_result.batches_processed
         batches_matched = batches_processed - batches_skipped
-
-        # I'll leave it in here because it could be useful to see one day, but as of now
-        # it clogs up the log files so it's probably best to not log.
-        # for f in files_duplicated:
-        #     logging.debug(f"FILE ALREADY IN DATABASE: {f}")
 
         for f in files_not_found:
             logging.warning(f"FILE NOT FOUND: {f}")
@@ -118,8 +110,9 @@ class Command(patsy.core.command.Command):
             f'APTrust objects analyzed: {batches_processed} '
             f'({batches_matched} matched, {batches_skipped} not matched)'
         )
-        # if I put these strings in the log directly, comma seperated, it'll error
-        s1 = f'Locations analyzed: {files_processed}'
-        s2 = f'({duplicate_amount} previously matched,'
-        s3 = f'{locations_added} new matches, {len(files_not_found)} not matched)'
-        logging.info('%s %s %s', s1, s2, s3)
+        logging.info(
+            f'Locations analyzed: {files_processed} '
+            f'({duplicate_amount} previously matched, '
+            f'{locations_added} new matches, '
+            f'{len(files_not_found)} not matched)'
+        )
