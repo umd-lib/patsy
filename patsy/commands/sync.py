@@ -1,13 +1,11 @@
-import patsy.core.command
 import argparse
 import logging
-import sys
 import os
-
-from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
-from patsy.core.db_gateway import DbGateway
 from datetime import datetime, timedelta
-from patsy.model import Accession
+
+import patsy.core.command
+from patsy.core.db_gateway import DbGateway
+from patsy.core.sync import Sync, MissingHeadersError, InvalidTimeError
 
 
 def configure_cli(subparsers) -> None:  # type: ignore
