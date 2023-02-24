@@ -27,11 +27,11 @@ def database_helper(database: str) -> None:
     if database.startswith('postgresql+psycopg2:'):
         db_path = database
         url = db_path.split('@', 1)[1]
-        logging.info(f"Using PostgreSQL database at {url}")
+        logging.info(f"Database: {url}")
     else:
         logging.debug("Switching to using SQLite as the adapter")
         db_path = f"sqlite:///{database}"
-        logging.info(f"Using SQLite database at {db_path}")
+        logging.info(f"Database: {db_path}")
 
     logging.debug("Binding the database session...")
     engine = create_engine(db_path)
