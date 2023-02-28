@@ -72,6 +72,7 @@ def main() -> None:
     logging.info(f"Command ran: {args.cmd_name}")
 
     load_dotenv()
+    status_code: int = 0
 
     try:
         gateway = DbGateway(args)
@@ -84,35 +85,39 @@ def main() -> None:
 
     except DatabaseNotSetError:
         logging.error('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.')
-        sys.exit(1)
+        status_code = 1
 
     except OperationalError as e:
         # Some error messages created contain multiple lines and tabs
         # I'm removing them so that splunk has an easier time parsing them
         error = str(e.orig).replace('\n', ' ').replace('\t', '')
         logging.error(error)
-        sys.exit(1)
+        status_code = 1
 
     except InvalidStatusCodeError:
         logging.error(
             'An error occurred when using the API. This could be due to the servers, '
             'or the headers provided may be incorrect.'
         )
-        sys.exit(1)
+        status_code = 1
 
     except MissingHeadersError:
         logging.error(
             'The headers to access the ApTrust API were not set. '
             'Provide them as an argument to the sync command or as environment variables in the shell.'
         )
-        sys.exit(1)
+        status_code = 1
 
     except InvalidTimeError:
         logging.error(
             'The time arguments provided conflict with each other. '
             'Make sure that the "timeafter" argument is a date that comes before the "timebefore" argument.'
         )
-        sys.exit(1)
+        status_code = 1
+
+    finally:
+        logging.info("Done")
+        sys.exit(status_code)
 
 
 if __name__ == "__main__":
