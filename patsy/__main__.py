@@ -116,7 +116,7 @@ def main() -> None:
         status_code = 1
 
     finally:
-        logging.info("Done")
+        logging.debug("Done")
         sys.exit(status_code)
 
 
