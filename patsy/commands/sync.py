@@ -79,7 +79,7 @@ class Command(patsy.core.command.Command):
             sync_result = sync.process(created_at__lteq=timebefore, created_at__gteq=timeafter)
 
         elif timebefore:
-            logging.info(f"Dates: - to {timebefore}")
+            logging.info(f"Dates: [no limit] to {timebefore}")
             sync_result = sync.process(created_at__lteq=timebefore)
         elif timeafter:
             now = datetime.now().strftime('%Y-%m-%d')

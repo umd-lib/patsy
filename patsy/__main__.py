@@ -114,6 +114,14 @@ def main() -> None:
         )
         sys.exit(1)
 
+    else:
+        # no errors, exit with a normal status
+        sys.exit(0)
+
+    finally:
+        # this will always get called, even after the calls to sys.exit()
+        logging.debug("Done")
+
 
 if __name__ == "__main__":
     main()

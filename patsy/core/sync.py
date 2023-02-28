@@ -102,7 +102,7 @@ class Sync:
         # Then increment down to 3 if it doesn't match
         for i in range(3, 6):
             id = '/'.join(map(str, p.parts[i:]))
-            match = list(filter(lambda x: x.relpath == id, relpaths))
+            match = [x for x in relpaths if x.relpath == id]
             if match:
                 return match[0]
 
@@ -112,6 +112,7 @@ class Sync:
     def check_or_add_files(self, batch: str, identifiers: list, accessions: list, add: bool = False) -> None:
         amount_files_added: int = 0
         amount_not_found: int = 0
+        amount_already_exists: int = 0
         amount_files_processed: int = 0
 
         # Go through the identifiers
@@ -146,12 +147,16 @@ class Sync:
             else:
                 self.sync_results.duplicate_files += 1
                 self.sync_results.files_duplicated.append(id)
+                amount_already_exists += 1
 
         if amount_files_added > 0:
             logging.info(f"Batch {batch}: {amount_files_added}/{amount_files_processed} files matched")
 
         if amount_not_found > 2:
             logging.info(f"Batch {batch}: {amount_not_found}/{amount_files_processed} not matched")
+
+        if amount_already_exists > 0:
+            logging.info(f"Batch {batch}: {amount_already_exists}/{amount_files_processed} preexisting matches")
 
     def check_batch(self, bag: dict) -> tuple:
         # Check if archive in PATSy
