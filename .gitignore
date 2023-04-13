@@ -107,3 +107,6 @@ dump/
 .vscode
 .idea
 :memory
+
+# VS Code Dev Container configuration
+.devcontainer

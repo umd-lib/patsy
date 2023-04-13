@@ -5,6 +5,9 @@
 This page describes how to set up a local development environment, and other
 information useful for developers to be aware of.
 
+An alternate setup, using VS Code "Dev Container" functionality, is described
+in [VsCodeDevContainerSetup.md](./VsCodeDevContainerSetup.md).
+
 ## Prerequisites
 
 The following instructions assume that "pyenv" and venv" are installed to
@@ -21,7 +24,7 @@ or via Brew:
 $ brew install postgresql
 ```
 
-## Installation for Development
+## Local Development Setup
 
 1) Clone the "patsy" GitHub repository:
 
