@@ -17,6 +17,12 @@ Any work on the legacy patsy-db v1 application should be performed on the
 
 See [docs/DevelopmentSetup.md](docs/DevelopmentSetup.md).
 
+## Database Setup
+
+Patsy can be used with either a SQLite or Postgres database. The database
+to use is be specified by the "--database" command-line argument,
+or via a "PATSY_DATABASE" environment variable.
+
 ## Patsy Commands
 
 The "--help" flag provides information about available commands and arguments:
@@ -32,23 +38,23 @@ about that command:
 $ patsy load --help
 ```
 
-## Common Arguments
+### Common Arguments
 
-### "database" argument
+#### "database" argument
 
 The "--database" argument is used to specify the database the command should
 run against.
 
-### SQLite
+##### SQLite
 
 For SQLite databases, this is typically just the filename of the SQLite database
-file, for example if the name of the SQLite file is "patsy.sqlite":
+file. For example, to set up an empty SQLite file named "patsy-db.sqlite":
 
 ```bash
-$ patsy --database patsy.sqlite schema
+$ patsy --database patsy-db.sqlite schema
 ```
 
-### Postgres
+##### Postgres
 
 For Postgres databases, a database connection URL with the following format
 is used:
@@ -68,23 +74,35 @@ where:
 **Note:** The database specified in \<DATABASE> must exist.
 
 For example, to connect to a Postgres database named "patsy" on "localhost"
-with a username of "postgres", and a password of "secret_password":
+with a username of "postgres", and a password of "password":
 
 ```bash
-$ patsy --database postgresql+psycopg2://postgres:secret_password@localhost:5432/patsy
+$ patsy --database postgresql+psycopg2://postgres:password@localhost:5432/patsy <COMMAND>
 ```
 
-### PATSY_DATABASE environment variable
+where \<COMMAND> is the Patsy command to run.
 
-The "--database" argument can be omitted a "PATSY_DATABASE" environment variable
-has been defined:
+#### PATSY_DATABASE environment variable
+
+The "--database" argument can be omitted if a "PATSY_DATABASE" environment variable
+has been defined.
+
+For SQLite, simply specify the filename of the SQLite file. For example, for
+"patsy-db.sqlite":
 
 ```bash
-$ export PATSY_DATABASE=<DATABASE_URL>
+$ export PATSY_DATABASE=patsy-db.sqlite
+```
+
+For Postgres, use the database connection URL. For example, using the
+Postgres database connection URL for a local Docker container:
+
+```bash
+$ export PATSY_DATABASE=postgresql+psycopg2://postgres:password@localhost:5432/patsy
 ```
 
 The "--database" argument can still be passed in to temporarily override the
-environment variable .
+environment variable.
 
 ### "schema" command
 

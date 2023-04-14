@@ -56,7 +56,7 @@ information).
 
     with the following content:
 
-    ``json
+    ```text
     // For format details, see https://aka.ms/devcontainer.json. For config options, see the
     // README at: https://github.com/devcontainers/templates/tree/main/src/python
     {
@@ -112,12 +112,12 @@ information).
    The `pip install -e .[dev,test]` command is run as part of the Docker
    container setup, and various VS Code extensions are automatically added.
 
-8) To run commands, open a terminal in VS Code (select
-   "Terminal | New Terminal") from the menubar.
+8) To run Patsy commands and Python tools such as "pytest", open a terminal
+   in VS Code (select "Terminal | New Terminal") from the menubar.
 
 9) If you are running a local instance of Postgres (either from the local
     workstation, or in a separate Docker container), the "PATSY_DATABASE"
-    environment variable can using "host.docker.internal" as the hostname,
+    environment variable should use "host.docker.internal" as the hostname,
     i.e.:
 
     ```bash

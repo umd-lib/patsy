@@ -52,30 +52,59 @@ $ brew install postgresql
     $ pip install -e .[dev,test]
     ```
 
-## Sample Data - Postgres
+## Database Setup
 
-### Docker Postgres Container Setup
+The application supports development using either a SQLite database,
+or Postgres (production instances of the application always use
+Postgres).
 
-To set up a local Docker container running Postgres:
+### SQLite Database
+
+A empty SQLite database can be created simply by running the "schema" command
+with the appropriate "--database" argument (or "PATSY_DATABASE" environment
+variable). For example, to create a SQLite database file named
+"patsy-db.sqlite":
 
 ```bash
-$ docker run --rm -d -p 5432:5432 --name patsy-sample-data -e POSTGRES_PASSWORD=password -e POSTGRES_DB=patsy postgres
+$ patsy --database patsy-db.sqlite schema
 ```
 
-The database connection URL would then be:
+## Postgres Server Setup
 
-```text
-postgresql+psycopg2://postgres:password@localhost:5432/patsy
+In cases where development against an actual Postgres database is
+desirable, a local Docker container can be created.
+
+The following command creates a "patsy-db" container, based on Postgres 14,
+with a user named "postgres", and a password of "password":
+
+```bash
+$ docker run --rm -d -p 5432:5432 --name patsy-db \
+  -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=patsy postgres:14
 ```
 
-If using the "PATSY_DATABASE" environment variable:
+**Note:** All data in the container will be **LOST** when the container is
+stopped.
+
+The schema can then be set up using the following command:
+
+```bash
+$ patsy --database postgresql+psycopg2://postgres:password@localhost:5432/patsy schema
+```
+
+For convenience, the "PATSY_DATABASE" environment variable can be set up:
 
 ```bash
 $ export PATSY_DATABASE=postgresql+psycopg2://postgres:password@localhost:5432/patsy
 ```
 
-**Note:** All data in the container will be **LOST** when the container is
-stopped.
+
+## Sample Data - Postgres
+
+### Set up a Docker Container running Postgres
+
+1) Follow the instructions in the "Postgres Server Setup" to create a local
+Docker container running Postgres.
 
 ### Dump/Restore Data from Kubernetes
 
@@ -89,43 +118,32 @@ to populate a local Postgres database.
     $ kubectl config use-context test
     ```
 
-2) Create a Bash shell in the "patsy-db-0" pod:
+2) Create a Postgres database dump in the "/pgdate/patsy-db.sql" file:
 
     ```bash
-    $ kubectl exec -it patsy-db-0 -- /bin/bash
+    $ kubectl exec -it patsy-db-0 -- \
+        bash -c 'pg_dump --username postgres --format=c --create --clean --if-exists --verbose patsy > /pgdata/dump-patsy.custom'
     ```
 
-3) In the "patsy-db-0" pod, create a Postgres database dump in the
-   "/tmp/patsy-db.sql" file:
+3) Download the "/pgdata/patsy-db.custom" to the local directory:
 
     ```bash
-    patsy-db-0$ pg_dump --username postgres -Fc -v patsy > /pgdata/patsy-db.custom
+    $ kubectl cp patsy-db-0:/pgdata/dump-patsy.custom dump-patsy.custom
     ```
 
-4) Exit the "patsy-db-0" Bash shell:
-
-    ```bash
-    patsy-db-0$ exit
-    ```
-
-5) Download the "/pgdata/patsy-db.custom" to the local directory:
-
-    ```bash
-    $ kubectl cp --namespace=test patsy-db-0:/pgdata/patsy-db.custom patsy-db.custom
-    ```
-
-6) Delete the dump file in "/pgdata/patsy-db.custom" file in the "patsy-db-0"
+4) Delete the dump file in "/pgdata/patsy-db.custom" file in the "patsy-db-0"
    pod to recover the disk space:
 
     ```bash
-    $ kubectl exec --namespace=test patsy-db-0 -- rm /pgdata/patsy-db.custom
+    $ kubectl exec patsy-db-0 -- rm /pgdata/dump-patsy.custom
     ```
 
-7) Populate the sample database with the Postgres dump, using a command of the
+5) Populate the sample database with the Postgres dump, using a command of the
    form:
 
     ```bash
-    $ pg_restore --host=<HOST> --port=<PORT> --username=<USERNAME> --dbname=<DBNAME> -Fc -v patsy-db.custom
+    $ pg_restore --host=<HOST> --port=<PORT> --username=<USERNAME> --dbname=<DBNAME> \
+        --format=c --verbose --clean --if-exists --no-owner --no-privileges dump-patsy.custom
     ```
 
     where:
@@ -133,12 +151,13 @@ to populate a local Postgres database.
     * \<HOST> - the hostname or IP address of the local Postgres server to update
     * \<PORT> - the port of the local Postgres server to update
     * \<USERNAME> - the username of the local Postgres server to update
-    * \<DBNAME> - the name of the database, typically "patsy"
+    * \<DBNAME> - the name of the database, typicontainer, based on Postgrescally "patsy"
 
-    For example, to populate the local "patsy-sample-data" Docker container:
+    For example, to populate the local "patsy-db" Docker container:
 
     ```bash
-    $ pg_restore --host=localhost --port=5432 --username=postgres --dbname=patsy -Fc -v patsy-db.custom
+    $ pg_restore --host=localhost --port=5432 --username=postgres --dbname=patsy \
+        --format=c --verbose --clean --if-exists --no-owner --no-privileges dump-patsy.custom
     ```
 
 ## Running The Tests
@@ -149,13 +168,9 @@ $ pytest
 
 By default, running pytest will run the tests in an SQLite in-memory database.
 To run the test against a Postgres database, first create a docker container with
-Postgres.
+Postgres (see "Postgres Server Setup" section above).
 
-```bash
-$ docker run -d -p 5432:5432 --name test -e POSTGRES_PASSWORD=password postgres
-```
-
-Then run pytest with this additional parameter
+Then run pytest with this additional parameter:
 
 ```bash
 $ pytest --base-url="postgresql+psycopg2://postgres:password@localhost:5432/postgres"
