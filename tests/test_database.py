@@ -1,15 +1,6 @@
-import tempfile
 import pytest
 import os
 
-from patsy.commands.schema import Command as CommandSchema
-from patsy.commands.checksum import Command, get_checksum
-from sqlalchemy.ext.compiler import compiles
-from patsy.core.db_gateway import DbGateway
-from sqlalchemy.schema import DropTable
-from patsy.core.load import Load
-from argparse import Namespace
-from patsy.model import Base
 from patsy.database import DatabaseNotSetError, get_database_connection_url, use_database_file, Session
 
 

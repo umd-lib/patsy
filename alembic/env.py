@@ -8,6 +8,8 @@ from alembic import context
 # UMD Customization - Support "database" command-line argument
 from patsy.database import get_database_connection_url
 from patsy.model import Base
+from patsy.database import get_database_connection_url
+from patsy.alembic.helpers.replaceable_objects import *
 # End UMD Customization
 
 # this is the Alembic Config object, which provides
@@ -73,22 +75,25 @@ def run_migrations_online() -> None:
 
     """
 
-    # UMD Customization - Support "database" command-line argument
-    database_arg = context.get_x_argument(as_dictionary=True).get('database')
-    database_connection_url = get_database_connection_url(database_arg)
+    connectable = context.config.attributes.get("connection", None)
 
-    ini_section = config.get_section(config.config_ini_section)
-    ini_section['sqlalchemy.url'] = database_connection_url
-    # End UMD Customization
+    # UMD Customization - Only create connectable if it doesn't exist
+    # This enables pytest to provide the connection
+    if connectable is None:
 
-    connectable = engine_from_config(
         # UMD Customization - Support "database" command-line argument
-        # config.get_section(config.config_ini_section, {}),
-        ini_section,
-        # End UMD Customization
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+        database_arg = context.get_x_argument(as_dictionary=True).get('database')
+        database_connection_url = get_database_connection_url(database_arg)
+
+        ini_section = config.get_section(config.config_ini_section)
+        ini_section['sqlalchemy.url'] = database_connection_url
+
+        connectable = engine_from_config(
+            ini_section,
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+        )
+    # End UMD Customization
 
     with connectable.connect() as connection:
         context.configure(

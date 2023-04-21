@@ -47,17 +47,20 @@ run against.
 
 ##### SQLite
 
-For SQLite databases, this is typically just the filename of the SQLite database
-file. For example, to set up an empty SQLite file named "patsy-db.sqlite":
+For SQLite databases, the argument is just the filename of the SQLite database
+file. For example, to run against a SQLite database in a "patsy-db.sqlite" file:
+
 
 ```bash
-$ patsy --database patsy-db.sqlite schema
+$ patsy --database patsy-db.sqlite <COMMAND>
 ```
+
+where \<COMMAND> is the PATSy command to run.
 
 ##### Postgres
 
-For Postgres databases, a database connection URL with the following format
-is used:
+For Postgres databases, the argument is a database connection URL with the
+following format:
 
 ```text
 postgresql+psycopg2://<USER>:<PASSWORD>@<ADDRESS>:<PORT>/<DATABASE>
@@ -103,16 +106,6 @@ $ export PATSY_DATABASE=postgresql+psycopg2://postgres:password@localhost:5432/p
 
 The "--database" argument can still be passed in to temporarily override the
 environment variable.
-
-### "schema" command
-
-Creates the database schema.
-
-```bash
-$ patsy --database <DATABASE> schema
-```
-
-Typically needs only needs to be done once, when the database is created.
 
 ### "load" command
 
@@ -208,7 +201,7 @@ if the database has not been set.
 
 ### Run the database migrations
 
-To run the database migrations:
+To run the database migrations, or to set up the database for the first time:
 
 ```bash
 $ alembic upgrade head

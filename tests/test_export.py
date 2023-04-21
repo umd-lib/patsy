@@ -1,30 +1,12 @@
-import pytest
-
 from argparse import Namespace
-from patsy.commands.schema import Command
 from patsy.commands.load import Load
 from patsy.commands.export import Command as ExportCommand
-from patsy.core.db_gateway import DbGateway
-from patsy.model import Base
-from sqlalchemy.schema import DropTable
-from sqlalchemy.ext.compiler import compiles
-
-# pytestmark = pytest.mark.parametrize(
-#     "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
-# )
+from tests import clear_database
 
 
-@pytest.fixture
-def addr(request):
-    return request.config.getoption('--base-url')
+def setUp(obj, gateway):
+    obj.gateway = gateway
 
-
-@compiles(DropTable, "postgresql")
-def _compile_drop_table(element, compiler, **kwargs):
-    return compiler.visit_drop_table(element) + " CASCADE"
-
-
-def setUp(obj, addr):
     obj.valid_row_dict = {
         'BATCH': 'batch',
         'RELPATH': 'relpath',
@@ -41,22 +23,18 @@ def setUp(obj, addr):
     }
 
     obj.args = Namespace()
-    obj.args.database = addr
-    obj.gateway = DbGateway(obj.args)
-    Command.__call__(obj, obj.args, obj.gateway)
     obj.load = Load(obj.gateway)
 
 
 def tearDown(obj):
-    obj.gateway.close()
-    Base.metadata.drop_all(obj.gateway.session.get_bind())
+    clear_database(obj)
 
 
 class TestExport:
-    def test_export_aws_archiver(self, addr, tmpdir):
+    def test_export_aws_archiver(self, db_gateway, tmpdir):
         # Load file into database
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
             export_file = tmpdir.join("colors_inventory-preserve-export.csv")
             load_result = self.load.process_file(csv_file)
@@ -85,10 +63,10 @@ class TestExport:
         finally:
             tearDown(self)
 
-    def test_export_preserve(self, addr, tmpdir):
+    def test_export_preserve(self, db_gateway, tmpdir):
         # Load
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             csv_file = 'tests/fixtures/load/colors_inventory-preserve.csv'
             export_file = tmpdir.join("colors_inventory-preserve-export.csv")
             load_result = self.load.process_file(csv_file)

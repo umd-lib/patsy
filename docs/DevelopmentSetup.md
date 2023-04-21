@@ -60,13 +60,13 @@ Postgres).
 
 ### SQLite Database
 
-A empty SQLite database can be created simply by running the "schema" command
-with the appropriate "--database" argument (or "PATSY_DATABASE" environment
-variable). For example, to create a SQLite database file named
+A empty SQLite database can be created simply by running the Alembic upgrade
+command with the appropriate "database" argument (or "PATSY_DATABASE"
+environment variable). For example, to create a SQLite database file named
 "patsy-db.sqlite":
 
 ```bash
-$ patsy --database patsy-db.sqlite schema
+$ alembic -x database=patsy-db.sqlite upgrade head
 ```
 
 ## Postgres Server Setup
@@ -86,10 +86,10 @@ $ docker run --rm -d -p 5432:5432 --name patsy-db \
 **Note:** All data in the container will be **LOST** when the container is
 stopped.
 
-The schema can then be set up using the following command:
+The schema can then be set up using the following Alembic command:
 
 ```bash
-$ patsy --database postgresql+psycopg2://postgres:password@localhost:5432/patsy schema
+$ alembic -x database=postgresql+psycopg2://postgres:password@localhost:5432/patsy upgrade head
 ```
 
 For convenience, the "PATSY_DATABASE" environment variable can be set up:

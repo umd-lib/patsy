@@ -1,37 +1,14 @@
 import tempfile
-import pytest
 import os
 
-from patsy.commands.schema import Command as CommandSchema
 from patsy.commands.checksum import Command, get_checksum
-from sqlalchemy.ext.compiler import compiles
-from patsy.core.db_gateway import DbGateway
-from sqlalchemy.schema import DropTable
 from patsy.core.load import Load
 from argparse import Namespace
-from patsy.model import Base
+from tests import clear_database
 
 
-@pytest.fixture
-def addr(request):
-    return request.config.getoption('--base-url')
-
-
-@compiles(DropTable, "postgresql")
-def _compile_drop_table(element, compiler, **kwargs):
-    return compiler.visit_drop_table(element) + " CASCADE"
-
-
-def tearDown(obj):
-    obj.gateway.close()
-    Base.metadata.drop_all(obj.gateway.session.get_bind())
-
-
-def setUp(obj, addr):
-    args = Namespace()
-    args.database = addr
-    obj.gateway = DbGateway(args)
-
+def setUp(obj, gateway):
+    obj.gateway = gateway
     # Arguments passed to checksum.Command
     obj.checksum_command = Command()
     obj.command_args = Namespace()
@@ -39,18 +16,21 @@ def setUp(obj, addr):
     obj.command_args.output_type = None
     obj.command_args.output_file = None
 
-    CommandSchema.__call__(obj, args, obj.gateway)
     obj.load = Load(obj.gateway)
     csv_file = 'tests/fixtures/load/colors_inventory-aws-archiver.csv'
     obj.load.process_file(csv_file)
 
 
+def tearDown(obj):
+    clear_database(obj)
+
+
 class TestChecksumCommand:
-    def test_location_arg(self, capsys, addr):
+    def test_location_arg(self, capsys, db_gateway):
         # The call command will write to a file
         # and compare the answer to what's written in file.
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
             self.checksum_command.__call__(self.command_args, self.gateway)
             expected = '85a929103d2f58ddfa8c8768eb6339ad  test_bucket/TEST_BATCH/colors/sample_blue.jpg\n'
@@ -58,9 +38,9 @@ class TestChecksumCommand:
         finally:
             tearDown(self)
 
-    def test_output_type_arg(self, capsys, addr):
+    def test_output_type_arg(self, capsys, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             self.command_args.location = ['test_bucket/TEST_BATCH/colors/sample_blue.jpg']
             self.command_args.output_type = 'sha1'
             self.checksum_command.__call__(self.command_args, self.gateway)
@@ -69,9 +49,9 @@ class TestChecksumCommand:
         finally:
             tearDown(self)
 
-    def test_locations_file_arg(self, capsys, addr):
+    def test_locations_file_arg(self, capsys, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             with open('tests/fixtures/checksum/locations_file.csv') as f:
                 self.command_args.locations_file = f
                 self.checksum_command.__call__(self.command_args, self.gateway)
@@ -81,9 +61,9 @@ class TestChecksumCommand:
         finally:
             tearDown(self)
 
-    def test_output_file_arg(self, addr):
+    def test_output_file_arg(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             with tempfile.TemporaryDirectory() as tmpdirname:
                 output_filename = os.path.join(tmpdirname, 'test_output_file.csv')
                 with open(output_filename, 'w') as output_file:
@@ -98,9 +78,9 @@ class TestChecksumCommand:
 
 
 class TestGetChecksum:
-    def test_valid_row_and_md5_checksum__returns_tuple(self, addr):
+    def test_valid_row_and_md5_checksum__returns_tuple(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
             expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
             checksum_and_path = get_checksum(self.gateway, row, 'md5')
@@ -108,9 +88,9 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    def test_valid_row_and_sha1_checksum__returns_tuple(self, addr):
+    def test_valid_row_and_sha1_checksum__returns_tuple(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
             expected = ('2fa953a48600e1aef0486b4b3a17c6100cfeef80', 'test_bucket/TEST_BATCH/colors/sample_blue.jpg')
             checksum_and_path = get_checksum(self.gateway, row, 'sha1')
@@ -118,9 +98,9 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    def test_gvalid_row_and_sha256_checksum__returns_tuple(self, addr):
+    def test_gvalid_row_and_sha256_checksum__returns_tuple(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
             expected = (
                 'e80dd1c34dbdc98521138eacc0e921683d8c9970a1f7cfe75bbfff56d5638238',
@@ -131,9 +111,9 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    def test_location_not_found_returns__None_and_displays_error(self, caplog, addr):
+    def test_location_not_found_returns__None_and_displays_error(self, caplog, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'not_a_location_in_database'}
             checksum_and_path = get_checksum(self.gateway, row, 'md5')
             assert checksum_and_path is None
@@ -141,9 +121,9 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    def test_checksum_type_not_found_returns__None_and_displays_error(self, caplog, addr):
+    def test_checksum_type_not_found_returns__None_and_displays_error(self, caplog, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg'}
             checksum_type = 'invalid_type'
             checksum_and_path = get_checksum(self.gateway, row, checksum_type)
@@ -152,9 +132,9 @@ class TestGetChecksum:
         finally:
             tearDown(self)
 
-    def test_tuple_contains_destination_if_provided(self, addr):
+    def test_tuple_contains_destination_if_provided(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             row = {'location': 'test_bucket/TEST_BATCH/colors/sample_blue.jpg', 'destination': 'DESTINATION'}
             expected = ('85a929103d2f58ddfa8c8768eb6339ad', 'DESTINATION')
             checksum_and_path = get_checksum(self.gateway, row, 'md5')

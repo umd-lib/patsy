@@ -1,30 +1,14 @@
 import os
 import json
-import pytest
 import httpretty
 
-from argparse import Namespace
 from patsy.core.sync import Sync
 from patsy.core.load import Load
 from patsy.model import Base, Accession
-from patsy.commands.schema import Command
-from patsy.core.db_gateway import DbGateway
-
-from sqlalchemy.schema import DropTable
-from sqlalchemy.ext.compiler import compiles
+from tests import clear_database
 
 
-@pytest.fixture
-def addr(request):
-    return request.config.getoption('--base-url')
-
-
-@compiles(DropTable, "postgresql")
-def _compile_drop_table(element, compiler, **kwargs):
-    return compiler.visit_drop_table(element) + " CASCADE"
-
-
-def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False, head: bool = False):
+def setUp(obj, gateway, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False, head: bool = False):
     if head:
         headers = {
             'X-Pharos-API-User': os.getenv('X_PHAROS_NAME'),  # os.getenv('X_PHAROS_NAME'),
@@ -36,29 +20,23 @@ def setUp(obj, addr, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load:
             'X-Pharos-API-Key': "not being used",  # os.getenv('X_PHAROS_KEY')
         }
 
-    args = Namespace(database=addr)
-
-    obj.gateway = DbGateway(args)
+    obj.gateway = gateway
     obj.sync = Sync(obj.gateway, headers)
 
     if load:
-        Base.metadata.drop_all(obj.gateway.session.get_bind())
-        Command.__call__(obj, args, obj.gateway)
         obj.load = Load(obj.gateway)
         obj.load.process_file(csv_file)
         obj.gateway.session.commit()
 
 
-def tearDown(obj, tear: bool = True):
-    obj.gateway.close()
-    if tear:
-        Base.metadata.drop_all(obj.gateway.session.get_bind())
+def tearDown(obj):
+    clear_database(obj)
 
 
 class TestSync:
-    def test_parse_name(self, addr):
+    def test_parse_name(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             assert self.sync.parse_name('archive0001') == 'Archive001'
             assert self.sync.parse_name('archive0010') == 'Archive010'
             assert self.sync.parse_name('archive0100') == 'Archive100'
@@ -72,9 +50,9 @@ class TestSync:
         finally:
             tearDown(self)
 
-    def test_check_path(self, addr):
+    def test_check_path(self, db_gateway):
         try:
-            setUp(self, addr, load=True)
+            setUp(self, db_gateway, load=True)
             with open('tests/fixtures/sync/archive0149.json') as f:
                 files = json.load(f)
 
@@ -91,9 +69,9 @@ class TestSync:
 
     # The baglist.json file has 30 bags
     # Only 1 should be in the database
-    def test_batches(self, addr):
+    def test_batches(self, db_gateway):
         try:
-            setUp(self, addr, load=True)
+            setUp(self, db_gateway, load=True)
 
             with open('tests/fixtures/sync/baglist.json') as f:
                 bags = json.load(f)
@@ -106,9 +84,9 @@ class TestSync:
         finally:
             tearDown(self)
 
-    def test_check_locations_archive149(self, addr):
+    def test_check_locations_archive149(self, db_gateway):
         try:
-            setUp(self, addr, load=True)
+            setUp(self, db_gateway, load=True)
 
             with open('tests/fixtures/sync/archive0149.json') as f:
                 files = json.load(f)
@@ -131,9 +109,9 @@ class TestSync:
         finally:
             tearDown(self)
 
-    def test_add_locations_archive149(self, addr):
+    def test_add_locations_archive149(self, db_gateway):
         try:
-            setUp(self, addr, load=True)
+            setUp(self, db_gateway, load=True)
 
             with open('tests/fixtures/sync/archive0149.json') as f:
                 files = json.load(f)
@@ -155,9 +133,9 @@ class TestSync:
         finally:
             tearDown(self)
 
-    def test_catch_duplicates_archive149(self, addr):
+    def test_catch_duplicates_archive149(self, db_gateway):
         try:
-            setUp(self, addr, load=True)
+            setUp(self, db_gateway, load=True)
 
             with open('tests/fixtures/sync/archive0149.json') as f:
                 files = json.load(f)
@@ -185,9 +163,9 @@ class TestSync:
 
     # Using a modified CSV file which uses the same path but with the
     # Storage provider changed to AWS
-    def test_add_second_locations_archive149(self, addr):
+    def test_add_second_locations_archive149(self, db_gateway):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
+            setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
 
             with open('tests/fixtures/sync/archive0149.json') as f:
                 files = json.load(f)
@@ -209,9 +187,9 @@ class TestSync:
             tearDown(self)
 
     @httpretty.activate
-    def test_aptrust_without_time(self, addr):
+    def test_aptrust_without_time(self, db_gateway):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
+            setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
 
             # Create mock urls for getting the bags
             # and getting the files from archive0149
@@ -252,9 +230,9 @@ class TestSync:
             tearDown(self)
 
     @httpretty.activate
-    def test_aptrust_specify_timebefore(self, addr):
+    def test_aptrust_specify_timebefore(self, db_gateway):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+            setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
             # Create mock urls for getting the bags,
             # not for getting the files though, because
@@ -292,9 +270,9 @@ class TestSync:
             tearDown(self)
 
     @httpretty.activate
-    def test_aptrust_specify_timeafter(self, addr):
+    def test_aptrust_specify_timeafter(self, db_gateway):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+            setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
             # Create mock urls for just getting the bags,
             # same as above
@@ -322,9 +300,9 @@ class TestSync:
             tearDown(self)
 
     @httpretty.activate
-    def test_aptrust_specify_both(self, addr):
+    def test_aptrust_specify_both(self, db_gateway):
         try:
-            setUp(self, addr, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
+            setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
             # Create mock urls for just getting the bags,
             # same as above
