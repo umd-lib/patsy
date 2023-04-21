@@ -72,6 +72,20 @@ Index('batch_name', Batch.name)
 Index('accession_batch_relpath', Accession.batch_id, Accession.relpath, unique=True)
 
 
+class StorageProvider(Base):  # type: ignore
+    """
+    Class representing a storage provider
+    """
+
+    __tablename__ = "storage_providers"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+
+    def __repr__(self) -> str:
+        return f"<StorageProvider(id='{self.id}', name='{self.storage_provider}'>"
+
+
 class Location(Base):  # type: ignore
     """
     Class representing a storage location for an accession.
