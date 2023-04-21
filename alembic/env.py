@@ -7,6 +7,7 @@ from alembic import context
 
 # UMD Customization - Support "database" command-line argument
 from patsy.database import get_database_connection_url
+from patsy.model import Base
 # End UMD Customization
 
 # this is the Alembic Config object, which provides
@@ -22,7 +23,10 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+# UMD Customization - Enable "autogenerate" support
+# target_metadata = None
+target_metadata = Base.metadata
+# End UMD Customization
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -88,7 +92,11 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
+            # UMD Customization - Autogenerate batch mode operations for SQLite
+            # See https://alembic.sqlalchemy.org/en/latest/batch.html#batch-mode-with-autogenerate
+            render_as_batch=True
+            # End UMD Customization
         )
 
         with context.begin_transaction():

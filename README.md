@@ -214,6 +214,32 @@ To run the database migrations:
 $ alembic upgrade head
 ```
 
+### To add a new migration:
+
+```bash
+$ alembic revision -m "<MIGRATION_DESCRIPTION>"
+```
+
+where \<MIGRATION_DESCRIPTION> is a short description of the migration, such
+as "create local types table". This description will be included as part of the
+migration filename.
+
+### Auto-generating migrations
+
+**Note:** Auto-generating migrations has significant limitations. See
+<https://alembic.sqlalchemy.org/en/latest/autogenerate.html>.
+
+Alembic can attempt to "auto-generate" migrations. To do this, first modify the
+"declarative base" in "patsy/model.py", and then run the following command:
+
+```bash
+$ alembic revision --autogenerate -m "<MIGRATION_DESCRIPTION>"
+```
+
+where \<MIGRATION_DESCRIPTION> is a short description of the migration, such
+as "create local types table". This description will be included as part of the
+migration filename.
+
 ## License
 
 See the [LICENSE](LICENSE) file for license rights and limitations.
