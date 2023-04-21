@@ -1,8 +1,21 @@
-from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInteger
+from sqlalchemy import Column, Integer, String, Index, ForeignKey, Table, BigInteger, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
+
+# Set naming conventions for constraints.
+# See https://alembic.sqlalchemy.org/en/latest/naming.html
+#
+# This ensures that constraints are named consistently, to enable them
+# to be easily handled in Alembic database migrations
+Base.metadata = MetaData(naming_convention={
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_`%(constraint_name)s`",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s"
+    })
 
 # Many-to-many relationship between accessions and locations
 accession_locations_table = Table('accession_locations', Base.metadata,
