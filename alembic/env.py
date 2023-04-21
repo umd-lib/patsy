@@ -5,6 +5,10 @@ from sqlalchemy import pool
 
 from alembic import context
 
+# UMD Customization - Support "database" command-line argument
+from patsy.database import get_database_connection_url
+# End UMD Customization
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -38,7 +42,14 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    # UMD Customization
+    # url = config.get_main_option("sqlalchemy.url")
+    database_arg = config.get_main_option("database")
+    database_connection_url = get_database_connection_url(database_arg)
+
+    url = database_connection_url
+    # End UMD Customization
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -57,8 +68,20 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+
+    # UMD Customization - Support "database" command-line argument
+    database_arg = context.get_x_argument(as_dictionary=True).get('database')
+    database_connection_url = get_database_connection_url(database_arg)
+
+    ini_section = config.get_section(config.config_ini_section)
+    ini_section['sqlalchemy.url'] = database_connection_url
+    # End UMD Customization
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        # UMD Customization - Support "database" command-line argument
+        # config.get_section(config.config_ini_section, {}),
+        ini_section,
+        # End UMD Customization
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

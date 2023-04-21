@@ -19,11 +19,11 @@ See [docs/DevelopmentSetup.md](docs/DevelopmentSetup.md).
 
 ## Database Setup
 
-Patsy can be used with either a SQLite or Postgres database. The database
+PATSy can be used with either a SQLite or Postgres database. The database
 to use is be specified by the "--database" command-line argument,
 or via a "PATSY_DATABASE" environment variable.
 
-## Patsy Commands
+## PATSy Commands
 
 The "--help" flag provides information about available commands and arguments:
 
@@ -80,7 +80,7 @@ with a username of "postgres", and a password of "password":
 $ patsy --database postgresql+psycopg2://postgres:password@localhost:5432/patsy <COMMAND>
 ```
 
-where \<COMMAND> is the Patsy command to run.
+where \<COMMAND> is the PATSy command to run.
 
 #### PATSY_DATABASE environment variable
 
@@ -186,6 +186,33 @@ arguments.
 The "timebefore" and "timeafter" parameters are dates provided to specify what
 bags to access from ApTrust. The dates should be formatted in
 "year-month-day" format (####-##-##).
+
+## Database Migrations
+
+PATSy uses the "Alembic" (<https://alembic.sqlalchemy.org/en/latest/>) migration
+tool to handle updates to the database schema.
+
+Specifying the database must be done either by:
+
+* Setting up the "PATSY_DATABASE" environment variable, or
+* Running the "alembic" command with the "-x database=<DATABASE>" flag, with
+  \<DATABASE> being the same value passed to the "--database" argument for
+  PATSy commands. For example:
+
+    ```bash
+    $ alembic -x database=postgresql+psycopg2://postgres:password@localhost:5432/patsy upgrade head
+    ```
+
+The alembic command will fail with a "patsy.database.DatabaseNotSetError" error
+if the database has not been set.
+
+### Run the database migrations
+
+To run the database migrations:
+
+```bash
+$ alembic upgrade head
+```
 
 ## License
 
