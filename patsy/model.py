@@ -83,7 +83,7 @@ class StorageProvider(Base):  # type: ignore
     name = Column(String, nullable=False, unique=True)
 
     def __repr__(self) -> str:
-        return f"<StorageProvider(id='{self.id}', name='{self.storage_provider}'>"
+        return f"<StorageProvider(id='{self.id}', name='{self.name}'>"
 
 
 class Location(Base):  # type: ignore
@@ -97,6 +97,7 @@ class Location(Base):  # type: ignore
     storage_provider = Column(String)
     storage_location = Column(String)
     accessions = relationship("Accession", secondary=accession_locations_table, back_populates="locations")
+    storage_provider_id = Column(Integer, ForeignKey('storage_providers.id'))
 
     def __repr__(self) -> str:
         return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', " \
