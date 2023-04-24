@@ -108,7 +108,7 @@ class DbGateway():
         if location is None:
             location = Location(
                 storage_location=patsy_record.storage_location,
-                storage_provider_id=storage_provider.id
+                storage_provider=storage_provider
             )
             self.session.add(location)
             self.add_result.locations_added += 1
