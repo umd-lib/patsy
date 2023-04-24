@@ -97,6 +97,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
             assert load_result.accessions_added == 2
+            assert load_result.storage_providers_added == 1
             assert load_result.locations_added == 2
             assert len(load_result.errors) == 1
         finally:
@@ -109,6 +110,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
             assert load_result.accessions_added == 3
+            assert load_result.storage_providers_added == 1
             assert load_result.locations_added == 3
             assert len(load_result.errors) == 0
         finally:
@@ -121,6 +123,7 @@ class TestLoad():
             assert load_result.rows_processed == 2
             assert load_result.batches_added == 2
             assert load_result.accessions_added == 2
+            assert load_result.storage_providers_added == 1
             assert load_result.locations_added == 1
             assert len(load_result.errors) == 0
         finally:
@@ -135,6 +138,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
             assert load_result.accessions_added == 3
+            assert load_result.storage_providers_added == 1
             assert load_result.locations_added == 3
             assert len(load_result.errors) == 0
 
@@ -144,6 +148,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 0
             assert load_result.accessions_added == 0
+            assert load_result.storage_providers_added == 0
             assert load_result.locations_added == 0
             assert len(load_result.errors) == 0
         finally:
@@ -156,6 +161,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
             assert load_result.accessions_added == 3
+            assert load_result.storage_providers_added == 0
             assert load_result.locations_added == 0
             assert len(load_result.errors) == 0
         finally:
@@ -170,6 +176,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 1
             assert load_result.accessions_added == 3
+            assert load_result.storage_providers_added == 0
             assert load_result.locations_added == 0
             assert len(load_result.errors) == 0
 
@@ -180,6 +187,7 @@ class TestLoad():
             assert load_result.rows_processed == 3
             assert load_result.batches_added == 0
             assert load_result.accessions_added == 0
+            assert load_result.storage_providers_added == 1
             assert load_result.locations_added == 3
             assert len(load_result.errors) == 0
         finally:
