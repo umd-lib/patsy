@@ -1,4 +1,5 @@
 # This code is taken directly from https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects
+# type: ignore
 from alembic.operations import Operations, MigrateOperation
 
 
