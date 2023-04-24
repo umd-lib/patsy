@@ -9,6 +9,7 @@ class LoadResult():
         self.rows_processed = 0
         self.batches_added = 0
         self.accessions_added = 0
+        self.storage_providers_added = 0
         self.locations_added = 0
         self.errors: List[str] = []
 
@@ -17,6 +18,7 @@ class LoadResult():
             f"rows_processed='{self.rows_processed}'",
             f"batches_added='{self.batches_added}'",
             f"accessions_added='{self.accessions_added}'",
+            f"storage_providers_added='{self.storage_providers_added}'",
             f"locations_added='{self.locations_added}'",
             f"errors='{self.errors}'"
         ]
@@ -66,6 +68,7 @@ class Load:
                 if add_result:
                     self.load_result.batches_added += add_result.batches_added
                     self.load_result.accessions_added += add_result.accessions_added
+                    self.load_result.storage_providers_added += add_result.storage_providers_added
                     self.load_result.locations_added += add_result.locations_added
 
         return self.load_result

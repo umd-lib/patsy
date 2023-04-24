@@ -35,9 +35,6 @@ depends_on = None
 # Implementation "patsy_records" View as replaceable object, so that it
 # can be easily changed in subsequent migrations (see
 # https://alembic.sqlalchemy.org/en/latest/cookbook.html#replaceable-objects)
-#
-# Different versions of the "patsy_records" SQL are stored in
-# "patsy/alembic/patsy_record_views_sql.py"
 patsy_records_view = ReplaceableObject(
     "patsy_records",
     '''

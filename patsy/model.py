@@ -94,14 +94,14 @@ class Location(Base):  # type: ignore
     __tablename__ = "locations"
 
     id = Column(Integer, primary_key=True)
-    storage_provider = Column(String)
+    storage_provider = relationship("StorageProvider")
     storage_location = Column(String)
     accessions = relationship("Accession", secondary=accession_locations_table, back_populates="locations")
     storage_provider_id = Column(Integer, ForeignKey('storage_providers.id'))
 
     def __repr__(self) -> str:
-        return f"<Location(id='{self.id}', storage_provider='{self.storage_provider}', " \
+        return f"<Location(id='{self.id}', storage_provider='{self.storage_provider.name}', " \
                f"storage_location='{self.storage_location}'>"
 
 
-Index('location_storage', Location.storage_provider, Location.storage_location, unique=True)
+Index('location_storage', Location.storage_provider_id, Location.storage_location, unique=True)
