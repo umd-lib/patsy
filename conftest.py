@@ -1,8 +1,9 @@
 import pytest
-from argparse import Namespace
 import pytest_alembic
-from pytest_alembic.config import Config
+from argparse import Namespace
 from patsy.core.db_gateway import DbGateway
+from pytest_alembic.config import Config
+from sqlalchemy.exc import OperationalError
 
 
 def pytest_addoption(parser):
@@ -37,12 +38,16 @@ def db_gateway(addr):
     args = Namespace()
     args.database = addr
     gateway = DbGateway(args)
-    engine = gateway.session.get_bind()
-    with pytest_alembic.runner(config=Config(), engine=engine) as runner:
-        runner.migrate_up_to('head')
-        yield gateway
 
-    # Drop the "alembic_versions" table Alembic so that running the migrations
-    # will update the database
-    gateway.session.execute("DROP TABLE IF EXISTS alembic_version;")
-    gateway.session.commit()
+    try:
+        engine = gateway.session.get_bind()
+        with pytest_alembic.runner(config=Config(), engine=engine) as runner:
+            runner.migrate_up_to('head')
+            yield gateway
+
+            # Drop the "alembic_versions" table Alembic so that running the migrations
+            # will update the database
+            gateway.session.execute("DROP TABLE IF EXISTS alembic_version;")
+            gateway.session.commit()
+    except OperationalError:
+        pytest.exit(reason=f"ERROR - Cannot connect to database.", returncode=5)
