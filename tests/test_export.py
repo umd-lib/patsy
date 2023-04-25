@@ -18,8 +18,8 @@ def setUp(obj, gateway):
         'MD5': 'md5',
         'SHA1': 'sha1',
         'SHA256': 'sha256',
-        'storageprovider': 'storageprovider',
-        'storagepath': 'storagepath'
+        'STORAGEPROVIDER': 'storageprovider',
+        'STORAGELOCATION': 'storagelocation'
     }
 
     obj.args = Namespace()

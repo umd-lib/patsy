@@ -30,7 +30,7 @@ class Load:
     ALL_CSV_FIELDS = [
         'BATCH', 'PATH', 'DIRECTORY', 'RELPATH', 'FILENAME', 'EXTENSION',
         'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256',
-        'storageprovider', 'storagepath'
+        'STORAGEPROVIDER', 'STORAGELOCATION'
     ]
 
     # Fields that must be present in the CSV, with non-empty content
@@ -48,7 +48,7 @@ class Load:
 
     # The following fields are not required in the CSV file
     ALLOWED_MISSING_FIELDS = [
-        'storageprovider', 'storagepath'
+        'STORAGEPROVIDER', 'STORAGELOCATION'
     ]
 
     def __init__(self, gateway: DbGateway) -> None:

@@ -51,8 +51,8 @@ class PatsyUtils:
         patsy_record.md5 = csv_row['MD5']
         patsy_record.sha1 = csv_row['SHA1']
         patsy_record.sha256 = csv_row['SHA256']
-        patsy_record.storage_provider = csv_row.get('storageprovider', None)
-        patsy_record.storage_location = csv_row.get('storagepath', None)
+        patsy_record.storage_provider = csv_row.get('STORAGEPROVIDER', None)
+        patsy_record.storage_location = csv_row.get('STORAGELOCATION', None)
 
         return patsy_record
 
@@ -69,7 +69,7 @@ class PatsyUtils:
         csv_row['MD5'] = patsy_record.md5
         csv_row['SHA1'] = patsy_record.sha1
         csv_row['SHA256'] = patsy_record.sha256
-        csv_row['storageprovider'] = patsy_record.storage_provider or ""
-        csv_row['storagepath'] = patsy_record.storage_location or ""
+        csv_row['STORAGEPROVIDER'] = patsy_record.storage_provider or ""
+        csv_row['STORAGELOCATION'] = patsy_record.storage_location or ""
 
         return csv_row
