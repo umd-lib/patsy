@@ -48,7 +48,7 @@ class Export:
             return self.export_result
 
     def export_entries(self, batch_list: List[str], file_stream: TextIO) -> None:
-        writer = csv.DictWriter(file_stream, fieldnames=Load.ALL_CSV_FIELDS, extrasaction='ignore')
+        writer = csv.DictWriter(file_stream, fieldnames=Load.ALL_CSV_FIELDS, extrasaction='raise')
 
         writer.writeheader()
         for b in batch_list:

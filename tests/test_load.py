@@ -193,6 +193,32 @@ class TestLoad():
         finally:
             tearDown(self)
 
+    def test_load__with_empty_csv_field_returns_error(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            load_result = self.load.process_file('tests/fixtures/load/empty.csv')
+            assert len(load_result.errors) == 1
+            assert load_result.rows_processed == 0
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.storage_providers_added == 0
+            assert load_result.locations_added == 0
+        finally:
+            tearDown(self)
+
+    def test_load__with_unexpected_csv_field_returns_error(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            load_result = self.load.process_file('tests/fixtures/load/unknown_extra_field_inventory.csv')
+            assert len(load_result.errors) == 1
+            assert load_result.rows_processed == 0
+            assert load_result.batches_added == 0
+            assert load_result.accessions_added == 0
+            assert load_result.storage_providers_added == 0
+            assert load_result.locations_added == 0
+        finally:
+            tearDown(self)
+
 
 def remove_key(dict: Dict[str, str], key: str) -> Dict[str, str]:
     new_dict = dict.copy()
