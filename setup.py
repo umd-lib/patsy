@@ -17,6 +17,7 @@ setup(
     python_requires='>=3.10',
     extras_require={  # Optional
        'dev': ['pycodestyle==2.7.0', 'mypy==0.910'],
-       'test': ['pytest==7.1.3', 'pytest-cov==2.12.1', 'pytest-alembic==0.10.4'],
+       'test': ['pytest==7.1.3', 'pytest-cov==2.12.1', 'pytest-alembic==0.10.4',
+                'deepdiff==6.3.0'],
     }
 )
