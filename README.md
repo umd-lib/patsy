@@ -168,7 +168,7 @@ respectively. They are required for the command. These can be provided in the
 command or can be added as command-line arguments:
 
 ```bash
-$ export X_PHAROS_KEY=your-email
+$ export X_PHAROS_NAME=your-email
 $ export X_PHAROS_KEY=the-secret-key
 ```
 
