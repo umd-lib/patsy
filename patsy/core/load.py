@@ -1,7 +1,7 @@
 import csv
 from patsy.core.db_gateway import DbGateway, AddResult
 from patsy.core.patsy_record import PatsyUtils
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 
 class LoadResult():
@@ -9,6 +9,7 @@ class LoadResult():
         self.rows_processed = 0
         self.batches_added = 0
         self.accessions_added = 0
+        self.storage_providers_added = 0
         self.locations_added = 0
         self.errors: List[str] = []
 
@@ -17,6 +18,7 @@ class LoadResult():
             f"rows_processed='{self.rows_processed}'",
             f"batches_added='{self.batches_added}'",
             f"accessions_added='{self.accessions_added}'",
+            f"storage_providers_added='{self.storage_providers_added}'",
             f"locations_added='{self.locations_added}'",
             f"errors='{self.errors}'"
         ]
@@ -28,7 +30,7 @@ class Load:
     ALL_CSV_FIELDS = [
         'BATCH', 'PATH', 'DIRECTORY', 'RELPATH', 'FILENAME', 'EXTENSION',
         'BYTES', 'MTIME', 'MODDATE', 'MD5', 'SHA1', 'SHA256',
-        'storageprovider', 'storagepath'
+        'STORAGEPROVIDER', 'STORAGELOCATION'
     ]
 
     # Fields that must be present in the CSV, with non-empty content
@@ -46,7 +48,14 @@ class Load:
 
     # The following fields are not required in the CSV file
     ALLOWED_MISSING_FIELDS = [
-        'storageprovider', 'storagepath'
+        'STORAGEPROVIDER', 'STORAGELOCATION'
+    ]
+
+    # The following "extra" fields are unused, and not exported, but are allowed
+    # in input CSV files. Listed here so that validation can check that there
+    # are no _other_ extra fields
+    ALLOWED_EXTRA_FIELDS = [
+        'ETAG', 'ID', 'KEYPATH', 'RESULT'
     ]
 
     def __init__(self, gateway: DbGateway) -> None:
@@ -57,6 +66,11 @@ class Load:
         csv_line_index = 2  # Starting at two to account for CSV header
         with open(file) as f:
             reader = csv.DictReader(f, delimiter=',')
+
+            if not self.is_header_valid(reader.fieldnames):
+                return self.load_result
+
+            reader.fieldnames
             add_result = None
             for row in reader:
                 add_result = self.process_csv_row(csv_line_index, row)
@@ -66,6 +80,7 @@ class Load:
                 if add_result:
                     self.load_result.batches_added += add_result.batches_added
                     self.load_result.accessions_added += add_result.accessions_added
+                    self.load_result.storage_providers_added += add_result.storage_providers_added
                     self.load_result.locations_added += add_result.locations_added
 
         return self.load_result
@@ -76,6 +91,25 @@ class Load:
 
         patsy_record = PatsyUtils.from_inventory_csv(row)
         return self.gateway.add(patsy_record)
+
+    def is_header_valid(self, header_fields: Optional[Sequence[str]]) -> bool:
+        """
+        Returns True if the given header fields match expectations, False
+        otherwise.
+        """
+        if header_fields is None:
+            self.load_result.errors.append(
+                  f"CSV file does not have a header line."
+            )
+            return False
+
+        unexpected_extra_fields = set(header_fields) - set(Load.ALL_CSV_FIELDS) - set(Load.ALLOWED_EXTRA_FIELDS)
+        if len(unexpected_extra_fields) > 0:
+            self.load_result.errors.append(
+                f"CSV Header has unexpected extra fields: {unexpected_extra_fields}"
+            )
+            return False
+        return True
 
     def is_row_valid(self, csv_line_index: int, row_dict: Dict[str, str]) -> bool:
         """

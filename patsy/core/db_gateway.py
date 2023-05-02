@@ -2,8 +2,8 @@ from argparse import Namespace
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import text
 from patsy.database import Session
-from patsy.core.patsy_record import PatsyRecord, PatsyUtils
-from patsy.model import Batch, Accession, Location
+from patsy.core.patsy_record import PatsyRecord
+from patsy.model import Batch, Accession, Location, StorageProvider
 from patsy.database import use_database_file
 from typing import cast, Dict, List, Optional
 
@@ -12,6 +12,7 @@ class AddResult():
     def __init__(self) -> None:
         self.batches_added = 0
         self.accessions_added = 0
+        self.storage_providers_added = 0
         self.locations_added = 0
 
 
@@ -72,20 +73,42 @@ class DbGateway():
 
         return accession
 
-    def find_or_create_location(self, patsy_record: PatsyRecord) -> Optional[Location]:
+    def find_or_create_storage_provider(self, patsy_record: PatsyRecord) -> Optional[StorageProvider]:
+        if not patsy_record.storage_provider:
+            return None
+
+        storage_provider: StorageProvider = self.session.query(StorageProvider).filter(
+            StorageProvider.name == patsy_record.storage_provider
+        ).first()
+
+        if storage_provider is None:
+            storage_provider = StorageProvider(
+                name=patsy_record.storage_provider
+            )
+            self.session.add(storage_provider)
+            self.add_result.storage_providers_added += 1
+
+        return storage_provider
+
+    def find_or_create_location(
+          self, patsy_record: PatsyRecord) -> Optional[Location]:
         storage_location = patsy_record.storage_location
         if not storage_location:
             return None
 
+        storage_provider = self.find_or_create_storage_provider(patsy_record)
+        if not storage_provider:
+            return None
+
         location: Location = self.session.query(Location).filter(
             Location.storage_location == patsy_record.storage_location,
-            Location.storage_provider == patsy_record.storage_provider
+            Location.storage_provider_id == storage_provider.id
         ).first()
 
         if location is None:
             location = Location(
                 storage_location=patsy_record.storage_location,
-                storage_provider=patsy_record.storage_provider
+                storage_provider=storage_provider
             )
             self.session.add(location)
             self.add_result.locations_added += 1

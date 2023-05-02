@@ -112,7 +112,7 @@ information).
    The `pip install -e .[dev,test]` command is run as part of the Docker
    container setup, and various VS Code extensions are automatically added.
 
-8) To run Patsy commands and Python tools such as "pytest", open a terminal
+8) To run PATSy commands and Python tools such as "pytest", open a terminal
    in VS Code (select "Terminal | New Terminal") from the menubar.
 
 9) If you are running a local instance of Postgres (either from the local
@@ -123,3 +123,46 @@ information).
     ```bash
     $ export PATSY_DATABASE=postgresql+psycopg2://postgres:password@host.docker.internal:5432/patsy
     ```
+
+## Debugging Setup
+
+See <https://code.visualstudio.com/docs/python/debugging> for the VS Code
+documentation related to Python debugging.
+
+For debugging pytest tests, the built-in VS Code ability to run a test
+directly (using "Debug Test") should work without any additional configuration.
+
+To debug PATSy commands running outside of the tests, one way is to run the
+command via the "debugpy" (<https://github.com/microsoft/debugpy>) debugger,
+and attach to the local process:
+
+1) Install the "debugpy" module:
+
+```bash
+$ pip install debugpy
+```
+
+2) In VS Code, select the "Run and Debug" icon in the sidebar.
+
+3) In the "Run and Debug" pane, left-click the "create a launch.json file" link.
+   In the resulting menu, select "Python | Remote Attach". Accept the defaults
+   of "localhost" and "5678". This will add a "Python: Remote Attach" entry to
+   the "Run and Debug" panel's drop-down list.
+
+4) Set breakpoints as needed in the Python code.
+
+5) Run the PATSy command as follows:
+
+```bash
+$ python -m debugpy --listen 5678 --wait-for-client -m patsy <PATSY_COMMAND>
+```
+
+where \<PATSY_COMMAND> is the PATSy command (with any appropriate command-line
+arguments). The command will pause until the remote debugger is connected.
+
+6) In VS Code a notification will pop up indicating that port 5678 is available.
+   *DO NOT* click on the notification. Instead, go to the "Run and Debug" panel,
+   select the "Python | Remote Attach" entry from the drop-down, and left-click
+   the green "Play" icon.
+
+   The PATSy command will start running and halt at the specified breakpoints.

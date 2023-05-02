@@ -1,58 +1,35 @@
 import csv
-import pytest
 
 from argparse import Namespace
-from patsy.commands.schema import Command
 from patsy.commands.load import Command as LoadCommand
-from patsy.core.db_gateway import DbGateway
-from patsy.core.patsy_record import PatsyUtils
-from patsy.model import Base
-from sqlalchemy.schema import DropTable
-from sqlalchemy.ext.compiler import compiles
+from patsy.core.patsy_record import PatsyRecord, PatsyUtils
+from patsy.model import StorageProvider
+from tests import clear_database
 
 
-# pytestmark = pytest.mark.parametrize(
-#     "addr", [":memory"]  # , "postgresql+psycopg2://postgres:password@localhost:5432/postgres"]
-# )
+def setUp(obj, gateway):
+    obj.gateway = gateway
 
-@pytest.fixture
-def addr(request):
-    return request.config.getoption('--base-url')
+    args = Namespace()
 
-
-@compiles(DropTable, "postgresql")
-def _compile_drop_table(element, compiler, **kwargs):
-    return compiler.visit_drop_table(element) + " CASCADE"
-
-
-def setUp(obj, addr):
     test_db_files = [
         "tests/fixtures/db_gateway/colors_inventory.csv",
         "tests/fixtures/db_gateway/solar_system_inventory.csv"
     ]
 
-    args = Namespace()
-    args.database = addr
-    obj.gateway = DbGateway(args)
-    # schema = Schema(obj.gateway)
-    # schema.create_schema()
-    Command.__call__(obj, args, obj.gateway)
     for file in test_db_files:
         args.file = file
         LoadCommand.__call__(obj, args, obj.gateway)
-        # load = Load(obj.gateway)
-        # load.process_file(file)
 
 
 def tearDown(obj):
-    obj.gateway.close()
-    Base.metadata.drop_all(obj.gateway.session.get_bind())
+    clear_database(obj)
 
 
 class TestDbGateway:
-    def test_get_all_batches(self, addr):
+    def test_get_all_batches(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             batches = self.gateway.get_all_batches()
             assert len(batches) == 2
             batch_names = [batch.name for batch in batches]
@@ -61,34 +38,34 @@ class TestDbGateway:
         finally:
             tearDown(self)
 
-    def test_get_batch_by_name__batch_does_not_exist(self, addr):
+    def test_get_batch_by_name__batch_does_not_exist(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             batch = self.gateway.get_batch_by_name("NON_EXISTENT_BATCH")
             assert batch is None
         finally:
             tearDown(self)
 
-    def test_get_batch_by_name__batch_exists(self, addr):
+    def test_get_batch_by_name__batch_exists(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             batch = self.gateway.get_batch_by_name("TEST_COLORS")
             assert batch is not None
             assert batch.name == "TEST_COLORS"
         finally:
             tearDown(self)
 
-    def test_get_batch_records__batch_does_not_exist(self, addr):
+    def test_get_batch_records__batch_does_not_exist(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             patsy_records = self.gateway.get_batch_records("NON_EXISTENT_BATCH")
             assert len(patsy_records) == 0
         finally:
             tearDown(self)
 
-    def test_get_batch_records__batch_exists(self, addr):
+    def test_get_batch_records__batch_exists(self, db_gateway):
         try:
-            setUp(self, addr)
+            setUp(self, db_gateway)
             patsy_records = self.gateway.get_batch_records("TEST_COLORS")
             expected_patsy_records = []
             expected_csv = []
@@ -107,5 +84,104 @@ class TestDbGateway:
                 assert p in expected_patsy_records
                 assert record_csv in expected_csv
 
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_storage_provider__returns_None_if_no_storage_provider_in_patsy_record(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            assert self.gateway.find_or_create_storage_provider(patsy_record) is None
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_storage_provider__creates_storage_provider_when_does_not_exists(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_provider = 'TEST_STORAGE_PROVIDER'
+
+            # Verify 'TEST_STORAGE_PROVIDER' doesn't exist
+            storage_providers = db_gateway.session.query(StorageProvider).filter(
+                StorageProvider.name == patsy_record.storage_provider
+            ).all()
+            assert len(storage_providers) == 0
+
+            storage_provider = self.gateway.find_or_create_storage_provider(patsy_record)
+            assert storage_provider.name == 'TEST_STORAGE_PROVIDER'
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_storage_provider__returns_storage_provider_when_exists(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_provider = 'TEST_STORAGE_PROVIDER'
+
+            self.gateway.find_or_create_storage_provider(patsy_record)
+
+            # Verify 'TEST_STORAGE_PROVIDER' exists
+            storage_providers = db_gateway.session.query(StorageProvider).filter(
+                StorageProvider.name == patsy_record.storage_provider
+            ).all()
+            assert len(storage_providers) == 1
+
+            storage_provider = self.gateway.find_or_create_storage_provider(patsy_record)
+            assert storage_provider.name == 'TEST_STORAGE_PROVIDER'
+
+            # Verify 'TEST_STORAGE_PROVIDER' exists
+            storage_providers = db_gateway.session.query(StorageProvider).filter(
+                StorageProvider.name == patsy_record.storage_provider
+            ).all()
+            assert len(storage_providers) == 1
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_location__returns_None_if_no_storage_location_in_patsy_record(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_provider == 'TEST_STORAGE_PROVIDER'
+
+            location = self.gateway.find_or_create_location(patsy_record)
+            assert location is None
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_location__returns_None_if_no_storage_provider_in_patsy_record(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_location == 'TEST_STORAGE_LOCATION'
+
+            location = self.gateway.find_or_create_location(patsy_record)
+            assert location is None
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_location__returns_location_when_storage_location_and_provider_are_set(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_location = 'TEST_STORAGE_LOCATION'
+            patsy_record.storage_provider = 'TEST_STORAGE_PROVIDER'
+
+            location = self.gateway.find_or_create_location(patsy_record)
+            assert location.storage_location == 'TEST_STORAGE_LOCATION'
+            assert location.storage_provider.name == 'TEST_STORAGE_PROVIDER'
+        finally:
+            tearDown(self)
+
+    def test_find_or_create_location__returns_location_when_storage_provider_exists(self, db_gateway):
+        try:
+            setUp(self, db_gateway)
+            patsy_record = PatsyRecord()
+            patsy_record.storage_location = 'TEST_STORAGE_LOCATION'
+            patsy_record.storage_provider = 'TEST_STORAGE_PROVIDER'
+            self.gateway.find_or_create_storage_provider(patsy_record)
+
+            location = self.gateway.find_or_create_location(patsy_record)
+            assert location.storage_location == 'TEST_STORAGE_LOCATION'
+            assert location.storage_provider.name == 'TEST_STORAGE_PROVIDER'
         finally:
             tearDown(self)

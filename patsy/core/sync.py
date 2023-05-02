@@ -2,7 +2,7 @@ import requests
 import logging
 import re
 
-from patsy.model import Accession, Batch, Location, accession_locations_table
+from patsy.model import Accession, Batch, Location, StorageProvider
 from patsy.core.db_gateway import DbGateway
 
 from dataclasses import dataclass, field
@@ -115,6 +115,12 @@ class Sync:
         amount_already_exists: int = 0
         amount_files_processed: int = 0
 
+        ap_trust_storage_provider = self.gateway.session.query(StorageProvider).filter(
+            StorageProvider.name == "APTrust"
+            ).first()
+        if ap_trust_storage_provider is None:
+            return None
+
         # Go through the identifiers
         for id in identifiers:
             # Add processed file and check the path
@@ -130,14 +136,14 @@ class Sync:
 
             location = self.gateway.session.query(Location) \
                            .filter(Location.storage_location == id,
-                                   Location.storage_provider == "APTrust") \
+                                   Location.storage_provider == ap_trust_storage_provider) \
                            .first()
 
             if location is None:
                 if add:
                     location = Location(
                         storage_location=id,
-                        storage_provider="APTrust",
+                        storage_provider=ap_trust_storage_provider,
                     )
                     self.gateway.session.add(location)
                     match.locations.append(location)

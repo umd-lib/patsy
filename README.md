@@ -19,11 +19,11 @@ See [docs/DevelopmentSetup.md](docs/DevelopmentSetup.md).
 
 ## Database Setup
 
-Patsy can be used with either a SQLite or Postgres database. The database
+PATSy can be used with either a SQLite or Postgres database. The database
 to use is be specified by the "--database" command-line argument,
 or via a "PATSY_DATABASE" environment variable.
 
-## Patsy Commands
+## PATSy Commands
 
 The "--help" flag provides information about available commands and arguments:
 
@@ -47,17 +47,20 @@ run against.
 
 ##### SQLite
 
-For SQLite databases, this is typically just the filename of the SQLite database
-file. For example, to set up an empty SQLite file named "patsy-db.sqlite":
+For SQLite databases, the argument is just the filename of the SQLite database
+file. For example, to run against a SQLite database in a "patsy-db.sqlite" file:
+
 
 ```bash
-$ patsy --database patsy-db.sqlite schema
+$ patsy --database patsy-db.sqlite <COMMAND>
 ```
+
+where \<COMMAND> is the PATSy command to run.
 
 ##### Postgres
 
-For Postgres databases, a database connection URL with the following format
-is used:
+For Postgres databases, the argument is a database connection URL with the
+following format:
 
 ```text
 postgresql+psycopg2://<USER>:<PASSWORD>@<ADDRESS>:<PORT>/<DATABASE>
@@ -80,7 +83,7 @@ with a username of "postgres", and a password of "password":
 $ patsy --database postgresql+psycopg2://postgres:password@localhost:5432/patsy <COMMAND>
 ```
 
-where \<COMMAND> is the Patsy command to run.
+where \<COMMAND> is the PATSy command to run.
 
 #### PATSY_DATABASE environment variable
 
@@ -103,16 +106,6 @@ $ export PATSY_DATABASE=postgresql+psycopg2://postgres:password@localhost:5432/p
 
 The "--database" argument can still be passed in to temporarily override the
 environment variable.
-
-### "schema" command
-
-Creates the database schema.
-
-```bash
-$ patsy --database <DATABASE> schema
-```
-
-Typically needs only needs to be done once, when the database is created.
 
 ### "load" command
 
@@ -186,6 +179,115 @@ arguments.
 The "timebefore" and "timeafter" parameters are dates provided to specify what
 bags to access from ApTrust. The dates should be formatted in
 "year-month-day" format (####-##-##).
+
+## Database Migrations
+
+PATSy uses the "Alembic" (<https://alembic.sqlalchemy.org/en/latest/>) migration
+tool to handle updates to the database schema.
+
+Specifying the database must be done either by:
+
+* Setting up the "PATSY_DATABASE" environment variable, or
+* Running the "alembic" command with the "-x database=<DATABASE>" flag, with
+  \<DATABASE> being the same value passed to the "--database" argument for
+  PATSy commands. For example:
+
+    ```bash
+    $ alembic -x database=postgresql+psycopg2://postgres:password@localhost:5432/patsy upgrade head
+    ```
+
+The alembic command will fail with a "patsy.database.DatabaseNotSetError" error
+if the database has not been set.
+
+### Run the database migrations
+
+To run the database migrations, or to set up the database for the first time:
+
+```bash
+$ alembic upgrade head
+```
+
+### To add a new migration:
+
+```bash
+$ alembic revision -m "<MIGRATION_DESCRIPTION>"
+```
+
+where \<MIGRATION_DESCRIPTION> is a short description of the migration, such
+as "create local types table". This description will be included as part of the
+migration filename.
+
+### Auto-generating migrations
+
+**Note:** Auto-generating migrations has significant limitations. See
+<https://alembic.sqlalchemy.org/en/latest/autogenerate.html>.
+
+Alembic can attempt to "auto-generate" migrations. To do this, first modify the
+"declarative base" in "patsy/model.py", and then run the following command:
+
+```bash
+$ alembic revision --autogenerate -m "<MIGRATION_DESCRIPTION>"
+```
+
+where \<MIGRATION_DESCRIPTION> is a short description of the migration, such
+as "create local types table". This description will be included as part of the
+migration filename.
+
+### Migrations and Views
+
+As discussed in <https://alembic.sqlalchemy.org/en/latest/batch.html#running-batch-migrations-for-sqlite-and-other-databases>,
+SQLite does not support the "ALTER" statement for changing the database schema.
+
+In PATSy, the Alembic "autogenerate" functionality has been configured to
+create "batch" migrations, which use a "move and copy" workflow for SQLite,
+where:
+
+> the existing table structure is reflected from the database, a new version of
+> this table is created with the given changes, data is copied from the old
+> table to the new table using “INSERT from SELECT”, and finally the old table
+> is dropped and the new one renamed to the original name.
+
+This generally works, except when a table is used by a SQL View. For example,
+the "locations" table is used by the "patsy_records" view. In these cases, the
+Postgres migration will succeed, but a SQLite migration (including those used
+by the tests) will fail with an error such as:
+
+```text
+sqlite3.OperationalError: error in view patsy_records: no such table: main.locations
+```
+
+To enable these migrations to work with SQLite, the affect View must be dropped
+prior to the migration, and restored after the migration:
+
+1) In the "upgrade" method:
+
+    a) At the start of the method, drop the view, i.e.:
+
+      ```text
+      op.execute("DROP VIEW IF EXISTS patsy_records")
+      ```
+
+    b) Perform the migration (typically the `with op.batch_alter_table ... as`
+       block that was autogenerated)
+
+    c) At the end of the method, restore the view. This will typically require
+       retrieving the "ReplaceableObject" from the revision where the view was
+       last created/updated. For example, for the "patsy_records_view"
+       ReplaceableObject that was last modified in the "f693a44bd7fe" revision
+       the code would be:
+
+      ```text
+      # Restore the "patsy_records" view
+      prior_view_module = op.get_context().script.get_revision('f693a44bd7fe').module
+      obj = getattr(prior_view_module, 'patsy_records_view')
+      batch_op.create_view(obj)
+      ```
+
+2) In the "downgrade method, the same code changes as above are needed, i.e.,
+   drop the view, perform the migration, then restore the view.
+
+An example of these changes is in
+[alembic/versions/1e2e3bd85d6d_libitd_2254_add_locations_storage_.py](alembic/versions/1e2e3bd85d6d_libitd_2254_add_locations_storage_.py)
 
 ## License
 
