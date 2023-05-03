@@ -91,4 +91,3 @@ class Command(patsy.core.command.Command):
             checksum_and_path = get_checksum(gateway=gateway, row=row, checksum_type=args.output_type)
             if checksum_and_path:
                 print('  '.join(checksum_and_path), file=args.output_file)
-
