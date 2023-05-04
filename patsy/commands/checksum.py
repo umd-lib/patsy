@@ -79,7 +79,7 @@ def get_checksum(gateway: DbGateway, row: Mapping[str, str], checksum_type: str)
 
 
 class Command(patsy.core.command.Command):
-    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> str:
+    def __call__(self, args: argparse.Namespace, gateway: DbGateway) -> None:
         if args.output_type is None:
             args.output_type = 'md5'
 
@@ -91,5 +91,3 @@ class Command(patsy.core.command.Command):
             checksum_and_path = get_checksum(gateway=gateway, row=row, checksum_type=args.output_type)
             if checksum_and_path:
                 print('  '.join(checksum_and_path), file=args.output_file)
-
-        return ''

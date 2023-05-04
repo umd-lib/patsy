@@ -75,12 +75,8 @@ def main() -> None:
 
     try:
         gateway = DbGateway(args)
-        result = command(args, gateway)
+        command(args, gateway)
         gateway.close()
-
-        if result:
-            sys.stderr.write(result)
-            sys.stderr.write('\n\n')
 
     except DatabaseNotSetError:
         logging.error('The "-d" argument was not set nor was the "PATSY_DATABASE" environment variable.')
