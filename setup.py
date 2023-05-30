@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='patsy-db',
+    name='patsy',
     version='3.0.0',
     description='Command-line client for preservation asset tracking system (PATSy)',
     author='Joshua A. Westgard',
     author_email="westgard@umd.edu",
     platforms=["any"],
     license="Apache",
-    url="https://github.com/umd-lib/patsy-db",
+    url="https://github.com/umd-lib/patsy",
     packages=find_packages(),
     entry_points={
         'console_scripts': ['patsy=patsy.__main__:main']
