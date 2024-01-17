@@ -1,14 +1,14 @@
-import requests
 import logging
 import re
-
-from patsy.model import Accession, Batch, Location, StorageProvider
-from patsy.core.db_gateway import DbGateway
-
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from sqlalchemy import text
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import requests
+from sqlalchemy import text
+
+from patsy.core.db_gateway import DbGateway
+from patsy.model import Accession, Batch, Location, StorageProvider
 
 
 class InvalidStatusCodeError(Exception):
@@ -211,7 +211,7 @@ class Sync:
 
                 logging.debug(f'Attempting to check files from {batch_name}')
                 object_id = bag.get('id')
-                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000)
+                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000, state='A')
 
                 if files:
                     logging.debug("Successfully retrieved files!")
