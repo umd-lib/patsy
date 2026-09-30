@@ -3,8 +3,10 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode
 
 import requests
+from requests import Timeout
 from sqlalchemy import text
 
 from patsy.core.db_gateway import DbGateway
@@ -54,31 +56,47 @@ class Sync:
     FILE_REQUEST = '/member-api/v3/files'
     OBJECT_REQUEST = '/member-api/v3/objects'
 
-    def __init__(self, gateway: DbGateway, headers: Dict[str, Any]) -> None:
-        # Headers will be an enviroment variable that will be obtained and passed in
+    def __init__(self, gateway: DbGateway, headers: Dict[str, Any], timeout: float | tuple[float, float] | None) -> None:
+        # Headers will be an environment variable that will be obtained and passed in
         self.headers = headers
         self.gateway = gateway
+        self.timeout = timeout
         self.sync_results = SyncResult()
 
     def get_request(self, endpoint: str, **params: Any) -> list[Dict[str, Any]]:
+        url = self.APTRUST_URL + endpoint
+        if params:
+            url += '?' + urlencode(params)
+
         results = []
-        r = requests.get(url=self.APTRUST_URL + endpoint, params=params, headers=self.headers)
-
-        while r.status_code == 200:
-            get_results = r.json().get('results')
-            if get_results is None:
-                logging.info("There was no results to retrieve from the get request.")
-                return []
-
-            results.extend(get_results)
-            next_page = r.json().get('next')
-            if next_page == '':
+        while True:
+            try:
+                response = requests.get(url=url, headers=self.headers, timeout=self.timeout)
+            except Timeout:
+                logging.error(f'Timeout connecting to {url}.')
+                logging.warning('Returning no results.')
                 return results
 
-            r = requests.get(url=self.APTRUST_URL + next_page, headers=self.headers)
+            if not response.ok:
+                logging.error(f'Got a {response.status_code} {response.reason} response from {url}.')
+                logging.warning('Returning accumulated results (may not complete).')
+                return results
 
-        logging.warning(f"Got a {r.status_code} status code, skipping this get request.")
-        return []
+            get_results = response.json().get('results')
+            if get_results is None:
+                logging.error(f'No results found in the JSON at {url}.')
+                logging.warning('Returning accumulated results (may not be complete).')
+                return results
+
+            results.extend(get_results)
+
+            next_page = response.json().get('next')
+            if next_page == '':
+                logging.info('No more pages of results found.')
+                logging.info('Returning accumulated results.')
+                return results
+
+            url = self.APTRUST_URL + next_page
 
     def parse_name(self, batchname: str) -> str:
         if batchname.startswith('archive'):
@@ -211,7 +229,11 @@ class Sync:
 
                 logging.debug(f'Attempting to check files from {batch_name}')
                 object_id = bag.get('id')
-                files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000, state='A')
+                try:
+                    files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000, state='A')
+                except Timeout as e:
+                    logging.error(f'Request timed out: {e.request.url}')
+                    files = None
 
                 if files:
                     logging.debug("Successfully retrieved files!")
