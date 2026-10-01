@@ -65,8 +65,16 @@ class Command(patsy.core.command.Command):
             'X-Pharos-API-User': x_pharos_name,
             'X-Pharos-API-Key': x_pharos_key
         }
+        timeout_str = os.getenv('SYNC_TIMEOUT')
+        if timeout_str is None:
+            timeout = None
+        elif ',' in timeout_str:
+            connect_timeout, response_timeout = timeout_str.split(',', 1)
+            timeout = (float(connect_timeout), float(response_timeout))
+        else:
+            timeout = float(timeout_str)
 
-        sync = Sync(gateway=gateway, headers=headers)
+        sync = Sync(gateway=gateway, headers=headers, timeout=timeout)
 
         if timebefore and timeafter:
             tb = datetime.strptime(timebefore, '%Y-%m-%d').date()

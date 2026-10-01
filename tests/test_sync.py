@@ -1,11 +1,20 @@
 import os
 import json
+from time import sleep
+
 import httpretty
+import pytest
+from requests import Timeout
 
 from patsy.core.sync import Sync
 from patsy.core.load import Load
 from patsy.model import Accession, StorageProvider
 from tests import clear_database
+
+
+def slow_response(request, url, headers):
+    sleep(10)
+    return 200, headers, "{}"
 
 
 def setUp(obj, gateway, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False, head: bool = False):
@@ -21,7 +30,7 @@ def setUp(obj, gateway, csv_file: str = 'tests/fixtures/sync/Archive149.csv', lo
         }
 
     obj.gateway = gateway
-    obj.sync = Sync(obj.gateway, headers)
+    obj.sync = Sync(obj.gateway, headers, timeout=5)
 
     if load:
         obj.load = Load(obj.gateway)
@@ -333,3 +342,19 @@ class TestSync:
 
         finally:
             tearDown(self)
+
+    @httpretty.activate
+    def test_aptrust_timeout(self, db_gateway):
+        setUp(self, db_gateway)
+
+        mock_url = 'https://repo.aptrust.org' + self.sync.FILE_REQUEST
+
+        httpretty.register_uri(
+            httpretty.GET,
+            mock_url,
+            body=slow_response,
+            status=200,
+            content_type="application/json"
+        )
+        results = self.sync.get_request(self.sync.FILE_REQUEST, intellectual_object_id='123', per_page=1000, state='A')
+        assert len(results) == 0

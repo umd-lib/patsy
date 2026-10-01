@@ -22,8 +22,8 @@ pipeline {
   //    be the default recipients of Jenkins emails.
 
   agent {
-    dockerfile {
-      filename 'Dockerfile.ci'
+    docker {
+      image 'python:3.10.9-slim'
       // Pass JENKINS_EMAIL_SUBJECT_PREFIX and JENKINS_DEFAULT_EMAIL_RECIPIENTS
       // into container as "env" arguments, so they are available inside the
       // Docker container
