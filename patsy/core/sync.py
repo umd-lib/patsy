@@ -56,7 +56,12 @@ class Sync:
     FILE_REQUEST = '/member-api/v3/files'
     OBJECT_REQUEST = '/member-api/v3/objects'
 
-    def __init__(self, gateway: DbGateway, headers: Dict[str, Any], timeout: float | tuple[float, float] | None) -> None:
+    def __init__(
+        self,
+        gateway: DbGateway,
+        headers: Dict[str, Any],
+        timeout: float | tuple[float, float] | None,
+    ) -> None:
         # Headers will be an environment variable that will be obtained and passed in
         self.headers = headers
         self.gateway = gateway
@@ -229,11 +234,13 @@ class Sync:
 
                 logging.debug(f'Attempting to check files from {batch_name}')
                 object_id = bag.get('id')
-                try:
-                    files = self.get_request(self.FILE_REQUEST, intellectual_object_id=object_id, per_page=1000, state='A')
-                except Timeout as e:
-                    logging.error(f'Request timed out: {e.request.url}')
-                    files = None
+
+                files = self.get_request(
+                    self.FILE_REQUEST,
+                    intellectual_object_id=object_id,
+                    per_page=1000,
+                    state='A',
+                )
 
                 if files:
                     logging.debug("Successfully retrieved files!")
