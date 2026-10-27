@@ -171,7 +171,7 @@ class DbGateway():
     def close(self) -> None:
         try:
             self.session.commit()
-        except IntegrityError as err:
+        except IntegrityError:
             self.session.rollback()
 
     @staticmethod

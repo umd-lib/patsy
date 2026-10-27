@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+include = ["patsy*"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+
+[project]
+name = "patsy"
+dynamic = ["version"]
+description = "Command-line client for preservation asset tracking system (PATSy)"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.14"
+authors = [
+    { name = "Joshua A. Westgard", email = "westgard@umd.edu" },
+]
+dependencies = [
+    "alembic==1.10.3",
+    "psycopg2-binary>=2.9.13",
+    "python-dotenv>=0.21.1",
+    "requests>=2.28.1",
+    "responses>=0.26.3",
+    "sqlalchemy==1.3.13",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=0.910",
+    "deepdiff>=6.3.0",
+    "pytest-alembic>=0.10.4",
+    "pytest-cov>=2.12.1",
+    "pytest>=7.1.3",
+    "ruff>=0.17.3",
+    "setuptools-scm>=10.3.4",
+]
+
+[project.scripts]
+patsy = "patsy.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/umd-lib/patsy"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["alembic"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint]
+# for now, using the pre-0.16 default ruleset in ruff
+# see https://astral.sh/blog/ruff-v0.16.0#better-default-rule-set
+select = ["E4", "E7", "E9", "F"]
+
+[[tool.mypy.overrides]]
+module = "sqlalchemy.*"
+ignore_missing_imports = true
+

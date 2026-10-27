@@ -1,11 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.compiler import compiles
-from patsy.core.db_gateway import DbGateway
 from sqlalchemy.schema import DropTable
-from patsy.core.load import Load
-from argparse import Namespace
 from patsy.model import Base
-from pytest_alembic.plugin.fixtures import alembic_runner
 
 
 # Needed when running tests against Postgres, so that dependent tables/views
