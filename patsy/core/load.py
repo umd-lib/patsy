@@ -99,7 +99,7 @@ class Load:
         """
         if header_fields is None:
             self.load_result.errors.append(
-                  f"CSV file does not have a header line."
+                  "CSV file does not have a header line."
             )
             return False
 

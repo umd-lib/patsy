@@ -1,9 +1,7 @@
 import os
 import json
-from time import sleep
 
-import httpretty
-import pytest
+import responses
 from requests import Timeout
 
 from patsy.core.sync import Sync
@@ -12,9 +10,8 @@ from patsy.model import Accession, StorageProvider
 from tests import clear_database
 
 
-def slow_response(request, url, headers):
-    sleep(10)
-    return 200, headers, "{}"
+def timeout_response(request):
+    raise Timeout
 
 
 def setUp(obj, gateway, csv_file: str = 'tests/fixtures/sync/Archive149.csv', load: bool = False, head: bool = False):
@@ -199,7 +196,7 @@ class TestSync:
         finally:
             tearDown(self)
 
-    @httpretty.activate
+    @responses.activate
     def test_aptrust_without_time(self, db_gateway):
         try:
             setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True)
@@ -207,8 +204,11 @@ class TestSync:
             # Create mock urls for getting the bags
             # and getting the files from archive0149
             # since its in the database
-            mock_object_url = 'https://repo.aptrust.org/member-api/v3/objects?per_page=10000'
-            mock_file_url = 'https://repo.aptrust.org/member-api/v3/files?intellectual_object_id=246810&per_page=3986'
+            mock_object_url = 'https://repo.aptrust.org/member-api/v3/objects?per_page=1000'
+            mock_file_url = (
+                'https://repo.aptrust.org/member-api/v3/files'
+                '?intellectual_object_id=246810&per_page=1000&state=A'
+            )
 
             with open('tests/fixtures/sync/bags.json') as f:
                 body1 = f.read()
@@ -216,16 +216,16 @@ class TestSync:
             with open('tests/fixtures/sync/archive149_request.json') as f:
                 body2 = f.read()
 
-            httpretty.register_uri(
-                httpretty.GET,
+            responses.add(
+                responses.GET,
                 mock_object_url,
                 body=body1,
                 status=200,
                 content_type="application/json"
             )
 
-            httpretty.register_uri(
-                httpretty.GET,
+            responses.add(
+                responses.GET,
                 mock_file_url,
                 body=body2,
                 status=200,
@@ -242,7 +242,7 @@ class TestSync:
         finally:
             tearDown(self)
 
-    @httpretty.activate
+    @responses.activate
     def test_aptrust_specify_timebefore(self, db_gateway):
         try:
             setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
@@ -251,13 +251,16 @@ class TestSync:
             # not for getting the files though, because
             # since the bag isn't in the database, the files
             # wont be processed.
-            mock_url = 'https://repo.aptrust.org/member-api/v3/objects?per_page=10000&created_at__lteq=2022-08-05'
+            mock_url = (
+                'https://repo.aptrust.org/member-api/v3/objects'
+                '?per_page=1000&created_at__lteq=2022-08-05'
+            )
 
             with open('tests/fixtures/sync/bags_before_aug5.json') as f:
                 body1 = f.read()
 
-            httpretty.register_uri(
-                httpretty.GET,
+            responses.add(
+                responses.GET,
                 mock_url,
                 body=body1,
                 status=200,
@@ -282,20 +285,23 @@ class TestSync:
         finally:
             tearDown(self)
 
-    @httpretty.activate
+    @responses.activate
     def test_aptrust_specify_timeafter(self, db_gateway):
         try:
             setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
             # Create mock urls for just getting the bags,
             # same as above
-            mock_url = 'https://repo.aptrust.org/member-api/v3/objects?created_at__gteq=2022-10-01'
+            mock_url = (
+                'https://repo.aptrust.org/member-api/v3/objects'
+                '?per_page=1000&created_at__gteq=2022-10-01'
+            )
 
             with open('tests/fixtures/sync/bags_after_oct.json') as f:
                 body1 = f.read()
 
-            httpretty.register_uri(
-                httpretty.GET,
+            responses.add(
+                responses.GET,
                 mock_url,
                 body=body1,
                 status=200,
@@ -312,21 +318,23 @@ class TestSync:
         finally:
             tearDown(self)
 
-    @httpretty.activate
+    @responses.activate
     def test_aptrust_specify_both(self, db_gateway):
         try:
             setUp(self, db_gateway, csv_file='tests/fixtures/sync/Archive149_Alternate.csv', load=True, head=True)
 
             # Create mock urls for just getting the bags,
             # same as above
-            mock_url = \
-                'https://repo.aptrust.org/member-api/v3/objects?created_at__gteq=2022-10-01&created_at__lteq=2022-11-01'
+            mock_url = (
+                'https://repo.aptrust.org/member-api/v3/objects'
+                '?per_page=1000&created_at__gteq=2022-10-01&created_at__lteq=2022-11-01'
+            )
 
             with open('tests/fixtures/sync/bags_between_oct_nov.json') as f:
                 body1 = f.read()
 
-            httpretty.register_uri(
-                httpretty.GET,
+            responses.add(
+                responses.GET,
                 mock_url,
                 body=body1,
                 status=200,
@@ -343,17 +351,19 @@ class TestSync:
         finally:
             tearDown(self)
 
-    @httpretty.activate
+    @responses.activate
     def test_aptrust_timeout(self, db_gateway):
         setUp(self, db_gateway)
 
-        mock_url = 'https://repo.aptrust.org' + self.sync.FILE_REQUEST
+        mock_url = (
+            'https://repo.aptrust.org'
+            '/member-api/v3/files?intellectual_object_id=123&per_page=1000&state=A'
+        )
 
-        httpretty.register_uri(
-            httpretty.GET,
+        responses.add_callback(
+            responses.GET,
             mock_url,
-            body=slow_response,
-            status=200,
+            callback=timeout_response,
             content_type="application/json"
         )
         results = self.sync.get_request(self.sync.FILE_REQUEST, intellectual_object_id='123', per_page=1000, state='A')

@@ -22,8 +22,8 @@ pipeline {
   //    be the default recipients of Jenkins emails.
 
   agent {
-    docker {
-      image 'python:3.10.9-slim'
+    dockerfile {
+      filename 'Dockerfile.ci'
       // Pass JENKINS_EMAIL_SUBJECT_PREFIX and JENKINS_DEFAULT_EMAIL_RECIPIENTS
       // into container as "env" arguments, so they are available inside the
       // Docker container
@@ -97,7 +97,7 @@ pipeline {
     stage('build') {
       steps {
         sh '''
-          pip install -e .[dev,test]
+          pip install -e . --group dev
         '''
       }
     }
@@ -105,9 +105,6 @@ pipeline {
     stage('test') {
       steps {
         sh '''
-          # Install pytest
-          pip install pytest
-
           pytest --cov-report xml:reports/coverage.xml --cov=patsy -v --junitxml=reports/results.xml -o junit_family=xunit1
         '''
       }
@@ -123,38 +120,29 @@ pipeline {
     stage('static-analysis') {
       steps {
         sh '''
-          # Install pycodestyle
-          pip install pycodestyle
+          # Install ruff
+          pip install ruff
 
-          # Run pycodestyle
+          # Run ruff with ruff rules (E, W)
           # Send output to standard out for "Record compiler warnings and static analysis results"
           # post-build action
           #
-          # Using "|| true" so that build will be considered successful, even if there are violations.
-          pycodestyle --format pylint patsy tests || true
+          # --exit-zero so that build will be considered successful, even if there are violations.
+          ruff check \
+            --preview \
+            --output-format pylint \
+            --no-cache \
+            --exit-zero \
+            patsy tests
         '''
       }
       post {
         always {
-          // Collect pycodestyle reports
-          recordIssues(tools: [pyLint(reportEncoding: 'UTF-8', name: 'pycodestyle')],
+          // Collect ruff reports
+          recordIssues(tools: [pyLint(reportEncoding: 'UTF-8', name: 'ruff')],
                        qualityGates: [[threshold: 1, type: 'TOTAL', criticality: 'UNSTABLE']]
           )
         }
-      }
-    }
-
-    stage('clean-workspace') {
-      steps {
-        // Change permissions of the workspace directory to world-writeable
-        // so Jenkins can delete it. This is needed, because files may be
-        // written to the directory from the Docker container as the "root"
-        // user, which Jenkins would not otherwise be able to clean up.
-        sh '''
-          chmod --recursive 777 $WORKSPACE
-        '''
-
-        cleanWs()
       }
     }
   }
@@ -164,6 +152,16 @@ pipeline {
       emailext to: "$DEFAULT_RECIPIENTS",
                subject: "$EMAIL_SUBJECT",
                body: "$EMAIL_CONTENT"
+
+      // Change permissions of the workspace directory to world-writeable
+      // so Jenkins can delete it. This is needed, because files may be
+      // written to the directory from the Docker container as the "root"
+      // user, which Jenkins would not otherwise be able to clean up.
+      sh '''
+        chmod --recursive 777 $WORKSPACE
+      '''
+
+      cleanWs()
     }
   }
 }

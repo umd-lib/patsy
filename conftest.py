@@ -50,4 +50,4 @@ def db_gateway(addr):
             gateway.session.execute("DROP TABLE IF EXISTS alembic_version;")
             gateway.session.commit()
     except OperationalError:
-        pytest.exit(reason=f"ERROR - Cannot connect to database.", returncode=5)
+        pytest.exit(reason="ERROR - Cannot connect to database.", returncode=5)

@@ -1,15 +1,16 @@
-FROM python:3.10.9-slim
+FROM python:3.14.9-slim
 
-RUN mkdir patsy
-WORKDIR /patsy
+RUN apt-get update && \
+    apt-get install -y git && \
+    apt-get clean
 
-COPY requirements.txt .
+WORKDIR /opt/patsy
+
+COPY pyproject.toml .
 COPY patsy ./patsy
-COPY README.md .
-COPY setup.cfg .
-COPY setup.py .
-COPY LICENSE .
 
-RUN pip install -e .[dev,test]
+# Temporarily mount the .git folder to infer the version during installation
+RUN --mount=source=.git,target=.git,type=bind \
+    pip install -e .
 
 ENTRYPOINT [ "patsy" ]
